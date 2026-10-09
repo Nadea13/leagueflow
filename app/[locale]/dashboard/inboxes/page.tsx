@@ -1,27 +1,65 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useMemo, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Check, X, ShieldCheck, Mail, Phone, Inbox, Trophy, Users, User } from "lucide-react";
-import { 
-    getAllUserInvites, 
-    acceptInvite, 
-    rejectInvite, 
-    getUserRegistrations, 
-    getUserTeamManagementRequests,
-    getIncomingTeamManagementRequests,
+import {
+    Check,
+    X,
+    ShieldCheck,
+    Mail,
+    Phone,
+    Inbox,
+    Trophy,
+    Users,
+    User,
+    Bell,
+    UserCheck,
+    ArrowUpRight,
+    MessageSquareQuote,
+    Eye,
+    Receipt,
+    Loader2,
+    Search,
+    CheckSquare,
+    Square,
+    ChevronDown,
+    ChevronRight,
+    AlertCircle,
+    CreditCard
+} from "lucide-react";
+import {
+    acceptInvite,
+    rejectInvite,
+    getTournamentTeamRoster,
     approveTeamManagementRequest,
     rejectTeamManagementRequest
 } from "@/actions/tournaments/staff";
+import {
+    approveRegistration,
+    rejectRegistration,
+    approveRoster,
+    rejectRoster,
+    approveRosterUnlock,
+    rejectRosterUnlock,
+    approveSingleRosterSubmission,
+    rejectSingleRosterSubmission,
+    approveSelectedRosterSubmissions
+} from "@/actions/tournaments/registration";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/ui/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { TabOption } from "@/components/ui/tab";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatDate } from "@/lib/date";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 type NotificationItem =
     | {
@@ -37,6 +75,7 @@ type NotificationItem =
     | {
         type: 'registration';
         id: string;
+        tournament_id?: string;
         team_id: string;
         team_name: string;
         team_logo?: string | null;
@@ -49,6 +88,7 @@ type NotificationItem =
     | {
         type: 'team_request';
         id: string;
+        team_id?: string;
         team_name: string;
         team_logo?: string | null;
         status: 'pending' | 'approved' | 'rejected';
@@ -67,7 +107,59 @@ type NotificationItem =
         message: string | null;
         status: 'pending' | 'approved' | 'rejected';
         created_at: string;
+    }
+    | {
+        type: 'tournament_action';
+        id: string;
+        tournament_id: string;
+        tournament_name: string;
+        tournament_logo?: string | null;
+        category_name?: string | null;
+        max_teams?: number;
+        approved_teams_count?: number;
+        min_players?: number;
+        max_players?: number;
+        registration_fee?: number;
+        team_id?: string | null;
+        team_name: string;
+        team_logo?: string | null;
+        contact_name?: string | null;
+        contact_phone?: string | null;
+        slip_img?: string | null;
+        action_type: 'tournament_registration' | 'tournament_roster_submission' | 'tournament_roster_unlock';
+        status: 'pending' | 'approved' | 'rejected';
+        registration_status?: string | null;
+        payment_status?: string | null;
+        roster_player_count?: number;
+        created_at: string;
+    }
+    | {
+        type: 'system';
+        id: string;
+        title: string;
+        message: string;
+        notification_type: 'invite' | 'payment' | 'system';
+        link?: string | null;
+        is_read: boolean;
+        created_at: string;
     };
+
+type TabValue = 'all' | 'registrations' | 'invites' | 'team_requests' | 'system';
+
+interface RosterPlayerItem {
+    id: string;
+    tournament_team_id: string;
+    master_player_id?: string | null;
+    player_id?: string | null;
+    name: string;
+    shirt_number?: string | null;
+    position?: string | null;
+    tel?: string | null;
+    photo_url?: string | null;
+    status: string;
+    rejection_reason?: string | null;
+    created_at: string;
+}
 
 function getInitials(name?: string | null): string {
     if (!name) return "";
@@ -79,105 +171,268 @@ function getInitials(name?: string | null): string {
         .join("");
 }
 
+function getRoleLabel(role?: string | null, isTh: boolean = true): string {
+    if (!role) return isTh ? "ทีมงาน" : "Staff";
+    const normalized = role.toLowerCase().trim();
+    if (normalized === "co_organizer" || normalized === "co-organizer") {
+        return isTh ? "ผู้ร่วมจัดการแข่งขัน" : "Co-Organizer";
+    }
+    if (normalized === "referee") {
+        return isTh ? "ผู้ตัดสิน / กรรมการ" : "Referee";
+    }
+    if (normalized === "staff") {
+        return isTh ? "ทีมงาน" : "Staff";
+    }
+    if (normalized === "owner") {
+        return isTh ? "เจ้าของ" : "Owner";
+    }
+    return role.replace(/_/g, ' ');
+}
+
 export default function InboxesPage() {
     const router = useRouter();
-    const t = useTranslations("Collaborators");
+    const searchParams = useSearchParams();
     const tCommon = useTranslations("Common");
     const tReg = useTranslations("Registration");
     const locale = useLocale();
+    const isTh = locale === "th";
     const { toast } = useToast();
 
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
-    const [actionState, setActionState] = useState<Record<string, 'accepted' | 'rejected' | 'error' | null>>({});
-
-    const loadData = async () => {
-        const [invitesRes, regsRes, mgmtReqsRes, incomingReqsRes] = await Promise.all([
-            getAllUserInvites(),
-            getUserRegistrations(),
-            getUserTeamManagementRequests(),
-            getIncomingTeamManagementRequests()
-        ]);
-
-        const combined: NotificationItem[] = [];
-
-        if (invitesRes.success && invitesRes.data) {
-            combined.push(...invitesRes.data.map(item => ({
-                ...item,
-                type: 'invite' as const
-            })));
-        }
-
-        if (regsRes.success && regsRes.data) {
-            combined.push(...regsRes.data.map(item => ({
-                ...item,
-                type: 'registration' as const
-            })));
-        }
-
-        if (mgmtReqsRes.success && mgmtReqsRes.data) {
-            combined.push(...mgmtReqsRes.data.map(item => ({
-                ...item,
-                type: 'team_request' as const
-            })));
-        }
-
-        if (incomingReqsRes.success && incomingReqsRes.data) {
-            combined.push(...incomingReqsRes.data.map(item => ({
-                ...item,
-                type: 'incoming_team_request' as const
-            })));
-        }
-
-        // Sort by created_at DESC
-        combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        setNotifications(combined);
-        setIsLoading(false);
-    };
+    const [actionState, setActionState] = useState<Record<string, 'accepted' | 'approved' | 'rejected' | 'error' | null>>({});
+    
+    const tabParam = searchParams.get('tab') as TabValue | null;
+    const [activeTab, setActiveTab] = useState<TabValue>(tabParam || 'all');
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            loadData();
-        }, 0);
-        return () => clearTimeout(timer);
-    }, []);
+        if (tabParam && ['all', 'registrations', 'invites', 'team_requests', 'system'].includes(tabParam)) {
+            setActiveTab(tabParam);
+        }
+    }, [tabParam]);
 
-    const handleAccept = async (tournamentId: string, inviteId: string) => {
+    const handleTabChange = (val: TabValue) => {
+        setActiveTab(val);
+        router.push(`/dashboard/inboxes?tab=${val}`);
+    };
+
+    const [viewingSlipUrl, setViewingSlipUrl] = useState<string | null>(null);
+
+    // Registration details dropdown state
+    const [expandedDetailsTeamIds, setExpandedDetailsTeamIds] = useState<string[]>([]);
+
+    // Roster inline dropdown state
+    const [expandedRosterTeamId, setExpandedRosterTeamId] = useState<string | null>(null);
+    const [expandedRosterItem, setExpandedRosterItem] = useState<{
+        id: string;
+        tournament_id: string;
+        team_name: string;
+        tournament_name: string;
+        min_players?: number;
+        max_players?: number;
+        isTeamApproved?: boolean;
+    } | null>(null);
+    const [rosterPlayers, setRosterPlayers] = useState<RosterPlayerItem[]>([]);
+    const [loadingRoster, setLoadingRoster] = useState(false);
+    const [actioningPlayerId, setActioningPlayerId] = useState<string | null>(null);
+    const [rosterSearchQuery, setRosterSearchQuery] = useState("");
+    const [selectedRosterIds, setSelectedRosterIds] = useState<string[]>([]);
+    const [isBatchApproving, setIsBatchApproving] = useState(false);
+
+    const toggleExpandDetails = (id: string) => {
+        setExpandedDetailsTeamIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const loadData = useCallback(async (isInitial = false) => {
+        try {
+            const url = expandedRosterTeamId
+                ? `/api/inboxes?rosterTeamId=${encodeURIComponent(expandedRosterTeamId)}`
+                : `/api/inboxes`;
+
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) {
+                if (isInitial) setIsLoading(false);
+                return;
+            }
+
+            const json = await res.json();
+            if (!json.success || !json.inbox) {
+                if (isInitial) setIsLoading(false);
+                return;
+            }
+
+            const { invites, registrations, teamRequests, incomingTeamRequests, systemNotifications, tournamentActions } = json.inbox;
+            const combined: NotificationItem[] = [];
+
+            // Tournament Organizer actions (ยืนยันทีม, ยอมรับเอกสาร, ปลดล็อครายชื่อ)
+            if (tournamentActions?.length) {
+                combined.push(...tournamentActions.map((item: any) => ({
+                    ...item,
+                    type: 'tournament_action' as const
+                })));
+            }
+
+            if (invites?.length) {
+                combined.push(...invites.map((item: any) => ({
+                    ...item,
+                    type: 'invite' as const
+                })));
+            }
+
+            if (registrations?.length) {
+                combined.push(...registrations.map((item: any) => ({
+                    ...item,
+                    type: 'registration' as const
+                })));
+            }
+
+            if (teamRequests?.length) {
+                combined.push(...teamRequests.map((item: any) => ({
+                    ...item,
+                    type: 'team_request' as const
+                })));
+            }
+
+            if (incomingTeamRequests?.length) {
+                combined.push(...incomingTeamRequests.map((item: any) => ({
+                    ...item,
+                    type: 'incoming_team_request' as const
+                })));
+            }
+
+            if (systemNotifications?.length) {
+                combined.push(...systemNotifications.map((item: any) => ({
+                    type: 'system' as const,
+                    id: item.id,
+                    title: item.title,
+                    message: item.message,
+                    notification_type: item.type,
+                    link: item.link,
+                    is_read: item.is_read,
+                    created_at: item.created_at,
+                })));
+            }
+
+            // Sort by created_at DESC
+            combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+            setNotifications(prev => {
+                if (JSON.stringify(prev) !== JSON.stringify(combined)) {
+                    return combined;
+                }
+                return prev;
+            });
+
+            // If roster data is present for open dropdown, update realtime
+            if (json.roster && Array.isArray(json.roster)) {
+                // Avoid replacing during active single/batch actions
+                if (!actioningPlayerId && !isBatchApproving) {
+                    setRosterPlayers(prev => {
+                        if (JSON.stringify(prev) !== JSON.stringify(json.roster)) {
+                            return json.roster;
+                        }
+                        return prev;
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("Error loading inboxes data:", e);
+        } finally {
+            if (isInitial) setIsLoading(false);
+        }
+    }, [expandedRosterTeamId, actioningPlayerId, isBatchApproving]);
+
+    useEffect(() => {
+        loadData(true);
+
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                loadData(false);
+            }
+        }, 2500);
+
+        const handleFocus = () => {
+            loadData(false);
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [loadData]);
+
+    const toggleExpandRoster = async (item: {
+        id: string;
+        tournament_id: string;
+        team_name: string;
+        tournament_name: string;
+        min_players?: number;
+        max_players?: number;
+        isTeamApproved?: boolean;
+    }) => {
+        if (expandedRosterTeamId === item.id) {
+            setExpandedRosterTeamId(null);
+            setExpandedRosterItem(null);
+            return;
+        }
+
+        setExpandedRosterTeamId(item.id);
+        setExpandedRosterItem(item);
+        setLoadingRoster(true);
+        setRosterSearchQuery("");
+        setSelectedRosterIds([]);
+        const res = await getTournamentTeamRoster(item.id);
+        if (res.success && res.data) {
+            setRosterPlayers(res.data);
+            // Default select all pending players for convenient confirmation
+            const pendingIds = res.data.filter(p => p.status === 'pending').map(p => p.id);
+            setSelectedRosterIds(pendingIds);
+        } else {
+            setRosterPlayers([]);
+        }
+        setLoadingRoster(false);
+    };
+
+    const handleAcceptInvite = async (tournamentId: string, inviteId: string) => {
         startTransition(async () => {
             const res = await acceptInvite(tournamentId);
             if (res.success) {
                 setActionState(prev => ({ ...prev, [inviteId]: 'accepted' }));
                 toast({
-                    title: "Accepted Invitation",
-                    description: "You are now a collaborator on this tournament.",
+                    title: locale === "th" ? "ตอบรับคำเชิญแล้ว" : "Accepted Invitation",
+                    description: locale === "th" ? "คุณได้เข้าร่วมเป็นทีมงานของทัวร์นาเมนต์นี้เรียบร้อยแล้ว" : "You are now a collaborator on this tournament.",
                 });
+                loadData();
             } else {
                 setActionState(prev => ({ ...prev, [inviteId]: 'error' }));
                 toast({
-                    title: "Error",
-                    description: res.error || "Failed to accept the invitation.",
+                    title: locale === "th" ? "เกิดข้อผิดพลาด" : "Error",
+                    description: res.error || (locale === "th" ? "ไม่สามารถตอบรับคำเชิญได้" : "Failed to accept the invitation."),
                     variant: "destructive",
                 });
             }
         });
     };
 
-    const handleReject = async (tournamentId: string, inviteId: string) => {
+    const handleRejectInvite = async (tournamentId: string, inviteId: string) => {
         startTransition(async () => {
             const res = await rejectInvite(tournamentId);
             if (res.success) {
                 setActionState(prev => ({ ...prev, [inviteId]: 'rejected' }));
                 toast({
-                    title: "Declined Invitation",
-                    description: "You have declined the invitation.",
+                    title: locale === "th" ? "ปฏิเสธคำเชิญแล้ว" : "Declined Invitation",
+                    description: locale === "th" ? "คุณได้ปฏิเสธคำเชิญเข้าร่วมจัดงานแล้ว" : "You have declined the invitation.",
                 });
+                loadData();
             } else {
                 setActionState(prev => ({ ...prev, [inviteId]: 'error' }));
                 toast({
-                    title: "Error",
-                    description: res.error || "Failed to decline the invitation.",
+                    title: locale === "th" ? "เกิดข้อผิดพลาด" : "Error",
+                    description: res.error || (locale === "th" ? "ไม่สามารถปฏิเสธคำเชิญได้" : "Failed to decline the invitation."),
                     variant: "destructive",
                 });
             }
@@ -193,7 +448,6 @@ export default function InboxesPage() {
                     title: isTh ? "อนุมัติคำขอสำเร็จ" : "Request Approved",
                     description: isTh ? "ผู้ใช้ได้รับสิทธิ์จัดการทีมเรียบร้อยแล้ว" : "The user now has rights to manage the team.",
                 });
-                // Reload list to get fresh status from db
                 loadData();
             } else {
                 setActionState(prev => ({ ...prev, [requestId]: 'error' }));
@@ -215,7 +469,6 @@ export default function InboxesPage() {
                     title: isTh ? "ปฏิเสธคำขอสำเร็จ" : "Request Rejected",
                     description: isTh ? "ปฏิเสธคำขอจัดการทีมเรียบร้อยแล้ว" : "The team management request has been rejected.",
                 });
-                // Reload list to get fresh status from db
                 loadData();
             } else {
                 setActionState(prev => ({ ...prev, [requestId]: 'error' }));
@@ -228,30 +481,376 @@ export default function InboxesPage() {
         });
     };
 
+    // --- Tournament Action Handlers ---
+    const handleApproveTournamentReg = async (regId: string, tourId: string) => {
+        setActionState(prev => ({
+            ...prev,
+            [`tournament_registration-${regId}`]: 'approved',
+            [`team-${regId}`]: 'approved'
+        }));
+        setNotifications(prev => prev.map(n => {
+            if (n.type === 'tournament_action' && n.id === regId) {
+                if (n.action_type === 'tournament_registration') {
+                    return { ...n, status: 'approved' as const, registration_status: 'approved' as const };
+                }
+                return { ...n, registration_status: 'approved' as const };
+            }
+            return n;
+        }));
+        if (expandedRosterItem?.id === regId) {
+            setExpandedRosterItem(prev => prev ? { ...prev, isTeamApproved: true } : null);
+        }
+        startTransition(async () => {
+            const res = await approveRegistration(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ยืนยันทีมสำเร็จ" : "Team Approved",
+                    description: isTh ? "อนุมัติการสมัครและยืนยันทีมเข้าสู่ทัวร์นาเมนต์แล้ว" : "Team registration has been approved.",
+                });
+                if (expandedRosterItem?.id === regId) {
+                    setExpandedRosterItem(prev => prev ? { ...prev, isTeamApproved: true } : null);
+                }
+                loadData();
+            } else {
+                setActionState(prev => ({ ...prev, [`tournament_registration-${regId}`]: 'error' }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to approve team registration.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleRejectTournamentReg = async (regId: string, tourId: string) => {
+        setActionState(prev => ({ ...prev, [`tournament_registration-${regId}`]: 'rejected' }));
+        setNotifications(prev => prev.map(n => (n.id === regId && n.type === 'tournament_action' && n.action_type === 'tournament_registration') ? { ...n, status: 'rejected' as const } : n));
+        startTransition(async () => {
+            const res = await rejectRegistration(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ปฏิเสธการสมัครสำเร็จ" : "Registration Rejected",
+                    description: isTh ? "ปฏิเสธการสมัครทีมเรียบร้อยแล้ว" : "Team registration has been rejected.",
+                });
+                loadData();
+            } else {
+                setActionState(prev => ({ ...prev, [`tournament_registration-${regId}`]: 'error' }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to reject team registration.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleApproveTournamentRoster = async (regId: string, tourId: string) => {
+        if (expandedRosterItem && expandedRosterItem.isTeamApproved === false) {
+            toast({
+                title: isTh ? "ไม่สามารถอนุมัติได้" : "Action not allowed",
+                description: isTh ? "กรุณายืนยันทีมก่อนอนุมัติรายชื่อนักกีฬา" : "Please approve the team before approving roster.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setActionState(prev => ({
+            ...prev,
+            [`tournament_roster_submission-${regId}`]: 'accepted',
+            [`roster-${regId}`]: 'accepted'
+        }));
+        setNotifications(prev => prev.map(n => (n.id === regId && n.type === 'tournament_action' && n.action_type === 'tournament_roster_submission') ? { ...n, status: 'approved' as const } : n));
+        startTransition(async () => {
+            const res = await approveRoster(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ยอมรับเอกสาร/รายชื่อสำเร็จ" : "Roster Approved",
+                    description: isTh ? "อนุมัติรายชื่อนักกีฬาและล็อครายชื่อเรียบร้อยแล้ว" : "Roster has been approved and locked.",
+                });
+                if (expandedRosterItem?.id === regId) {
+                    setExpandedRosterItem(null);
+                    setExpandedRosterTeamId(null);
+                }
+                loadData();
+            } else {
+                setActionState(prev => ({
+                    ...prev,
+                    [`tournament_roster_submission-${regId}`]: 'error',
+                    [`roster-${regId}`]: 'error'
+                }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to approve roster.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleApproveSinglePlayer = async (submissionId: string) => {
+        if (!expandedRosterItem) return;
+
+        if (expandedRosterItem.isTeamApproved === false) {
+            toast({
+                title: isTh ? "ไม่สามารถอนุมัติได้" : "Action not allowed",
+                description: isTh ? "กรุณายืนยันทีมก่อนอนุมัตินักกีฬา" : "Please approve the team before approving players.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setActioningPlayerId(submissionId);
+        try {
+            const res = await approveSingleRosterSubmission(submissionId, expandedRosterItem.id, expandedRosterItem.tournament_id);
+            if (res.success) {
+                toast({
+                    title: isTh ? "อนุมัตินักกีฬาแล้ว" : "Player Approved",
+                    description: isTh ? "อนุมัติรายชื่อนักกีฬารายนี้สำเร็จ" : "Player has been approved.",
+                });
+                setRosterPlayers(prev => prev.map(p => p.id === submissionId ? { ...p, status: 'approved' } : p));
+                loadData();
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to approve player.",
+                    variant: "destructive",
+                });
+            }
+        } finally {
+            setActioningPlayerId(null);
+        }
+    };
+
+    const handleRejectSinglePlayer = async (submissionId: string) => {
+        if (!expandedRosterItem) return;
+        setActioningPlayerId(submissionId);
+        try {
+            const res = await rejectSingleRosterSubmission(submissionId, expandedRosterItem.id, expandedRosterItem.tournament_id);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ปฏิเสธนักกีฬาแล้ว" : "Player Rejected",
+                    description: isTh ? "ปฏิเสธรายชื่อนักกีฬารายนี้สำเร็จ" : "Player has been rejected.",
+                });
+                setRosterPlayers(prev => prev.map(p => p.id === submissionId ? { ...p, status: 'rejected' } : p));
+                loadData();
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to reject player.",
+                    variant: "destructive",
+                });
+            }
+        } finally {
+            setActioningPlayerId(null);
+        }
+    };
+
+    const handleApproveSelectedPlayers = async () => {
+        if (!expandedRosterItem || selectedRosterIds.length === 0) return;
+
+        if (expandedRosterItem.isTeamApproved === false) {
+            toast({
+                title: isTh ? "ไม่สามารถอนุมัติได้" : "Action not allowed",
+                description: isTh ? "กรุณายืนยันทีมก่อนอนุมัตินักกีฬา" : "Please approve the team before approving players.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setIsBatchApproving(true);
+        try {
+            const res = await approveSelectedRosterSubmissions(
+                selectedRosterIds,
+                expandedRosterItem.id,
+                expandedRosterItem.tournament_id
+            );
+            if (res.success) {
+                toast({
+                    title: isTh ? "ยืนยันนักกีฬาที่เลือกแล้ว" : "Selected Players Approved",
+                    description: isTh
+                        ? `อนุมัตินักกีฬาจำนวน ${selectedRosterIds.length} คนเรียบร้อยแล้ว`
+                        : `Successfully approved ${selectedRosterIds.length} players.`,
+                });
+                setRosterPlayers(prev => prev.map(p => selectedRosterIds.includes(p.id) ? { ...p, status: 'approved' } : p));
+                setSelectedRosterIds([]);
+                loadData();
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to approve selected players.",
+                    variant: "destructive",
+                });
+            }
+        } finally {
+            setIsBatchApproving(false);
+        }
+    };
+
+    const handleRejectTournamentRoster = async (regId: string, tourId: string) => {
+        setActionState(prev => ({
+            ...prev,
+            [`tournament_roster_submission-${regId}`]: 'rejected',
+            [`roster-${regId}`]: 'rejected'
+        }));
+        setNotifications(prev => prev.map(n => (n.id === regId && n.type === 'tournament_action' && n.action_type === 'tournament_roster_submission') ? { ...n, status: 'rejected' as const } : n));
+        startTransition(async () => {
+            const res = await rejectRoster(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ปฏิเสธเอกสาร/รายชื่อสำเร็จ" : "Roster Rejected",
+                    description: isTh ? "ปฏิเสธรายชื่อนักกีฬาเรียบร้อยแล้ว" : "Roster has been rejected.",
+                });
+                if (expandedRosterItem?.id === regId) {
+                    setExpandedRosterItem(null);
+                    setExpandedRosterTeamId(null);
+                }
+                loadData();
+            } else {
+                setActionState(prev => ({
+                    ...prev,
+                    [`tournament_roster_submission-${regId}`]: 'error',
+                    [`roster-${regId}`]: 'error'
+                }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to reject roster.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleApproveTournamentUnlock = async (regId: string, tourId: string) => {
+        setActionState(prev => ({ ...prev, [`tournament_roster_unlock-${regId}`]: 'accepted' }));
+        setNotifications(prev => prev.map(n => (n.id === regId && n.type === 'tournament_action' && n.action_type === 'tournament_roster_unlock') ? { ...n, status: 'approved' as const } : n));
+        startTransition(async () => {
+            const res = await approveRosterUnlock(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ปลดล็อครายชื่อสำเร็จ" : "Roster Unlocked",
+                    description: isTh ? "ปลดล็อคให้ทีมสามารถแก้ไข/เพิ่มรายชื่อได้แล้ว" : "Roster unlocked for modification.",
+                });
+                loadData();
+            } else {
+                setActionState(prev => ({ ...prev, [`tournament_roster_unlock-${regId}`]: 'error' }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to approve unlock.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleRejectTournamentUnlock = async (regId: string, tourId: string) => {
+        setActionState(prev => ({ ...prev, [`tournament_roster_unlock-${regId}`]: 'rejected' }));
+        setNotifications(prev => prev.map(n => (n.id === regId && n.type === 'tournament_action' && n.action_type === 'tournament_roster_unlock') ? { ...n, status: 'rejected' as const } : n));
+        startTransition(async () => {
+            const res = await rejectRosterUnlock(regId, tourId);
+            if (res.success) {
+                toast({
+                    title: isTh ? "ปฏิเสธคำขอปลดล็อค" : "Unlock Rejected",
+                    description: isTh ? "ปฏิเสธคำขอปลดล็อครายชื่อเรียบร้อยแล้ว" : "Roster unlock request rejected.",
+                });
+                loadData();
+            } else {
+                setActionState(prev => ({ ...prev, [`tournament_roster_unlock-${regId}`]: 'error' }));
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to reject unlock.",
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
     const getStatusText = (status: string) => {
-        if (status === 'approved') return tCommon("approved") || "Approved";
+        if (status === 'approved' || status === 'accepted') return tCommon("approved") || "Approved";
         if (status === 'rejected') return tCommon("rejected") || "Rejected";
         return tCommon("pending") || "Pending";
     };
 
-    const isTh = locale === "th";
+    // Tab counts
+    const registrationsTotalCount = useMemo(() => notifications.filter(n => n.type === 'tournament_action' || n.type === 'registration').length, [notifications]);
+    const invitesCount = useMemo(() => notifications.filter(n => n.type === 'invite').length, [notifications]);
+    const teamReqsCount = useMemo(() => notifications.filter(n => n.type === 'team_request' || n.type === 'incoming_team_request').length, [notifications]);
+    const systemCount = useMemo(() => notifications.filter(n => n.type === 'system').length, [notifications]);
+
+    const tabOptions: TabOption<TabValue>[] = useMemo(() => [
+        { value: 'all', label: isTh ? `ทั้งหมด (${notifications.length})` : `All (${notifications.length})`, icon: Inbox },
+        { value: 'registrations', label: isTh ? `รายการที่สมัครแข่ง (${registrationsTotalCount})` : `Registrations (${registrationsTotalCount})`, icon: Trophy },
+        { value: 'invites', label: isTh ? `คำเชิญ (${invitesCount})` : `Invitations (${invitesCount})`, icon: UserCheck },
+        { value: 'team_requests', label: isTh ? `คำขอจัดการทีม (${teamReqsCount})` : `Team Requests (${teamReqsCount})`, icon: ShieldCheck },
+        ...(systemCount > 0 ? [{ value: 'system' as TabValue, label: isTh ? `ระบบ (${systemCount})` : `System (${systemCount})`, icon: Bell }] : [])
+    ], [notifications.length, registrationsTotalCount, invitesCount, teamReqsCount, systemCount, isTh]);
+
+    const filteredNotifications = useMemo(() => {
+        if (activeTab === 'all') return notifications;
+        if (activeTab === 'registrations') return notifications.filter(n => n.type === 'tournament_action' || n.type === 'registration');
+        if (activeTab === 'invites') return notifications.filter(n => n.type === 'invite');
+        if (activeTab === 'team_requests') return notifications.filter(n => n.type === 'team_request' || n.type === 'incoming_team_request');
+        if (activeTab === 'system') return notifications.filter(n => n.type === 'system');
+        return notifications;
+    }, [notifications, activeTab]);
 
     return (
-        <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
-            <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-3 md:gap-4 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <Header level={2} className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
+                    <Header level={2} className="text-2xl md:text-3xl font-black tracking-tight">
                         {isTh ? "กล่องข้อความ" : "Inbox"}
                     </Header>
                 </div>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                {/* Left Column: Inbox Navigation Menu */}
+                <aside className="lg:col-span-4 xl:col-span-3">
+                    <div className="rounded-sm border bg-card p-4 space-y-1 lg:sticky lg:top-4">
+                        <div className="pb-4 hidden lg:block">
+                            <Header level={6}>
+                                {isTh ? "หมวดหมู่ข้อความ" : "Inbox Categories"}
+                            </Header>
+                        </div>
+                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible">
+                            {tabOptions.map((opt) => {
+                                const Icon = opt.icon;
+                                const isActive = activeTab === opt.value;
+
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => handleTabChange(opt.value)}
+                                        className={cn(
+                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full",
+                                            isActive
+                                                ? "bg-primary text-primary-foreground font-bold shadow-2xs"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                        )}
+                                    >
+                                        {Icon && <Icon className="size-4 shrink-0" />}
+                                        <span className="flex-1 whitespace-nowrap lg:whitespace-normal">{opt.label}</span>
+                                        <ChevronRight className={cn(
+                                            "size-4 hidden lg:block transition-transform",
+                                            isActive ? "opacity-100 translate-x-0.5" : "opacity-0"
+                                        )} />
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </aside>
+
+                {/* Right Column: Inbox Content */}
+                <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+
             {isLoading ? (
-                <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
                     {[...Array(4)].map((_, idx) => (
                         <div
                             key={idx}
-                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card"
+                            className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card"
                         >
                             <div className="flex items-start gap-4 w-full">
                                 <Skeleton className="h-10 w-10 rounded-full shrink-0" />
@@ -265,324 +864,855 @@ export default function InboxesPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                                <Skeleton className="h-8 w-10 rounded-sm" />
+                                <Skeleton className="h-8 w-16 rounded-sm" />
                                 <Skeleton className="h-8 w-20 rounded-sm" />
                             </div>
                         </div>
                     ))}
                 </div>
-            ) : notifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
                 <EmptyState
-                    title={t("no_pending_invites") || (isTh ? "ไม่มีข้อความใหม่" : "No new messages")}
-                    description={t("pending_invites_desc") || (isTh ? "กล่องข้อความของคุณไม่มีการแจ้งเตือนหรือข้อความใหม่" : "Your inbox is empty.")}
-                    icon={Inbox}
+                    title={
+                        activeTab === 'registrations'
+                            ? (isTh ? "ไม่มีรายการที่สมัครแข่ง" : "No tournament registrations")
+                            : activeTab === 'invites'
+                                ? (isTh ? "ไม่มีคำเชิญที่รอตอบรับ" : "No pending invitations")
+                                : activeTab === 'team_requests'
+                                    ? (isTh ? "ไม่มีคำขอจัดการทีม" : "No team requests")
+                                    : (isTh ? "ไม่มีข้อความในหมวดนี้" : "No messages found")
+                    }
+                    description={
+                        activeTab === 'registrations'
+                            ? (isTh ? "คุณยังไม่มีประวัติการสมัครเข้าร่วมการแข่งขันในขณะนี้" : "You have not registered for any tournaments yet.")
+                            : activeTab === 'invites'
+                                ? (isTh ? "ตอบรับคำเชิญเพื่อช่วยจัดการทัวร์นาเมนต์" : "Accept invitations to collaborate on tournaments.")
+                                : activeTab === 'team_requests'
+                                    ? (isTh ? "ไม่มีคำขอสิทธิ์การจัดการทีมในขณะนี้" : "No team management requests at the moment.")
+                                    : (isTh ? "กล่องข้อความของคุณไม่มีรายการในขณะนี้" : "Your inbox is empty.")
+                    }
+                    icon={activeTab === 'registrations' ? Trophy : activeTab === 'invites' ? UserCheck : activeTab === 'team_requests' ? ShieldCheck : Inbox}
                     action={<div />}
                     className="bg-card rounded-sm border"
                 />
             ) : (
-                <div className="border bg-card rounded-sm divide-y overflow-hidden">
-                    {notifications.map((item) => {
-                        if (item.type === 'invite') {
-                            const currentStatus = actionState[item.id] || item.status;
-                            const tournamentInitials = getInitials(item.tournament_name);
+                <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
+                    {filteredNotifications.map((item) => {
+                        // 1. TOURNAMENT ORGANIZER ACTIONS
+                        if (item.type === 'tournament_action') {
+                            const actionKey = `${item.action_type}-${item.id}`;
+                            const currentStatus = actionState[actionKey] || item.status;
+
+                            const teamRegState = actionState[`tournament_registration-${item.id}`] || actionState[`team-${item.id}`];
+                            const teamRegStatus = teamRegState || item.registration_status;
+
+                            const isTeamApproved = item.action_type === 'tournament_registration'
+                                ? (currentStatus === 'approved' || currentStatus === 'accepted')
+                                : (teamRegStatus === 'approved' || teamRegStatus === 'accepted');
+
+                            const isRosterActionApproved = actionState[`tournament_roster_submission-${item.id}`] === 'accepted'
+                                || actionState[`roster-${item.id}`] === 'accepted'
+                                || (item.action_type === 'tournament_roster_submission' && (currentStatus === 'accepted' || currentStatus === 'approved'));
+
+                            const teamInitials = getInitials(item.team_name);
+                            const hasRosterSubmissions = Boolean(item.roster_player_count && item.roster_player_count > 0);
+                            const isRosterExpanded = expandedRosterTeamId === item.id;
+                            const isDetailsExpanded = expandedDetailsTeamIds.includes(item.id);
 
                             return (
                                 <div
-                                    key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
+                                    key={`tour-act-${item.id}-${item.action_type}`}
+                                    onClick={(e) => {
+                                        if (item.action_type === 'tournament_registration') {
+                                            // Check if click was on an interactive element or inside one
+                                            const target = e.target as HTMLElement | null;
+                                            if (target?.closest('button, a, input, [role="button"], [role="menuitem"], [role="checkbox"]')) {
+                                                return;
+                                            }
+                                            toggleExpandDetails(item.id);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "p-4 transition-colors space-y-4",
+                                        item.action_type === 'tournament_registration' && "cursor-pointer",
+                                        (isRosterExpanded || isDetailsExpanded) ? "" : "hover:bg-muted/30"
+                                    )}
                                 >
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-10 w-10 border rounded-full shrink-0 bg-muted/40">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                                        <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                            <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
+                                                {item.team_logo && (
+                                                    <AvatarImage
+                                                        src={item.team_logo}
+                                                        alt={item.team_name}
+                                                        className="object-contain"
+                                                    />
+                                                )}
+                                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                    {teamInitials || <Users className="h-4 w-4" />}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="space-y-1.5 min-w-0 flex-1">
+                                                {item.action_type === 'tournament_registration' ? (
+                                                    <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                        ทีม <span className="font-semibold text-foreground">{item.team_name}</span> ขอสมัครเข้าร่วมรายการ <span className="font-semibold text-foreground">{item.tournament_name}</span>
+                                                    </p>
+                                                ) : item.action_type === 'tournament_roster_submission' ? (
+                                                    <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                        ทีม <span className="font-semibold text-foreground">{item.team_name}</span> ได้ยื่นรายชื่อ/เอกสารนักกีฬา ({item.roster_player_count || 0} คน) สำหรับรายการ <span className="font-semibold text-foreground">{item.tournament_name}</span>
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                        ทีม <span className="font-semibold text-foreground">{item.team_name}</span> ขอปลดล็อคแก้ไขรายชื่อนักกีฬาในรายการ <span className="font-semibold text-foreground">{item.tournament_name}</span>
+                                                    </p>
+                                                )}
+
+                                                {/* Status/Action Tag & Timestamp */}
+                                                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                                                    {currentStatus === 'accepted' || currentStatus === 'approved' ? (
+                                                        <Badge variant="outline" className="border-primary/40 text-primary">
+                                                            {isTh ? "อนุมัติแล้ว" : "Approved"}
+                                                        </Badge>
+                                                    ) : currentStatus === 'rejected' ? (
+                                                        <Badge variant="outline" className="border-destructive/50 text-destructive">
+                                                            {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
+                                                        </Badge>
+                                                    ) : currentStatus === 'error' ? (
+                                                        <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                            <span>Error occurred</span>
+                                                        </Badge>
+                                                    ) : item.action_type === 'tournament_registration' ? (
+                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/50">
+                                                            <span>{isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}</span>
+                                                        </Badge>
+                                                    ) : item.action_type === 'tournament_roster_submission' ? (
+                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/50">
+                                                            {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50">
+                                                            {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
+                                                        </Badge>
+                                                    )}
+                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                    <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                        {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons & Menu */}
+                                        <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                            {currentStatus === 'accepted' || currentStatus === 'approved' ? (
+                                                item.action_type === 'tournament_registration' && hasRosterSubmissions && !isRosterActionApproved ? (
+                                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleRejectTournamentRoster(item.id, item.tournament_id)}
+                                                            disabled={isPending}
+                                                            className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                        >
+                                                            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                            {isTh ? "ปฏิเสธ" : "Reject"}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleApproveTournamentRoster(item.id, item.tournament_id)}
+                                                            disabled={isPending}
+                                                            className="font-bold text-xs"
+                                                        >
+                                                            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                            {isTh ? "ยอมรับเอกสาร" : "Accept Roster"}
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    item.action_type === 'tournament_registration' ? (
+                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/30">
+                                                            {isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}
+                                                        </Badge>
+                                                    ) : item.action_type === 'tournament_roster_submission' ? (
+                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/30">
+                                                            {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                                            {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
+                                                        </Badge>
+                                                    )
+                                                )
+                                            ) : currentStatus === 'rejected' || currentStatus === 'error' ? (
+                                                item.action_type === 'tournament_registration' ? (
+                                                    <Badge variant="outline" className="text-blue-600 border-blue-500/30">
+                                                        {isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}
+                                                    </Badge>
+                                                ) : item.action_type === 'tournament_roster_submission' ? (
+                                                    <Badge variant="outline" className="text-emerald-600 border-emerald-500/30">
+                                                        {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                                        {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
+                                                    </Badge>
+                                                )
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 md:gap-2">
+                                                    {item.action_type === 'tournament_registration' ? (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleRejectTournamentReg(item.id, item.tournament_id)}
+                                                                disabled={isPending}
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                            >
+                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isTh ? "ปฏิเสธ" : "Reject"}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleApproveTournamentReg(item.id, item.tournament_id)}
+                                                                disabled={isPending}
+                                                                className="font-bold text-xs"
+                                                            >
+                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isTh ? "ยืนยันทีม" : "Approve Team"}
+                                                            </Button>
+                                                        </>
+                                                    ) : item.action_type === 'tournament_roster_submission' ? (
+                                                        hasRosterSubmissions ? (
+                                                            <>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleRejectTournamentRoster(item.id, item.tournament_id)}
+                                                                    disabled={isPending}
+                                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                                >
+                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isTh ? "ปฏิเสธ" : "Reject"}
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => handleApproveTournamentRoster(item.id, item.tournament_id)}
+                                                                    disabled={!isTeamApproved || isPending}
+                                                                    title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนยอมรับเอกสาร" : "Please approve team first") : undefined}
+                                                                    className="font-bold text-xs disabled:opacity-50"
+                                                                >
+                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isTh ? "ยอมรับเอกสาร" : "Accept Roster"}
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-muted-foreground border-border">
+                                                                {isTh ? "ยังไม่มีการยื่นเอกสาร" : "No documents"}
+                                                            </Badge>
+                                                        )
+                                                    ) : (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleRejectTournamentUnlock(item.id, item.tournament_id)}
+                                                                disabled={isPending}
+                                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                            >
+                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isTh ? "ปฏิเสธ" : "Reject"}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleApproveTournamentUnlock(item.id, item.tournament_id)}
+                                                                disabled={isPending}
+                                                                className="font-bold text-xs"
+                                                            >
+                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isTh ? "ปลดล็อค" : "Unlock"}
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Inline Expandable Registration Details Dropdown Section */}
+                                    {isDetailsExpanded && item.action_type === 'tournament_registration' && (
+                                        <div className="pl-0 sm:pl-[52px] animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                                            <div className="rounded-sm border border-border bg-card overflow-hidden">
+                                                {/* Header */}
+                                                <div className="p-4 flex items-center justify-between border-b border-border">
+                                                    <Header level={5}>
+                                                        {isTh ? "ข้อมูลการสมัครทีม" : "Team Registration Details"}
+                                                    </Header>
+                                                    {item.category_name && (
+                                                        <Badge variant="outline">{item.category_name}</Badge>
+                                                    )}
+                                                </div>
+
+                                                {/* 2-Column Split: Info rows on Left, Payment Slip on Right */}
+                                                <div className="grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-border">
+                                                    {/* Left side: Information Rows */}
+                                                    <div className="md:col-span-7 lg:col-span-7">
+                                                        {/* Row 1: Registration Fee */}
+                                                        <div className="flex items-center gap-4 px-4 py-2">
+                                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                                <CreditCard className="size-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                                <Header level={6} className="text-muted-foreground">{isTh ? "ค่าสมัครเข้าร่วม" : "Registration Fee"}</Header>
+                                                                <Label className="text-primary">
+                                                                    {item.registration_fee !== undefined
+                                                                        ? item.registration_fee > 0
+                                                                            ? `฿${item.registration_fee.toLocaleString()}`
+                                                                            : isTh ? "ฟรี (ไม่มีค่าใช้จ่าย)" : "Free"
+                                                                        : "-"}
+                                                                </Label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Contact Person */}
+                                                        <div className="flex items-center gap-4 px-4 py-2">
+                                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                                <User className="size-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                                <Header level={6} className="text-muted-foreground">{isTh ? "ชื่อผู้ติดต่อ/ผู้จัดการ" : "Contact Person"}</Header>
+                                                                <Label>{item.contact_name || (isTh ? "ไม่ระบุ" : "Not specified")}</Label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 3: Contact Phone */}
+                                                        <div className="flex items-center gap-4 px-4 py-2">
+                                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                                <Phone className="size-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                                <Header level={6} className="text-muted-foreground">{isTh ? "เบอร์โทรศัพท์ติดต่อ" : "Phone Number"}</Header>
+                                                                {item.contact_phone ? (
+                                                                    <Label asChild className="hover:text-primary transition-colors block truncate cursor-pointer">
+                                                                        <a href={`tel:${item.contact_phone}`} onClick={(e) => e.stopPropagation()}>
+                                                                            {item.contact_phone}
+                                                                        </a>
+                                                                    </Label>
+                                                                ) : (
+                                                                    <Label>-</Label>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 4: Quota & Player Limits */}
+                                                        {(item.min_players !== undefined || item.max_teams !== undefined) && (
+                                                            <div className="flex items-center gap-4 px-4 py-2">
+                                                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                                    <Users className="size-4 text-muted-foreground" />
+                                                                </div>
+                                                                <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                                    <Header level={6} className="text-muted-foreground">{isTh ? "เกณฑ์นักกีฬา & โควตา" : "Limits & Quota"}</Header>
+                                                                    <div className="flex items-center gap-4 flex-wrap justify-end">
+                                                                        {item.min_players !== undefined && (
+                                                                            <Label>
+                                                                                {item.min_players}-{item.max_players || 20} {isTh ? "คน/ทีม" : "players"}
+                                                                            </Label>
+                                                                        )}
+                                                                        {item.max_teams !== undefined && (
+                                                                            <Label>
+                                                                                {item.approved_teams_count || 0}/{item.max_teams} {isTh ? "ทีม" : "teams"}
+                                                                            </Label>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Right side: Payment Slip Preview */}
+                                                    <div className="md:col-span-5 lg:col-span-5 p-4 flex flex-col justify-between">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            {!item.slip_img && (
+                                                                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                                                                    {isTh ? "ไม่มีสลิป" : "No slip"}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+
+                                                        {item.slip_img ? (
+                                                            <div className="space-y-4">
+                                                                <div
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setViewingSlipUrl(item.slip_img!);
+                                                                    }}
+                                                                    className="group/slip relative w-full aspect-[4/3] rounded-sm overflow-hidden border border-border cursor-pointer shadow-2xs hover:border-primary/60 transition-all bg-muted"
+                                                                >
+                                                                    <Image
+                                                                        src={item.slip_img}
+                                                                        alt="Slip"
+                                                                        fill
+                                                                        sizes="(max-width: 768px) 100vw, 240px"
+                                                                        className="object-cover group-hover/slip:scale-105 transition-transform duration-300"
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/slip:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-xs font-bold text-white">
+                                                                        <Eye className="size-4" />
+                                                                        <span>{isTh ? "ดูสลิปขนาดเต็ม" : "View Full Slip"}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-[10px] text-muted-foreground text-center">
+                                                                    {isTh ? "คลิกที่รูปเพื่อดูสลิปฉบับเต็ม" : "Click image to view full slip"}
+                                                                </p>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex-1 min-h-[90px] flex flex-col items-center justify-center py-4 border border-dashed border-border rounded-sm bg-muted/10 text-center">
+                                                                <Receipt className="size-5 text-muted-foreground/40 mb-1" />
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {isTh ? "ไม่มีหลักฐานการชำระเงิน" : "No slip attached"}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Inline Expandable Roster Inspection Section */}
+                                    {isRosterExpanded && (
+                                        <div className="mt-2 space-y-3.5 animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                                            {/* Alert banner if team registration has not been approved */}
+                                            {!isTeamApproved && (
+                                                <div className="p-3 rounded-sm bg-transparent border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2">
+                                                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                                                    <span>
+                                                        {isTh
+                                                            ? "กรุณากดยืนยันทีม (Approve Team) ก่อน จึงจะสามารถอนุมัติรายชื่อนักกีฬาได้"
+                                                            : "Please approve the team registration first before approving players."}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {loadingRoster ? (
+                                                <div className="py-6 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                                                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                                    <span className="text-xs">{isTh ? "กำลังโหลดรายชื่อ..." : "Loading roster..."}</span>
+                                                </div>
+                                            ) : rosterPlayers.length === 0 ? (
+                                                <div className="p-4 text-center text-xs text-muted-foreground rounded-sm border border-border bg-card">
+                                                    {isTh ? "ไม่พบข้อมูลรายชื่อนักกีฬาที่ส่งมา" : "No roster submissions found."}
+                                                </div>
+                                            ) : (() => {
+                                                const query = rosterSearchQuery.trim().toLowerCase();
+                                                const filtered = rosterPlayers.filter(p => {
+                                                    if (!query) return true;
+                                                    const nameMatch = (p.name || "").toLowerCase().includes(query);
+                                                    const numMatch = (p.shirt_number || "").toString().includes(query);
+                                                    const posMatch = (p.position || "").toLowerCase().includes(query);
+                                                    const telMatch = (p.tel || "").toLowerCase().includes(query);
+                                                    return nameMatch || numMatch || posMatch || telMatch;
+                                                });
+
+                                                const pendingFiltered = filtered.filter(p => p.status === 'pending');
+                                                const allPendingSelected = pendingFiltered.length > 0 && pendingFiltered.every(p => selectedRosterIds.includes(p.id));
+
+                                                const toggleSelectAll = () => {
+                                                    if (allPendingSelected) {
+                                                        setSelectedRosterIds(prev => prev.filter(id => !pendingFiltered.some(p => p.id === id)));
+                                                    } else {
+                                                        const newIds = Array.from(new Set([...selectedRosterIds, ...pendingFiltered.map(p => p.id)]));
+                                                        setSelectedRosterIds(newIds);
+                                                    }
+                                                };
+
+                                                const toggleSelectPlayer = (id: string) => {
+                                                    setSelectedRosterIds(prev =>
+                                                        prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+                                                    );
+                                                };
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        {/* Summary Badges & Limit Header */}
+                                                        <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <Badge variant="outline">
+                                                                    {isTh ? `ทั้งหมด ${rosterPlayers.length} คน` : `Total ${rosterPlayers.length}`}
+                                                                </Badge>
+                                                                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
+                                                                    {isTh ? `อนุมัติแล้ว ${rosterPlayers.filter(p => p.status === 'approved').length} คน` : `Approved ${rosterPlayers.filter(p => p.status === 'approved').length}`}
+                                                                </Badge>
+                                                                <Badge variant="outline" className="border-amber-500/30 text-amber-600">
+                                                                    {isTh ? `รอตรวจ ${rosterPlayers.filter(p => p.status === 'pending').length} คน` : `Pending ${rosterPlayers.filter(p => p.status === 'pending').length}`}
+                                                                </Badge>
+                                                                {rosterPlayers.some(p => p.status === 'rejected') && (
+                                                                    <Badge variant="outline" className="border-destructive/30 text-destructive">
+                                                                        {isTh ? `ไม่ผ่าน ${rosterPlayers.filter(p => p.status === 'rejected').length} คน` : `Rejected ${rosterPlayers.filter(p => p.status === 'rejected').length}`}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+
+                                                            {expandedRosterItem?.min_players && (
+                                                                <span className="text-[11px] text-muted-foreground font-medium">
+                                                                    {isTh
+                                                                        ? `เกณฑ์: ${expandedRosterItem.min_players} - ${expandedRosterItem.max_players || 20} คน`
+                                                                        : `Limit: ${expandedRosterItem.min_players}-${expandedRosterItem.max_players || 20}`}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Search and Selection Controls */}
+                                                        <div className="flex items-center gap-2 flex-col sm:flex-row">
+                                                            <div className="relative group w-full flex-1">
+                                                                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-all duration-300" />
+                                                                <Input
+                                                                    type="text"
+                                                                    size="sm"
+                                                                    className="bg-card pr-8 rounded-sm text-xs h-8"
+                                                                    value={rosterSearchQuery}
+                                                                    onChange={(e) => setRosterSearchQuery(e.target.value)}
+                                                                    placeholder={isTh ? "ค้นหาชื่อ, เบอร์เสื้อ, หรือตำแหน่ง..." : "Search athlete, number, position..."}
+                                                                />
+                                                            </div>
+                                                            {pendingFiltered.length > 0 && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={toggleSelectAll}
+                                                                    disabled={!isTeamApproved}
+                                                                    title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อน" : "Please approve team first") : undefined}
+                                                                    className="h-8 text-xs shrink-0 self-start sm:self-auto"
+                                                                >
+                                                                    {allPendingSelected
+                                                                        ? (isTh ? "ยกเลิกเลือกทั้งหมด" : "Deselect All")
+                                                                        : (isTh ? "เลือกทั้งหมด" : "Select All")}
+                                                                </Button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Players List Section */}
+                                                        {filtered.length === 0 ? (
+                                                            <div className="p-4 text-center text-xs text-muted-foreground rounded-sm border border-border bg-card">
+                                                                {isTh ? "ไม่พบรายชื่อนักกีฬาที่ตรงกับการค้นหา" : "No players match your search."}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="border border-border rounded-sm bg-card overflow-hidden max-h-[340px] overflow-y-auto divide-y divide-border">
+                                                                {filtered.map((player, idx) => {
+                                                                    const isSelected = selectedRosterIds.includes(player.id);
+                                                                    const isPendingStatus = player.status === 'pending';
+
+                                                                    return (
+                                                                        <div
+                                                                            key={player.id || idx}
+                                                                            onClick={() => {
+                                                                                if (isPendingStatus && isTeamApproved) {
+                                                                                    toggleSelectPlayer(player.id);
+                                                                                }
+                                                                            }}
+                                                                            className={cn(
+                                                                                "p-3 flex items-center justify-between gap-3 transition-colors",
+                                                                                isPendingStatus && isTeamApproved && "cursor-pointer select-none hover:bg-muted/30",
+                                                                                isSelected ? "bg-primary/10 hover:bg-primary/15" : "bg-card"
+                                                                            )}
+                                                                        >
+                                                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                                                {/* Individual Checkbox */}
+                                                                                {isPendingStatus ? (
+                                                                                    <div
+                                                                                        role="checkbox"
+                                                                                        aria-checked={isSelected}
+                                                                                        className={cn(
+                                                                                            "shrink-0 p-0.5 text-muted-foreground rounded-sm transition-colors",
+                                                                                            isTeamApproved ? "hover:text-foreground cursor-pointer" : "opacity-40 cursor-not-allowed"
+                                                                                        )}
+                                                                                    >
+                                                                                        {isSelected ? (
+                                                                                            <CheckSquare className="h-4 w-4 text-primary" />
+                                                                                        ) : (
+                                                                                            <Square className="h-4 w-4 text-muted-foreground/60" />
+                                                                                        )}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="w-5 shrink-0" />
+                                                                                )}
+
+                                                                                <Avatar className="h-8 w-8 rounded-full shrink-0 bg-transparent overflow-hidden">
+                                                                                    {player.photo_url && (
+                                                                                        <AvatarImage src={player.photo_url} alt={player.name} className="object-cover rounded-full" />
+                                                                                    )}
+                                                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-[11px] rounded-full">
+                                                                                        {getInitials(player.name) || (idx + 1)}
+                                                                                    </AvatarFallback>
+                                                                                </Avatar>
+                                                                                <div className="min-w-0">
+                                                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                        <span className="text-xs font-bold text-foreground truncate">{player.name}</span>
+                                                                                        {player.shirt_number && (
+                                                                                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                                                                                #{player.shirt_number}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
+                                                                                        {player.position && (
+                                                                                            <span className="font-medium text-foreground/80">{player.position}</span>
+                                                                                        )}
+                                                                                        {player.tel && (
+                                                                                            <>
+                                                                                                <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                                                                <a
+                                                                                                    href={`tel:${player.tel}`}
+                                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                                    className="text-primary hover:underline flex items-center gap-1"
+                                                                                                >
+                                                                                                    <Phone className="h-3 w-3" />
+                                                                                                    <span>{player.tel}</span>
+                                                                                                </a>
+                                                                                            </>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    {player.rejection_reason && (
+                                                                                        <div className="text-[10px] text-destructive mt-0.5 font-medium bg-transparent px-1.5 py-0.5 rounded-sm border border-destructive/30 inline-block">
+                                                                                            {isTh ? "เหตุผล: " : "Reason: "}{player.rejection_reason}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1 shrink-0">
+                                                                                {player.status === 'approved' ? (
+                                                                                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 text-[11px]">
+                                                                                        {isTh ? "อนุมัติแล้ว" : "Approved"}
+                                                                                    </Badge>
+                                                                                ) : player.status === 'rejected' ? (
+                                                                                    <Badge variant="outline" className="border-destructive/40 text-destructive text-[11px]">
+                                                                                        {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
+                                                                                    </Badge>
+                                                                                ) : (
+                                                                                    <div
+                                                                                        className="flex items-center gap-1"
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                    >
+                                                                                        <Button
+                                                                                            type="button"
+                                                                                            variant="ghost"
+                                                                                            size="icon-sm"
+                                                                                            title={isTh ? "ปฏิเสธ" : "Reject"}
+                                                                                            aria-label={isTh ? "ปฏิเสธ" : "Reject"}
+                                                                                            disabled={actioningPlayerId === player.id || isPending || isBatchApproving}
+                                                                                            onClick={() => handleRejectSinglePlayer(player.id)}
+                                                                                        >
+                                                                                            {actioningPlayerId === player.id ? (
+                                                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                                            ) : (
+                                                                                                <X className="h-3.5 w-3.5 text-destructive" />
+                                                                                            )}
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            type="button"
+                                                                                            variant="ghost"
+                                                                                            size="icon-sm"
+                                                                                            title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนอนุมัติ" : "Please approve team first") : (isTh ? "อนุมัติ" : "Approve")}
+                                                                                            aria-label={isTh ? "อนุมัติ" : "Approve"}
+                                                                                            disabled={!isTeamApproved || actioningPlayerId === player.id || isPending || isBatchApproving}
+                                                                                            onClick={() => handleApproveSinglePlayer(player.id)}
+                                                                                        >
+                                                                                            {actioningPlayerId === player.id ? (
+                                                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                                            ) : (
+                                                                                                <Check className={cn("h-3.5 w-3.5", isTeamApproved ? "text-primary" : "text-muted-foreground/30")} />
+                                                                                            )}
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Action Footer for Inline Roster: HIDE if all are approved/rejected (no pending) */}
+                                                        {expandedRosterItem && rosterPlayers.some(p => p.status === 'pending') && (
+                                                            <div className="pt-1 flex flex-row items-center justify-between gap-2 flex-wrap">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="destructive"
+                                                                    size="sm"
+                                                                    onClick={() => handleRejectTournamentRoster(expandedRosterItem.id, expandedRosterItem.tournament_id)}
+                                                                    disabled={isPending || isBatchApproving}
+                                                                    className="h-8 text-xs"
+                                                                >
+                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isTh ? "ปฏิเสธทั้งหมด" : "Reject All"}
+                                                                </Button>
+                                                                <div className="flex items-center gap-2 flex-wrap justify-end">
+                                                                    {selectedRosterIds.length > 0 && (
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={handleApproveSelectedPlayers}
+                                                                            disabled={!isTeamApproved || isPending || isBatchApproving}
+                                                                            title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนอนุมัติ" : "Please approve team first") : undefined}
+                                                                            className="h-8 text-xs"
+                                                                        >
+                                                                            {isBatchApproving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                            {isTh
+                                                                                ? `ยืนยันนักกีฬาที่เลือก (${selectedRosterIds.length})`
+                                                                                : `Confirm Selected (${selectedRosterIds.length})`}
+                                                                        </Button>
+                                                                    )}
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        onClick={() => handleApproveTournamentRoster(expandedRosterItem.id, expandedRosterItem.tournament_id)}
+                                                                        disabled={!isTeamApproved || isPending || isBatchApproving}
+                                                                        title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนอนุมัติ" : "Please approve team first") : undefined}
+                                                                        className="h-8 text-xs"
+                                                                    >
+                                                                        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                        {isTh ? "ยอมรับทั้งหมดและล็อครายชื่อ" : "Accept All and Lock"}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
+
+                                    {/* Expand / Collapse Roster Button: Compact Badge Style (like add-player-form) */}
+                                    {(item.action_type === 'tournament_registration' || item.action_type === 'tournament_roster_submission') && hasRosterSubmissions && (
+                                        <div className="flex items-center justify-center pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleExpandRoster({
+                                                    id: item.id,
+                                                    tournament_id: item.tournament_id,
+                                                    team_name: item.team_name,
+                                                    tournament_name: item.tournament_name,
+                                                    min_players: item.min_players,
+                                                    max_players: item.max_players,
+                                                    isTeamApproved: isTeamApproved
+                                                })}
+                                                className={cn(
+                                                    "inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all cursor-pointer shadow-2xs select-none",
+                                                    isRosterExpanded
+                                                        ? "bg-primary/10 border-primary/40 text-primary hover:bg-primary/20"
+                                                        : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border/70 hover:border-primary/40"
+                                                )}
+                                            >
+                                                <span>
+                                                    {isRosterExpanded
+                                                        ? (isTh ? "ซ่อนรายชื่อนักกีฬา" : "Hide Roster")
+                                                        : (isTh ? `รายชื่อนักกีฬา (${item.roster_player_count})` : `Roster (${item.roster_player_count})`)}
+                                                </span>
+                                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isRosterExpanded && "rotate-180")} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        // 2. STAFF INVITATIONS
+                        if (item.type === 'invite') {
+                            const currentStatus = actionState[item.id] || item.status;
+                            const tournamentInitials = getInitials(item.tournament_name);
+                            const roleLabel = getRoleLabel(item.role, isTh);
+
+                            return (
+                                <div
+                                    key={`invite-${item.id}`}
+                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                    onClick={() => router.push(`/${locale}/dashboard/tournaments/${item.tournament_id}`)}
+                                >
+                                    <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                        <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
                                             {item.tournament_logo && (
                                                 <AvatarImage
                                                     src={item.tournament_logo}
                                                     alt={item.tournament_name || "Tournament"}
-                                                    className="object-cover"
+                                                    className="object-contain"
                                                 />
                                             )}
                                             <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                                                 {tournamentInitials || <Trophy className="h-4 w-4" />}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium leading-relaxed">
+                                        <div className="space-y-1.5 min-w-0 flex-1">
+                                            <p className="text-sm font-normal leading-relaxed text-foreground">
                                                 {isTh ? (
                                                     <>
-                                                        คุณได้รับคำเชิญเข้าร่วม <span className="font-black text-foreground">{item.tournament_name || "Unknown Tournament"}</span> ในตำแหน่ง <span className="font-black text-foreground">{item.role?.replace('_', ' ')}</span>
+                                                        คุณได้รับคำเชิญเข้าร่วมเป็นทีมงานในรายการแข่งขัน <span className="font-semibold text-foreground">{item.tournament_name || "Unknown Tournament"}</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        You have been invited to join <span className="font-black text-foreground">{item.tournament_name || "Unknown Tournament"}</span> as <span className="font-black text-foreground">{item.role?.replace('_', ' ')}</span>
+                                                        You have been invited to join <span className="font-semibold text-foreground">{item.tournament_name || "Unknown Tournament"}</span> as staff
                                                     </>
                                                 )}
                                             </p>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                    {isTh ? "คำเชิญร่วมจัดงาน" : "Tournament Invitation"}
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                                        {currentStatus === 'accepted' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
-                                                <span>Accepted</span>
-                                            </Badge>
-                                        ) : currentStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                <span>Declined</span>
-                                            </Badge>
-                                        ) : currentStatus === 'error' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                <span>Error occurred</span>
-                                            </Badge>
-                                        ) : (
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <Button
-                                                    variant="destructive"
-                                                    size="icon-sm"
-                                                    onClick={() => handleReject(item.tournament_id, item.id)}
-                                                    disabled={isPending}
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleAccept(item.tournament_id, item.id)}
-                                                    disabled={isPending}
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                    Accept
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        } else if (item.type === 'registration') {
-                            // Registration Notification
-                            const regStatus = item.registration_status;
-                            const displayLogo = item.team_logo || item.tournament_logo;
-                            const initials = getInitials(item.team_name || item.tournament_name);
-
-                            return (
-                                <div
-                                    key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
-                                    onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}`)}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-10 w-10 border rounded-full shrink-0 bg-muted/40">
-                                            {displayLogo && (
-                                                <AvatarImage
-                                                    src={displayLogo}
-                                                    alt={item.team_name}
-                                                    className="object-cover"
-                                                />
-                                            )}
-                                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                {initials || <Users className="h-4 w-4" />}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="space-y-1">
-                                            {isTh ? (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    การสมัครของทีม <span className="font-black text-foreground">{item.team_name}</span> ในรายการ <span className="font-black text-foreground">{item.tournament_name}</span> ได้รับการ <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
-                                                </p>
-                                            ) : (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    Registration for team <span className="font-black text-foreground">{item.team_name}</span> in <span className="font-black text-foreground">{item.tournament_name}</span> is <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
-                                                </p>
-                                            )}
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                    {tReg("nav_team_registration") || "Team Registration"}
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                                        {regStatus === 'approved' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
-                                                {getStatusText(regStatus)}
-                                            </Badge>
-                                        ) : regStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                {getStatusText(regStatus)}
-                                            </Badge>
-                                        ) : (
-                                            <Badge className="bg-warning/10 text-warning hover:bg-warning/10 border-warning/20">
-                                                {getStatusText(regStatus)}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        } else if (item.type === 'team_request') {
-                            // Team Management Request Notification (Own Claims)
-                            const reqStatus = item.status;
-                            const teamInitials = getInitials(item.team_name);
-
-                            return (
-                                <div
-                                    key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-10 w-10 border rounded-full shrink-0 bg-muted/40">
-                                            {item.team_logo && (
-                                                <AvatarImage
-                                                    src={item.team_logo}
-                                                    alt={item.team_name}
-                                                    className="object-cover"
-                                                />
-                                            )}
-                                            <AvatarFallback className="bg-amber-500/10 text-amber-600 font-bold text-xs">
-                                                {teamInitials || <ShieldCheck className="h-4 w-4" />}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="space-y-1">
-                                            {isTh ? (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    คำขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span> {reqStatus === 'approved' ? 'ได้รับการอนุมัติแล้ว' : reqStatus === 'rejected' ? 'ถูกปฏิเสธ' : 'กำลังรอการอนุมัติ'}
-                                                </p>
-                                            ) : (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    Team management request for <span className="font-black text-foreground">{item.team_name}</span> is <span className="font-black text-foreground">{getStatusText(reqStatus)}</span>
-                                                </p>
-                                            )}
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                    {isTh ? 'ขอสิทธิ์การจัดการทีม (ส่งคำขอ)' : 'Team Management Request (Sent)'}
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                                        {reqStatus === 'approved' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
-                                                {getStatusText(reqStatus)}
-                                            </Badge>
-                                        ) : reqStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                {getStatusText(reqStatus)}
-                                            </Badge>
-                                        ) : (
-                                            <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20">
-                                                {getStatusText(reqStatus)}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        } else {
-                            // Incoming Team Management Request Notification (For Organizer/Collaborator)
-                            const currentStatus = actionState[item.id] || item.status;
-                            const avatarSrc = item.requester_avatar || item.team_logo;
-                            const displayInitials = getInitials(item.requester_name || item.team_name);
-
-                            return (
-                                <div
-                                    key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-10 w-10 border rounded-full shrink-0 bg-muted/40">
-                                            {avatarSrc && (
-                                                <AvatarImage
-                                                    src={avatarSrc}
-                                                    alt={item.requester_name}
-                                                    className="object-cover"
-                                                />
-                                            )}
-                                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                {displayInitials || <User className="h-4 w-4" />}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="space-y-1">
-                                            {isTh ? (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    <span className="font-black text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span>
-                                                </p>
-                                            ) : (
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    <span className="font-black text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-black text-foreground">{item.team_name}</span>
-                                                </p>
-                                            )}
-                                            
-                                            <div className="flex flex-col gap-1 text-[12px] text-muted-foreground mt-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Mail className="h-3 w-3 shrink-0" />
-                                                    <span>{item.requester_email}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Phone className="h-3 w-3 shrink-0" />
-                                                    <span>{item.contact_phone}</span>
-                                                </div>
-                                                {item.message && (
-                                                    <div className="bg-muted/50 p-2 rounded-sm italic border-l-2 border-primary/20 text-xs mt-1">
-                                                        &ldquo;{item.message}&rdquo;
-                                                    </div>
+                                            {/* Status Badge & Timestamp */}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {currentStatus === 'accepted' ? (
+                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                        <span>{isTh ? "ตอบรับแล้ว" : "Accepted"}</span>
+                                                    </Badge>
+                                                ) : currentStatus === 'rejected' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        <span>{isTh ? "ปฏิเสธแล้ว" : "Declined"}</span>
+                                                    </Badge>
+                                                ) : currentStatus === 'error' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        <span>Error occurred</span>
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-primary border-primary/30">
+                                                        <span>{isTh ? `คำเชิญเข้าร่วมเป็น${roleLabel}` : `Invitation: ${roleLabel}`}</span>
+                                                    </Badge>
                                                 )}
-                                            </div>
 
-                                            <div className="flex items-center gap-1 md:gap-2 pt-1">
-                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                    {isTh ? 'คำขอสิทธิ์การจัดการทีม (รออนุมัติ)' : 'Incoming Team Management Request'}
-                                                </span>
                                                 <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
+                                                <span className="text-[10px] text-muted-foreground/60 font-medium">
                                                     {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                                        {currentStatus === 'approved' || currentStatus === 'accepted' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
-                                                {isTh ? "อนุมัติแล้ว" : "Approved"}
-                                            </Badge>
-                                        ) : currentStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
-                                            </Badge>
-                                        ) : currentStatus === 'error' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
-                                                <span>Error occurred</span>
-                                            </Badge>
+                                    <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                        {currentStatus === 'accepted' || currentStatus === 'rejected' || currentStatus === 'error' ? (
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge variant="outline" className="text-primary border-primary/30">
+                                                    <span>{isTh ? `คำเชิญเข้าร่วมเป็น${roleLabel}` : `Invitation: ${roleLabel}`}</span>
+                                                </Badge>
+                                            </div>
                                         ) : (
-                                            <div className="flex items-center gap-1 md:gap-2">
+                                            <div className="flex items-center gap-1.5 md:gap-2">
                                                 <Button
-                                                    variant="destructive"
-                                                    size="icon-sm"
-                                                    onClick={() => handleRejectTeamRequest(item.id)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRejectInvite(item.tournament_id, item.id);
+                                                    }}
                                                     disabled={isPending}
+                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                 >
-                                                    <X className="h-4 w-4" />
+                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isTh ? "ปฏิเสธ" : "Decline"}
                                                 </Button>
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleApproveTeamRequest(item.id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAcceptInvite(item.tournament_id, item.id);
+                                                    }}
                                                     disabled={isPending}
+                                                    className="font-bold text-xs"
                                                 >
-                                                    <Check className="h-4 w-4" />
-                                                    {isTh ? "อนุมัติ" : "Approve"}
+                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isTh ? "ตอบรับ" : "Accept"}
                                                 </Button>
                                             </div>
                                         )}
@@ -590,9 +1720,353 @@ export default function InboxesPage() {
                                 </div>
                             );
                         }
+
+                        // 3. TEAM REGISTRATION NOTIFICATIONS (FOR PARTICIPATING TEAMS)
+                        if (item.type === 'registration') {
+                            const regStatus = item.registration_status;
+                            const displayLogo = item.team_logo || item.tournament_logo;
+                            const initials = getInitials(item.team_name || item.tournament_name);
+                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+
+                            return (
+                                <div
+                                    key={`reg-${item.id}`}
+                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                    onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}${squadViewQuery}`)}
+                                >
+                                    <div className="flex items-start gap-3 md:gap-4">
+                                        <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
+                                            {displayLogo && (
+                                                <AvatarImage
+                                                    src={displayLogo}
+                                                    alt={item.team_name}
+                                                    className="object-contain"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                {initials || <Users className="h-4 w-4" />}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="space-y-1.5 min-w-0 flex-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    การสมัครของทีม <span className="font-semibold text-foreground">{item.team_name}</span> ในรายการ <span className="font-semibold text-foreground">{item.tournament_name}</span> ได้รับการ <span className="font-semibold text-foreground">{getStatusText(regStatus)}</span>
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    Registration for team <span className="font-semibold text-foreground">{item.team_name}</span> in <span className="font-semibold text-foreground">{item.tournament_name}</span> is <span className="font-semibold text-foreground">{getStatusText(regStatus)}</span>
+                                                </p>
+                                            )}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {regStatus === 'approved' ? (
+                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                        {getStatusText(regStatus)}
+                                                    </Badge>
+                                                ) : regStatus === 'rejected' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        {getStatusText(regStatus)}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                                                        {getStatusText(regStatus)}
+                                                    </Badge>
+                                                )}
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                        <Badge variant="outline" className="text-muted-foreground border-border">
+                                            {tReg("nav_team_registration") || (isTh ? "การสมัครทีม" : "Team Registration")}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // 4. TEAM MANAGEMENT REQUEST (SENT)
+                        if (item.type === 'team_request') {
+                            const reqStatus = item.status;
+                            const teamInitials = getInitials(item.team_name);
+                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+
+                            return (
+                                <div
+                                    key={`team-req-${item.id}`}
+                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                    onClick={() => router.push(item.team_id ? `/${locale}/dashboard/teams/${item.team_id}${squadViewQuery}` : `/${locale}/dashboard/teams`)}
+                                >
+                                    <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                        <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
+                                            {item.team_logo && (
+                                                <AvatarImage
+                                                    src={item.team_logo}
+                                                    alt={item.team_name}
+                                                    className="object-contain"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-amber-500/10 text-amber-600 font-bold text-xs">
+                                                {teamInitials || <ShieldCheck className="h-4 w-4" />}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="space-y-1.5 min-w-0 flex-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    คำขอสิทธิ์การจัดการทีม <span className="font-semibold text-foreground">{item.team_name}</span> {reqStatus === 'approved' ? 'ได้รับการอนุมัติแล้ว' : reqStatus === 'rejected' ? 'ถูกปฏิเสธ' : 'กำลังรอการอนุมัติ'}
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    Team management request for <span className="font-semibold text-foreground">{item.team_name}</span> is <span className="font-semibold text-foreground">{getStatusText(reqStatus)}</span>
+                                                </p>
+                                            )}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {reqStatus === 'approved' ? (
+                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                        {getStatusText(reqStatus)}
+                                                    </Badge>
+                                                ) : reqStatus === 'rejected' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        {getStatusText(reqStatus)}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                                                        {getStatusText(reqStatus)}
+                                                    </Badge>
+                                                )}
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                        <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                            {isTh ? 'คำขอจัดการทีมที่ส่ง' : 'Team Request (Sent)'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // 5. INCOMING TEAM MANAGEMENT REQUEST
+                        if (item.type === 'incoming_team_request') {
+                            const currentStatus = actionState[item.id] || item.status;
+                            const avatarSrc = item.requester_avatar || item.team_logo;
+                            const displayInitials = getInitials(item.requester_name || item.team_name);
+                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+
+                            return (
+                                <div
+                                    key={`in-team-req-${item.id}`}
+                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                    onClick={() => router.push(item.team_id ? `/${locale}/dashboard/teams/${item.team_id}${squadViewQuery}` : `/${locale}/dashboard/teams`)}
+                                >
+                                    <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                        <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
+                                            {avatarSrc && (
+                                                <AvatarImage
+                                                    src={avatarSrc}
+                                                    alt={item.requester_name}
+                                                    className="object-contain"
+                                                />
+                                            )}
+                                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                {displayInitials || <User className="h-4 w-4" />}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="space-y-1.5 min-w-0 flex-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    <span className="font-semibold text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-semibold text-foreground">{item.team_name}</span>
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                    <span className="font-semibold text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-semibold text-foreground">{item.team_name}</span>
+                                                </p>
+                                            )}
+
+                                            {/* Contact Info & direct action links */}
+                                            <div className="flex flex-col gap-1.5 text-[12px] text-muted-foreground mt-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    {item.requester_email && (
+                                                        <a
+                                                            href={`mailto:${item.requester_email}`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium bg-transparent border border-border px-2 py-0.5 rounded-sm transition-colors hover:border-primary"
+                                                            title={isTh ? "ส่งอีเมลหาผู้ขอสิทธิ์" : "Send Email"}
+                                                        >
+                                                            <Mail className="h-4 w-4 shrink-0" />
+                                                            <span>{item.requester_email}</span>
+                                                        </a>
+                                                    )}
+                                                    {item.contact_phone && (
+                                                        <a
+                                                            href={`tel:${item.contact_phone}`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium bg-transparent border border-border px-2 py-0.5 rounded-sm transition-colors hover:border-primary"
+                                                            title={isTh ? "โทรหาผู้ขอสิทธิ์" : "Call Phone"}
+                                                        >
+                                                            <Phone className="h-4 w-4 shrink-0" />
+                                                            <span>{item.contact_phone}</span>
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                {item.message && (
+                                                    <div className="bg-transparent p-3 rounded-sm italic border-l-2 border-primary/40 border border-border text-xs text-foreground/80 flex items-start gap-2">
+                                                        <MessageSquareQuote className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                                                        <span>&ldquo;{item.message}&rdquo;</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Status Badge & Timestamp */}
+                                            <div className="flex items-center gap-2 pt-1 flex-wrap">
+                                                {currentStatus === 'approved' || currentStatus === 'accepted' ? (
+                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                        {isTh ? "อนุมัติแล้ว" : "Approved"}
+                                                    </Badge>
+                                                ) : currentStatus === 'rejected' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
+                                                    </Badge>
+                                                ) : currentStatus === 'error' ? (
+                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        <span>Error occurred</span>
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-purple-600 border-purple-500/30">
+                                                        {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
+                                                    </Badge>
+                                                )}
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                        {currentStatus === 'approved' || currentStatus === 'accepted' || currentStatus === 'rejected' || currentStatus === 'error' ? (
+                                            <Badge variant="outline" className="text-purple-600 border-purple-500/30">
+                                                {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
+                                            </Badge>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 md:gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRejectTeamRequest(item.id);
+                                                    }}
+                                                    disabled={isPending}
+                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                >
+                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isTh ? "ปฏิเสธ" : "Reject"}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleApproveTeamRequest(item.id);
+                                                    }}
+                                                    disabled={isPending}
+                                                    className="font-bold text-xs"
+                                                >
+                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isTh ? "อนุมัติและโอนสิทธิ์" : "Approve"}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // 6. SYSTEM NOTIFICATIONS
+                        return (
+                            <div
+                                key={`sys-${item.id}`}
+                                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
+                            >
+                                <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                    <div className="h-10 w-10 border border-border rounded-full shrink-0 bg-primary/10 flex items-center justify-center text-primary">
+                                        <Bell className="h-4 w-4" />
+                                    </div>
+                                    <div className="space-y-1.5 min-w-0 flex-1">
+                                        <p className="text-sm font-semibold leading-relaxed text-foreground">
+                                            {item.title}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                            {item.message}
+                                        </p>
+                                        <div className="flex items-center gap-2 pt-0.5">
+                                            <Badge variant="outline" className="text-muted-foreground border-border">
+                                                {isTh ? "การแจ้งเตือนระบบ" : "System Notification"}
+                                            </Badge>
+                                            <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                            <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {item.link && (
+                                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 text-xs font-bold"
+                                        >
+                                            <a href={item.link}>
+                                                <span>{isTh ? "ดูรายละเอียด" : "View"}</span>
+                                                <ArrowUpRight className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        );
                     })}
                 </div>
             )}
+
+                </div>
+            </div>
+
+            {/* Payment Slip Preview Dialog */}
+            <Dialog open={!!viewingSlipUrl} onOpenChange={(open) => !open && setViewingSlipUrl(null)}>
+                <DialogContent className="max-w-md flex flex-col p-0 overflow-hidden bg-card border border-border rounded-sm">
+                    <DialogHeader className="p-4 border-b border-border">
+                        <DialogTitle className="text-lg md:text-xl font-black tracking-tighter text-foreground leading-none">
+                            {isTh ? "หลักฐานการชำระเงิน" : "Payment Slip"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4 bg-transparent">
+                        {viewingSlipUrl && (
+                            <div className="relative w-full aspect-[3/4] max-h-[70vh] bg-transparent rounded-sm overflow-hidden border border-border flex items-center justify-center">
+                                <Image
+                                    src={viewingSlipUrl}
+                                    alt="Payment Slip"
+                                    fill
+                                    className="object-contain"
+                                />
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
+

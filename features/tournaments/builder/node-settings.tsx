@@ -6,17 +6,24 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check, HelpCircle, Inbox } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Link } from "@/i18n/routing";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, HelpCircle, MoreVertical, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "@/i18n/routing";
 import { useParams } from "next/navigation";
-import { getSponsors, addSponsor, updateSponsorsOrder, deleteSponsor, Sponsor } from "@/actions/tournaments/sponsor";
+import { getSponsors, updateSponsorsOrder, deleteSponsor, Sponsor } from "@/actions/tournaments/sponsor";
 import { updateTournament } from "@/actions/tournaments/general";
-import { LogoUploader } from "@/components/shared/logo-uploader";
+import { saveBracketCanvas } from "@/actions/tournaments/bracket";
+import { ApiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+    ActionMenu,
+    ActionMenuContent,
+    ActionMenuItem,
+    ActionMenuTrigger,
+} from "@/components/ui/action-menu";
 
 type MatchItem = {
     id: string;
@@ -34,45 +41,35 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/dropdown";
 import { Registrations } from "@/features/tournaments/management/registrations";
 import { Announcements } from "@/features/tournaments/management/announcements";
-import { TeamForm } from "@/features/tournaments/teams/team-form";
+import { AddTournamentTeamDialog, AddAnnouncementDialog, AddSponsorDialog } from "@/features/dialogs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Plus } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-} from "@/components/ui/dialog";
 import { useTranslations, useLocale } from "next-intl";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode, selectNode, setActiveNodeId, teams, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
+    const { nodes, edges, updateNodeData, deleteNode, selectNode, setActiveNodeId, teams, fetchTeams, activeNodeId, activeCategoryId, getCanvasData } = useBracketStore();
     const params = useParams();
+    const router = useRouter();
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const [isAddAnnouncementOpen, setIsAddAnnouncementOpen] = React.useState(false);
-    const t = useTranslations("Team");
+    const [isCreatingConsoleId, setIsCreatingConsoleId] = React.useState<string | null>(null);
     const tSponsors = useTranslations("Sponsors");
     const locale = useLocale();
     const { toast } = useToast();
-    const supabase = React.useMemo(() => createClient(), []);
+    const _supabase = React.useMemo(() => createClient(), []);
 
     // Sponsors state
     const [sponsorsList, setSponsorsList] = React.useState<Sponsor[]>([]);
     const [isSponsorLoading, setIsSponsorLoading] = React.useState(true);
     const [isAddSponsorOpen, setIsAddSponsorOpen] = React.useState(false);
-    const [newSponsorName, setNewSponsorName] = React.useState("");
-    const [newSponsorLink, setNewSponsorLink] = React.useState("");
-    const [newSponsorLogoFile, setNewSponsorLogoFile] = React.useState<File | null>(null);
-    const [isSubmittingSponsor, setIsSubmittingSponsor] = React.useState(false);
+    const [editingSponsor, setEditingSponsor] = React.useState<Sponsor | null>(null);
     const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
     // Registration settings state
@@ -91,38 +88,35 @@ export function NodeSettings() {
         if (isRegistrationMode) {
             setIsRegLoading(true);
             const fetchRegDetails = async () => {
-                const { data, error } = await supabase
-                    .from("tournaments")
-                    .select("*")
-                    .eq("id", tournamentId)
-                    .single();
-
-                let catQuery = supabase
-                    .from("tournament_categories")
-                    .select("registration_fee")
-                    .eq("tournament_id", tournamentId);
-
-                if (activeCategoryId) {
-                    catQuery = catQuery.eq("id", activeCategoryId);
-                } else {
-                    catQuery = catQuery.limit(1);
+                try {
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+                    const res = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const tour = data.tournament;
+                        const cat = data.categories?.find((c: any) => c.id === activeCategoryId) || data.categories?.[0];
+                        if (tour) {
+                            setTournamentRecord({
+                                ...tour,
+                                max_teams: cat ? (cat.max_teams || cat.team_limit || 8) : 8,
+                                registration_fee: cat ? Number(cat.registration_fee || 0) : 0,
+                            });
+                            setRegOpen(tour.settings?.is_registration_open ?? (tour.status === 'registration_open'));
+                            setRegFee(cat ? Number(cat.registration_fee || 0) : "");
+                            setBankNumber(tour.settings?.bank_account_number || "");
+                            setBankName(tour.settings?.bank_name || "PromptPay");
+                            setAccountName(tour.settings?.bank_account_name || "");
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error fetching tournament for registration settings:", e);
+                } finally {
+                    setIsRegLoading(false);
                 }
-
-                const { data: catData } = await catQuery.maybeSingle();
-
-                if (data && !error) {
-                    setTournamentRecord(data);
-                    setRegOpen(data.is_registration_open);
-                    setRegFee(catData?.registration_fee ?? "");
-                    setBankNumber(data.bank_account_number ?? "");
-                    setBankName(data.bank_name || "PromptPay");
-                    setAccountName(data.bank_account_name ?? "");
-                }
-                setIsRegLoading(false);
             };
             fetchRegDetails();
         }
-    }, [isRegistrationMode, tournamentId, supabase, activeCategoryId]);
+    }, [isRegistrationMode, tournamentId, activeCategoryId]);
 
     const handleRegSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -253,46 +247,8 @@ export function NodeSettings() {
         }
     };
 
-    const handleAddSponsorSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newSponsorName) return;
-
-        setIsSubmittingSponsor(true);
-        try {
-            const formData = new FormData();
-            formData.append("sponsorName", newSponsorName);
-            if (newSponsorLink) formData.append("linkUrl", newSponsorLink);
-            if (newSponsorLogoFile) formData.append("logoFile", newSponsorLogoFile);
-
-            const res = await addSponsor(tournamentId, newSponsorName, formData, newSponsorLink);
-            if (res.success) {
-                toast({
-                    title: "Sponsor added",
-                    description: "The sponsor has been added successfully."
-                });
-                setIsAddSponsorOpen(false);
-                setNewSponsorName("");
-                setNewSponsorLink("");
-                setNewSponsorLogoFile(null);
-                loadSponsors();
-                window.dispatchEvent(new Event("reload-sponsors"));
-            } else {
-
-                toast({
-                    title: "Error",
-                    description: res.error || "Failed to add sponsor",
-                    variant: "destructive"
-                });
-            }
-        } catch (error: unknown) {
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to upload image",
-                variant: "destructive"
-            });
-        } finally {
-            setIsSubmittingSponsor(false);
-        }
+    const handleEditSponsorClick = (sponsor: Sponsor) => {
+        setEditingSponsor(sponsor);
     };
 
     const handleDeleteSponsorClick = async (sponsorId: string) => {
@@ -323,35 +279,30 @@ export function NodeSettings() {
     const [dbMatches, setDbMatches] = React.useState<Match[]>([]);
 
     useEffect(() => {
+        let isMounted = true;
         async function fetchScores() {
-            if (selectedNode?.type !== "matchNode") return;
-            const nodeMatches = (selectedNode.data.matches as MatchItem[]) || [];
-            const matchDbIds = nodeMatches.map(m => m.dbId || m.matchId).filter(Boolean) as string[];
-
-            let query = supabase
-                .from('matches')
-                .select('*')
-                .is('deleted_at', null);
-
-            if (matchDbIds.length > 0) {
-                query = query.in('id', matchDbIds);
-            } else if (selectedNode.id) {
-                query = query.eq('node_id', selectedNode.id);
-            } else {
-                return;
-            }
-
-            const { data: results } = await query;
-
-            if (results) {
-                setDbMatches(results as Match[]);
+            if (selectedNode?.type !== "matchNode" || !tournamentId) return;
+            try {
+                const targetCatId = activeCategoryId || undefined;
+                const endpoint = targetCatId 
+                    ? `/tournaments/${tournamentId}/categories/${targetCatId}/matches`
+                    : `/tournaments/${tournamentId}/matches`;
+                const results = await ApiClient.fetch<Match[]>(endpoint);
+                if (isMounted && results) {
+                    setDbMatches(results);
+                }
+            } catch {
+                // non-blocking
             }
         }
 
         fetchScores();
-        const interval = setInterval(fetchScores, 2000);
-        return () => clearInterval(interval);
-    }, [selectedNode, supabase]);
+        const interval = setInterval(fetchScores, 3000);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [selectedNode, tournamentId, activeCategoryId]);
 
     const nodeType = selectedNode?.type;
 
@@ -471,25 +422,22 @@ export function NodeSettings() {
         }
     }, [activeNodeId, nodeType, startNodeTutorial]);
 
-    if ((!selectedNode && activeNodeId !== "registration-setting-node" && activeNodeId !== "announcement-setting-node" && activeNodeId !== "sponsor-setting-node" && activeNodeId !== "inbox-setting-node") || !activeNodeId) {
+    if ((!selectedNode && activeNodeId !== "registration-setting-node" && activeNodeId !== "announcement-setting-node" && activeNodeId !== "sponsor-setting-node") || !activeNodeId) {
         return null;
     }
 
     const isPseudoRegistration = activeNodeId === "registration-setting-node" && !selectedNode;
     const isPseudoAnnouncement = activeNodeId === "announcement-setting-node" && !selectedNode;
     const isPseudoSponsor = activeNodeId === "sponsor-setting-node" && !selectedNode;
-    const isPseudoInbox = activeNodeId === "inbox-setting-node" && !selectedNode;
-    const isPseudoNode = isPseudoRegistration || isPseudoAnnouncement || isPseudoSponsor || isPseudoInbox;
-    const id = selectedNode?.id || (isPseudoAnnouncement ? "announcement-setting-node" : isPseudoSponsor ? "sponsor-setting-node" : isPseudoInbox ? "inbox-setting-node" : "registration-setting-node");
-    const type = selectedNode?.type || (isPseudoAnnouncement ? "announcementNode" : isPseudoSponsor ? "sponsorNode" : isPseudoInbox ? "inboxNode" : "registrationNode");
+    const isPseudoNode = isPseudoRegistration || isPseudoAnnouncement || isPseudoSponsor;
+    const id = selectedNode?.id || (isPseudoAnnouncement ? "announcement-setting-node" : isPseudoSponsor ? "sponsor-setting-node" : "registration-setting-node");
+    const type = selectedNode?.type || (isPseudoAnnouncement ? "announcementNode" : isPseudoSponsor ? "sponsorNode" : "registrationNode");
     const data = selectedNode?.data || {
         label: isPseudoAnnouncement
             ? (locale === "th" ? "ประกาศ" : "Announcements")
             : isPseudoSponsor
                 ? (locale === "th" ? "ผู้สนับสนุน" : "Sponsors")
-                : isPseudoInbox
-                    ? (locale === "th" ? "กล่องข้อความ" : "Inbox")
-                    : (locale === "th" ? "การลงทะเบียน" : "Registration")
+                : (locale === "th" ? "การลงทะเบียน" : "Registration")
     };
 
     // Resolve live teams from edges or database assignments
@@ -587,8 +535,7 @@ export function NodeSettings() {
                                 type === 'standingNode' ? 'bg-node-1/10' :
                                     type === 'teamListNode' ? 'bg-node-3/10' :
                                         type === 'sponsorNode' ? 'bg-red-500/10' :
-                                            type === 'registrationNode' ? 'bg-violet-500/10' :
-                                                type === 'inboxNode' ? 'bg-node-2/10' : 'bg-node-4/10'
+                                            type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4/10'
                             }`}>
                             {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-node-5" /> :
                                 type === 'matchNode' ? <span className="text-sm font-bold text-node-2 select-none">VS</span> :
@@ -596,8 +543,7 @@ export function NodeSettings() {
                                         type === 'teamListNode' ? <Users className="h-4 w-4 text-node-3" /> :
                                             type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500" /> :
                                                 type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
-                                                    type === 'inboxNode' ? <Inbox className="h-4 w-4 text-node-2" /> :
-                                                        <Megaphone className="h-4 w-4 text-node-4" />}
+                                                    <Megaphone className="h-4 w-4 text-node-4" />}
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -626,7 +572,7 @@ export function NodeSettings() {
                             className="bg-node-4 text-background hover:bg-node-4/90 h-8 text-xs px-2.5 gap-1 shrink-0"
                         >
                             <Plus className="h-4 w-4" />
-                            {locale === "th" ? "เพิ่มใหม่" : "New"}
+                            {locale === "th" ? "เพิ่มประกาศใหม่" : "New Announcement"}
                         </Button>
                     )}
                     {type === "sponsorNode" && (
@@ -637,7 +583,7 @@ export function NodeSettings() {
                             className="bg-red-500 text-white hover:bg-red-600 h-8 text-xs px-2.5 gap-1 shrink-0"
                         >
                             <Plus className="h-4 w-4" />
-                            {locale === "th" ? "เพิ่มใหม่" : "New"}
+                            {locale === "th" ? "เพิ่มผู้สนับสนุนใหม่" : "New Sponsor"}
                         </Button>
                     )}
                     {!isRegistrationMode && !isPseudoNode && (
@@ -786,9 +732,9 @@ export function NodeSettings() {
                                     </p>
                                 </div>
 
-                                <div className="grid gap-1 md:gap-2" id="node-settings-standing-columns">
+                                <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden" id="node-settings-standing-columns">
                                     {columnOptions.map((item) => (
-                                        <div key={item.key} className="flex items-center justify-between">
+                                        <div key={item.key} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-all">
                                             <Label className="text-[11px] font-bold text-foreground leading-none cursor-pointer" htmlFor={item.key}>
                                                 {item.label}
                                             </Label>
@@ -899,7 +845,7 @@ export function NodeSettings() {
                                             const matchConsoleId = match.dbId || match.matchId || dbMatch?.id || (type === "matchNode" && !!data.matchId && idx === 0 ? (data.matchId as string) : undefined);
 
                                             return (
-                                                <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
+                                                <div key={match.id || idx} className="p-2 bg-card border rounded-sm space-y-2 relative group">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-xs font-black">
                                                             {locale === "th" ? `แมตช์ที่ #${idx + 1}` : `Match #${idx + 1}`}
@@ -971,29 +917,55 @@ export function NodeSettings() {
                                                         />
                                                     </div>
 
-                                                    {matchConsoleId ? (
-                                                        <Button
-                                                            asChild
-                                                            variant={dbMatch?.status === 'finished' ? "outline" : "default"}
-                                                            size="sm"
-                                                            className="w-full"
-                                                        >
-                                                            <Link href={`/dashboard/tournaments/${tournamentId}/matches/${matchConsoleId}`}>
-                                                                {dbMatch?.status === 'finished'
-                                                                    ? (locale === "th" ? "ดูผลการแข่งขัน" : "VIEW MATCH")
-                                                                    : (locale === "th" ? "จัดการการแข่งขัน" : "MATCH CONSOLE")}
-                                                            </Link>
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="w-full text-muted-foreground opacity-70"
-                                                            disabled
-                                                        >
-                                                            {locale === "th" ? "กำลังสร้างการแข่งขัน..." : "Generating Match..."}
-                                                        </Button>
-                                                    )}
+                                                    <Button
+                                                        variant={dbMatch?.status === 'finished' ? "outline" : "default"}
+                                                        size="sm"
+                                                        className="w-full font-bold"
+                                                        disabled={isCreatingConsoleId === `${id}-${idx}`}
+                                                        onClick={async () => {
+                                                            let targetId = matchConsoleId;
+                                                            if (!targetId) {
+                                                                setIsCreatingConsoleId(`${id}-${idx}`);
+                                                                try {
+                                                                    const canvasData = getCanvasData();
+                                                                    const res = await saveBracketCanvas(tournamentId, canvasData, activeCategoryId || undefined);
+                                                                    if (res.success && res.data) {
+                                                                        const savedNode = res.data.nodes?.find(n => n.id === id);
+                                                                        const savedMatches = (savedNode?.data as { matches?: MatchItem[] })?.matches || [];
+                                                                        const savedMatch = savedMatches[idx];
+                                                                        if (savedMatch?.dbId || savedMatch?.matchId) {
+                                                                            targetId = savedMatch.dbId || savedMatch.matchId;
+                                                                        }
+                                                                    }
+                                                                } catch (err) {
+                                                                    console.error("Error creating match console:", err);
+                                                                } finally {
+                                                                    setIsCreatingConsoleId(null);
+                                                                }
+                                                            }
+
+                                                            if (targetId) {
+                                                                router.push(`/dashboard/tournaments/${tournamentId}/matches/${targetId}`);
+                                                            } else {
+                                                                toast({
+                                                                    title: locale === "th" ? "เกิดข้อผิดพลาด" : "Error",
+                                                                    description: locale === "th" ? "ไม่สามารถสร้างห้องแข่งขันได้ กรุณาลองใหม่อีกครั้ง" : "Failed to open match console",
+                                                                    variant: "destructive"
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        {isCreatingConsoleId === `${id}-${idx}` ? (
+                                                            <>
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                                {locale === "th" ? "กำลังเปิดห้องแข่งขัน..." : "Opening Console..."}
+                                                            </>
+                                                        ) : dbMatch?.status === 'finished' ? (
+                                                            locale === "th" ? "ดูผลการแข่งขัน" : "VIEW MATCH"
+                                                        ) : (
+                                                            locale === "th" ? "จัดการการแข่งขัน" : "MATCH CONSOLE"
+                                                        )}
+                                                    </Button>
                                                 </div>
                                             );
                                         })}
@@ -1018,42 +990,17 @@ export function NodeSettings() {
                     {type === "teamListNode" && (
                         <div className="space-y-1 md:space-y-2" id="node-settings-teamlist-add">
                             <div className="flex justify-end">
-                                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            {t("add_team_button") || "Add Team"}
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none">
-                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
-                                            <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                className="absolute right-2 top-2"
-                                                onClick={() => setIsAddDialogOpen(false)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </DialogHeader>
-                                        <TeamForm
-                                            tournamentId={tournamentId}
-                                            tournamentCategoryId={activeCategoryId || undefined}
-                                            isLimitReached={false}
-                                            onSuccess={() => {
-                                                setIsAddDialogOpen(false);
-                                                if (activeCategoryId) {
-                                                    fetchTeams(activeCategoryId);
-                                                }
-                                            }}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
+                                <AddTournamentTeamDialog
+                                    tournamentId={tournamentId}
+                                    tournamentCategoryId={activeCategoryId || undefined}
+                                    open={isAddDialogOpen}
+                                    onOpenChange={setIsAddDialogOpen}
+                                    onSuccess={() => {
+                                        if (activeCategoryId) {
+                                            fetchTeams(activeCategoryId);
+                                        }
+                                    }}
+                                />
                             </div>
 
                             <div className="space-y-1 md:space-y-2">
@@ -1064,84 +1011,26 @@ export function NodeSettings() {
                         </div>
                     )}
 
-                    {type === "inboxNode" && (
-                        <div className="space-y-1 md:space-y-2">
-                            <div className="custom-scrollbar">
-                                <Registrations tournamentId={tournamentId} categoryId={activeCategoryId || undefined} />
-                            </div>
-                        </div>
-                    )}
-
                     {type === "sponsorNode" && (
                         <div className="space-y-1 md:space-y-2" id="node-settings-sponsor-list">
-                            <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
-                                <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
-                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
-                                            <DialogTitle className="text-base font-bold tracking-tight">{tSponsors("title")}</DialogTitle>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                className="absolute right-2 top-2"
-                                                onClick={() => setIsAddSponsorOpen(false)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </DialogHeader>
-                                        <form onSubmit={handleAddSponsorSubmit} className="flex flex-col h-full overflow-hidden">
-                                            <div className="p-2 md:p-4 space-y-1 md:space-y-2 flex-1 overflow-y-auto">
-                                                <div className="flex flex-col items-center justify-center space-y-1">
-                                                    <div className="w-full flex justify-center py-1">
-                                                        <LogoUploader
-                                                            id="sponsor-logo-upload"
-                                                            uploadLabel="Upload Logo"
-                                                            clickToUploadLabel="Click to Upload"
-                                                            onFileChange={file => setNewSponsorLogoFile(file)}
-                                                        />
-                                                    </div>
-                                                </div>
+                            <AddSponsorDialog
+                                tournamentId={tournamentId}
+                                open={isAddSponsorOpen}
+                                onOpenChange={setIsAddSponsorOpen}
+                                onSuccess={loadSponsors}
+                                trigger={null}
+                            />
 
-                                                <div className="space-y-1">
-                                                    <Label htmlFor="sponsor-name">{tSponsors("name_label")}</Label>
-                                                    <Input
-                                                        size="sm"
-                                                        id="sponsor-name"
-                                                        value={newSponsorName}
-                                                        onChange={e => setNewSponsorName(e.target.value)}
-                                                        placeholder={tSponsors("name_placeholder")}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-1">
-                                                    <Label htmlFor="sponsor-link">{tSponsors("link_label")}</Label>
-                                                    <Input
-                                                        size="sm"
-                                                        id="sponsor-link"
-                                                        value={newSponsorLink}
-                                                        onChange={e => setNewSponsorLink(e.target.value)}
-                                                        placeholder={tSponsors("link_placeholder")}
-                                                        type="url"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <DialogFooter className="border-t p-2 md:p-4 shrink-0">
-                                                <Button
-                                                    size="sm"
-                                                    type="submit"
-                                                    className="w-full"
-                                                    disabled={isSubmittingSponsor || !newSponsorName}
-                                                >
-                                                    {isSubmittingSponsor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                                    {tSponsors("add_button")}
-                                                </Button>
-                                            </DialogFooter>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
-
-
+                            <AddSponsorDialog
+                                tournamentId={tournamentId}
+                                sponsorToEdit={editingSponsor}
+                                open={!!editingSponsor}
+                                onOpenChange={(open) => {
+                                    if (!open) setEditingSponsor(null);
+                                }}
+                                onSuccess={loadSponsors}
+                                trigger={null}
+                            />
 
                             {isSponsorLoading ? (
                                 <div className="flex justify-center py-8">
@@ -1158,7 +1047,7 @@ export function NodeSettings() {
                                     <p className="text-[10px] text-muted-foreground/60 italic">
                                          Drag handles to reorder sponsors. Reordering updates order_index automatically.
                                      </p>
-                                    <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                                    <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
                                         {sponsorsList.map((sponsor, idx) => (
                                             <div
                                                 key={sponsor.id}
@@ -1167,7 +1056,7 @@ export function NodeSettings() {
                                                 onDragOver={(e) => handleDragOver(e, idx)}
                                                 onDragEnd={handleDragEnd}
                                                 className={cn(
-                                                    "flex items-center justify-between p-2 hover:bg-muted/40 transition-colors",
+                                                    "flex items-center justify-between p-4 hover:bg-muted/40 transition-colors",
                                                     draggedIndex === idx && "opacity-50 bg-destructive/10"
                                                 )}
                                             >
@@ -1175,7 +1064,7 @@ export function NodeSettings() {
                                                     <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
                                                         <GripVertical className="h-4 w-4" />
                                                     </div>
-                                                    <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
+                                                    <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5 shrink-0">
                                                         {sponsor.logo_img ? (
                                                             <Image
                                                                 src={sponsor.logo_img}
@@ -1185,30 +1074,54 @@ export function NodeSettings() {
                                                                 height={32}
                                                             />
                                                         ) : (
-                                                            <Heart className="h-3.5 w-3.5 text-muted-foreground/20" />
+                                                            <Heart className="h-4 w-4 text-muted-foreground/20" />
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-xs font-bold truncate leading-none mb-1 text-foreground">
-                                                            {sponsor.sponsor_name}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            <span className="text-xs font-bold truncate leading-none text-foreground">
+                                                                {sponsor.sponsor_name}
+                                                            </span>
+                                                            {sponsor.cover_url && (
+                                                                <span className="text-[9px] px-1 py-0.2 rounded bg-primary/15 text-primary font-medium shrink-0">Cover</span>
+                                                            )}
+                                                        </div>
                                                         {sponsor.link_url && (
-                                                            <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1">
-                                                                <Globe className="h-2.5 w-2.5" />
+                                                            <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1 mt-0.5">
+                                                                <Globe className="h-4 w-4" />
                                                                 {sponsor.link_url}
                                                             </a>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    className="text-muted-foreground hover:text-destructive shrink-0"
-                                                    onClick={() => handleDeleteSponsorClick(sponsor.id)}
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
+                                                <ActionMenu>
+                                                    <ActionMenuTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            className="text-muted-foreground hover:text-foreground shrink-0"
+                                                        >
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </ActionMenuTrigger>
+                                                    <ActionMenuContent align="end" className="w-32 bg-card shadow-xl">
+                                                        <ActionMenuItem
+                                                            className="cursor-pointer text-xs flex items-center gap-2"
+                                                            onClick={() => handleEditSponsorClick(sponsor)}
+                                                        >
+                                                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                            <span>{tSponsors("edit")}</span>
+                                                        </ActionMenuItem>
+                                                        <ActionMenuItem
+                                                            className="cursor-pointer text-xs flex items-center gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                            onClick={() => handleDeleteSponsorClick(sponsor.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                            <span>{tSponsors("delete")}</span>
+                                                        </ActionMenuItem>
+                                                    </ActionMenuContent>
+                                                </ActionMenu>
                                             </div>
                                         ))}
                                     </div>
@@ -1216,8 +1129,6 @@ export function NodeSettings() {
                             )}
                         </div>
                     )}
-
-
 
                     {type === "announcementNode" && (
                         <div className="space-y-2">
@@ -1227,30 +1138,12 @@ export function NodeSettings() {
                                 isCompact={true}
                                 mode="list"
                             />
-                            <Dialog open={isAddAnnouncementOpen} onOpenChange={setIsAddAnnouncementOpen}>
-                                <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
-                                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                                        <DialogTitle className="text-base font-bold flex items-center gap-2">
-                                            {locale === "th" ? "เพิ่มใหม่" : "New"}
-                                        </DialogTitle>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            className="absolute right-2 top-2"
-                                            onClick={() => setIsAddAnnouncementOpen(false)}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </DialogHeader>
-                                    <Announcements
-                                        tournamentId={tournamentId}
-                                        isEditable={true}
-                                        mode="form"
-                                        onSuccess={() => setIsAddAnnouncementOpen(false)}
-                                    />
-                                </DialogContent>
-                            </Dialog>
+                            <AddAnnouncementDialog
+                                tournamentId={tournamentId}
+                                open={isAddAnnouncementOpen}
+                                onOpenChange={setIsAddAnnouncementOpen}
+                                trigger={null}
+                            />
                         </div>
                     )}
 
@@ -1324,10 +1217,8 @@ export function NodeSettings() {
                                             disabled={isRegSaving}
                                             className="w-full bg-violet-600 hover:bg-violet-700"
                                         >
-                                            {isRegSaving ? (
+                                            {isRegSaving && (
                                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                <Check className="h-4 w-4" />
                                             )}
                                             {locale === "th" ? "บันทึกการตั้งค่า" : "Save Settings"}
                                         </Button>
@@ -1354,3 +1245,5 @@ export function NodeSettings() {
         </aside>
     );
 }
+
+

@@ -191,7 +191,7 @@ export function PricingSection() {
                 {/* Popular Pill */}
                 {isEvent && (
                   <div className="inline-flex items-center gap-1 self-start bg-gradient-to-r from-primary via-primary to-emerald-400 text-primary-foreground text-[10px] font-black px-3 py-0.5 rounded-sm tracking-wider shadow-xs mb-3">
-                    <Sparkles className="w-3 h-3" /> ยอดนิยม
+                    <Sparkles className="h-4 w-4" /> ยอดนิยม
                   </div>
                 )}
 
@@ -200,7 +200,7 @@ export function PricingSection() {
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xl sm:text-2xl font-black text-foreground">{plan.name}</h3>
                     {plan.discountBadge && (
-                      <Badge variant="default" className="text-[10px] font-bold rounded-sm">
+                      <Badge variant="default" className="rounded-sm">
                         {plan.discountBadge}
                       </Badge>
                     )}
@@ -256,7 +256,7 @@ export function PricingSection() {
                     {plan.features.map((feature, fIdx) => (
                       <li key={fIdx} className="flex items-start gap-2.5">
                         <div className="w-4 h-4 rounded-sm bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          <Check className="h-4 w-4 stroke-[3]" />
                         </div>
                         <span className="leading-snug text-muted-foreground">{feature}</span>
                       </li>

@@ -1079,12 +1079,12 @@ function BroadcastOverlayContent() {
                                     className={cn(
                                         "flex",
                                         searchParams.get("orientation") === "vertical" ? "flex-col items-stretch" : "flex-row items-center",
-                                        searchParams.get("blockBg") === "docked" ? cn("bg-black/85 shadow-2xl p-1.5", rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-xl") : "bg-transparent"
+                                        searchParams.get("blockBg") === "docked" ? cn("bg-black/85 shadow-2xl p-1.5", rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-sm") : "bg-transparent"
                                     )}
                                     style={{ gap: `${searchParams.get("blockGap") || "8"}px` }}
                                 >
                                     {(searchParams.get("blocks") || "").split(",").filter(Boolean).map((blockId) => {
-                                        const activeRoundedClass = rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-xl";
+                                        const activeRoundedClass = rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-sm";
                                         const isSpaced = searchParams.get("blockBg") !== "docked";
                                         const cfg = customBlockConfigs[blockId] || { x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
                                         
@@ -1349,7 +1349,7 @@ function BroadcastOverlayContent() {
                                                     )}
                                                 >
                                                     {isAlertActive && (
-                                                        <div className="flex items-center gap-2 bg-black/95 border border-white/10 px-4 py-2 rounded-xl text-white font-bold leading-tight min-w-[160px]">
+                                                        <div className="flex items-center gap-2 bg-black/95 border border-white/10 px-4 py-2 rounded-sm text-white font-bold leading-tight min-w-[160px]">
                                                             {activeNotification.type === "goal" && (
                                                                 <>
                                                                     <Trophy className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -1398,7 +1398,7 @@ function BroadcastOverlayContent() {
                                                 >
                                                     {homeGoalEvents.slice(0, 3).map((e) => (
                                                         <div key={e.id} className="flex items-center gap-1.5 px-1 text-[9px] truncate">
-                                                            <Trophy className="w-3 h-3 text-emerald-400 shrink-0" />
+                                                            <Trophy className="h-4 w-4 text-emerald-400 shrink-0" />
                                                             <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
                                                         </div>
                                                     ))}
@@ -1428,7 +1428,7 @@ function BroadcastOverlayContent() {
                                                 >
                                                     {awayGoalEvents.slice(0, 3).map((e) => (
                                                         <div key={e.id} className="flex items-center gap-1.5 px-1 text-[9px] truncate">
-                                                            <Trophy className="w-3 h-3 text-emerald-400 shrink-0" />
+                                                            <Trophy className="h-4 w-4 text-emerald-400 shrink-0" />
                                                             <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
                                                         </div>
                                                     ))}
@@ -1493,7 +1493,7 @@ function BroadcastOverlayContent() {
                                         )}
                                         <div className={cn(
                                             "flex items-center bg-black/85 shadow-2xl h-14 relative",
-                                            displayHeaderText ? "rounded-b-xl rounded-t-none" : "rounded-xl"
+                                            displayHeaderText ? "rounded-b-xl rounded-t-none" : "rounded-sm"
                                         )}>
                                             {/* Home Team */}
                                             <div className="flex items-center gap-3 px-5 py-2 relative">
@@ -1574,7 +1574,7 @@ function BroadcastOverlayContent() {
 
                                 {/* Minimal Corner Scoreboard Style */}
                                 {(layout === "minimal-left" || layout === "minimal-right") && (
-                                    <div className="bg-black/90 rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[240px]">
+                                    <div className="bg-black/90 rounded-sm shadow-2xl p-3 flex flex-col gap-2 min-w-[240px]">
                                         {/* Header with Timer/Status */}
                                         <div className="flex items-center justify-between border-b border-white/5 pb-2 text-[10px] font-bold text-white/50 tracking-wider">
                                             <span>{displayHeaderText || "LEAGUEFLOW OVERLAY"}</span>
@@ -1587,7 +1587,7 @@ function BroadcastOverlayContent() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 {showLogos && (
-                                                    <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
+                                                    <div className="h-4 w-4 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
                                                         {match.home_team?.logo_url ? (
                                                             <Image src={match.home_team.logo_url} alt="" fill className="object-contain" unoptimized />
                                                         ) : (
@@ -1607,7 +1607,7 @@ function BroadcastOverlayContent() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 {showLogos && (
-                                                    <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
+                                                    <div className="h-4 w-4 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
                                                         {match.away_team?.logo_url ? (
                                                             <Image src={match.away_team.logo_url} alt="" fill className="object-contain" unoptimized />
                                                         ) : (
@@ -1632,7 +1632,7 @@ function BroadcastOverlayContent() {
                             <div className="flex flex-col gap-1 mt-2.5 max-h-[160px] overflow-hidden items-center select-none">
                                 {goalEvents.slice(0, 3).map((e) => (
                                     <div key={e.id} className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5 text-[10px] font-bold text-white/80 shadow-md">
-                                        <Trophy className="w-3.5 h-3.5 text-emerald-400" />
+                                        <Trophy className="h-4 w-4 text-emerald-400" />
                                         <span>{e.player_name} ({e.minute}&apos;)</span>
                                     </div>
                                 ))}

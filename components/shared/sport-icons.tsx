@@ -60,28 +60,50 @@ export function SepakTakrawIcon({ className = "w-6 h-6" }: { className?: string 
     );
 }
 
-export function getSportIcon(name: string, className = "h-4 w-4 shrink-0") {
-    const lower = name.toLowerCase();
-    if (lower.includes("futsal") || lower.includes("ฟุตซอล")) {
-        return <FutsalIcon className={className} />;
-    }
-    if (lower.includes("foot") || lower.includes("ฟุตบอล") || lower.includes("soccer")) {
-        return <FootballIcon className={className} />;
-    }
-    if (lower.includes("basket") || lower.includes("บาสเกตบอล")) {
-        return <BasketballIcon className={className} />;
-    }
-    if (lower.includes("volley") || lower.includes("วอลเลย์บอล")) {
-        return <VolleyballIcon className={className} />;
-    }
-    if (lower.includes("badminton") || lower.includes("แบดมินตัน")) {
-        return <BadmintonIcon className={className} />;
-    }
-    if (lower.includes("cricket") || lower.includes("คริกเก็ต")) {
-        return <CricketIcon className={className} />;
-    }
-    if (lower.includes("takraw") || lower.includes("ตะกร้อ")) {
-        return <SepakTakrawIcon className={className} />;
-    }
-    return <FootballIcon className={className} />;
+import {
+    IconBallFootball,
+    IconBallBasketball,
+    IconPlayFootball,
+    IconBallVolleyball,
+    IconBallTennis,
+    IconTrophy,
+    IconCricket,
+} from "@tabler/icons-react";
+import { GiShuttlecock } from "react-icons/gi";
+
+export function getSportIcon(name?: string | null, className = "h-4 w-4 shrink-0") {
+    return getLandingSportIcon(name, className);
 }
+
+export function getLandingSportIcon(name?: string | null, className = "h-4 w-4") {
+    if (!name) return <IconBallFootball className={className} stroke={1.75} />;
+    const lower = name.toLowerCase().trim();
+    if (lower === "e193797b-8454-4870-b669-715f45d43542" || lower.includes("volley") || lower.includes("วอลเลย์")) {
+        return <IconBallVolleyball className={className} stroke={1.75} />;
+    }
+    if (lower === "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1" || lower.includes("basket") || lower.includes("บาส")) {
+        return <IconBallBasketball className={className} stroke={1.75} />;
+    }
+    if (lower === "f193797b-8454-4870-b669-715f45d43543" || lower.includes("futsal") || lower.includes("ฟุตซอล")) {
+        return <IconPlayFootball className={className} stroke={1.75} />;
+    }
+    if (lower === "b193797b-8454-4870-b669-715f45d43544" || lower.includes("badminton") || lower.includes("แบดมินตัน")) {
+        return <GiShuttlecock className={className} />;
+    }
+    if (lower === "t193797b-8454-4870-b669-715f45d43545" || lower.includes("tennis") || lower.includes("เทนนิส")) {
+        return <IconBallTennis className={className} stroke={1.75} />;
+    }
+    if (lower === "c193797b-8454-4870-b669-715f45d43547" || lower.includes("cricket") || lower.includes("คริกเก็ต")) {
+        return <IconCricket className={className} stroke={1.75} />;
+    }
+    if (lower === "s193797b-8454-4870-b669-715f45d43546" || lower.includes("takraw") || lower.includes("ตะกร้อ")) {
+        return <IconTrophy className={className} stroke={1.75} />;
+    }
+    if (lower === "7cf8611f-99a1-44f6-a218-9345ca2cfa06" || lower.includes("foot") || lower.includes("ฟุตบอล") || lower.includes("soccer")) {
+        return <IconBallFootball className={className} stroke={1.75} />;
+    }
+    return <IconBallFootball className={className} stroke={1.75} />;
+}
+
+
+

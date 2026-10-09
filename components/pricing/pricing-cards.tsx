@@ -6,7 +6,7 @@ import { Plan } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { ManagerPlan, OrganizerPlan, Product } from "@/types";
 
 export type PricingPlan = Plan & Partial<ManagerPlan> & Partial<OrganizerPlan> & Partial<Product>;
@@ -108,7 +108,7 @@ export function PricingCards({
                                     <div className="flex flex-col items-center gap-2 mb-1">
                                         <div className="text-lg font-bold">{getTranslatedValue('name', plan.name)}</div>
                                         {plan.price > 0 && (
-                                            <Badge variant="default" className="text-[10px] h-4 px-1.5 font-black tracking-widest bg-primary text-primary-foreground border-none">
+                                            <Badge variant="default" className="bg-primary text-primary-foreground border-none">
                                                 {t('pro_badge')}
                                             </Badge>
                                         )}
@@ -322,7 +322,7 @@ export function PricingCards({
                                                 disabled={isEffectivelyActive || isLoading || isFreePlan || (isTournamentPlan && !selectedTournamentId)}
                                                 onClick={() => onSelectPlan && onSelectPlan(plan.id)}
                                             >
-                                                {isLoading && isSelected && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {isLoading && isSelected && <Loader2 className="h-4 w-4 animate-spin" />}
                                                 {isEffectivelyActive ? t('current_plan') : (isSelected ? t('selected') : t('choose_plan'))}
                                             </Button>
                                         </div>
@@ -336,3 +336,4 @@ export function PricingCards({
         </div>
     );
 }
+

@@ -1321,7 +1321,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                             : "text-muted-foreground hover:bg-muted/80"
                             }`}
                     >
-                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">1</span>
+                        <span className="h-4 w-4 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">1</span>
                         <span className="hidden sm:inline">{locale === 'th' ? "ตั้งค่าทีม" : "Setup"}</span>
                     </button>
 
@@ -1335,7 +1335,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                             : "text-muted-foreground hover:bg-muted/80"
                             }`}
                     >
-                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">2</span>
+                        <span className="h-4 w-4 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">2</span>
                         <span className="hidden sm:inline">{locale === 'th' ? "ออกแบบ" : "Design"}</span>
                     </button>
 
@@ -1349,7 +1349,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                             : "text-muted-foreground hover:bg-muted/80"
                             }`}
                     >
-                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">3</span>
+                        <span className="h-4 w-4 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">3</span>
                         <span className="hidden sm:inline">{locale === 'th' ? "จดคะแนนสด" : "Live Score"}</span>
                     </button>
                 </div>
@@ -1538,7 +1538,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                                         type="color"
                                                         value={homeBarColor}
                                                         onChange={(e) => setHomeBarColor(e.target.value)}
-                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-md border"
+                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-sm border"
                                                     />
                                                     <Input
                                                         type="text"
@@ -1591,7 +1591,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                                         type="color"
                                                         value={awayBarColor}
                                                         onChange={(e) => setAwayBarColor(e.target.value)}
-                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-md border"
+                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-sm border"
                                                     />
                                                     <Input
                                                         type="text"
@@ -1780,8 +1780,8 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                     <div className="flex items-center justify-between border-b pb-2">
                                         <div className="flex items-center gap-2">
                                             {logoHome && (
-                                                /* eslint-disable-next-line @next/next/no-img-element */
-                                                <img src={logoHome} alt="" className="w-5 h-5 object-contain" />
+                                                 
+                                                <img src={logoHome} alt="" className="h-4 w-4 object-contain" />
                                             )}
                                             <span className="font-black text-sm text-primary truncate max-w-[140px]">
                                                 {nameHome || "HOME"}
@@ -1860,8 +1860,8 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                     <div className="flex items-center justify-between border-b pb-2">
                                         <div className="flex items-center gap-2">
                                             {logoAway && (
-                                                /* eslint-disable-next-line @next/next/no-img-element */
-                                                <img src={logoAway} alt="" className="w-5 h-5 object-contain" />
+                                                 
+                                                <img src={logoAway} alt="" className="h-4 w-4 object-contain" />
                                             )}
                                             <span className="font-black text-sm text-destructive truncate max-w-[140px]">
                                                 {nameAway || "AWAY"}

@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Announcement } from "@/types/index";
 import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnouncementPin } from "@/actions/tournaments/announcement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical, Check, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical } from "lucide-react";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    ActionMenu,
+    ActionMenuContent,
+    ActionMenuItem,
+    ActionMenuTrigger,
+} from "@/components/ui/action-menu";
 import { useToast } from "@/hooks/use-toast";
 
 import { cn } from "@/lib/utils";
@@ -20,14 +24,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatDate } from "@/lib/date";
 import { EmptyState } from "@/components/shared/empty-state";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { AddAnnouncementDialog } from "@/features/dialogs";
+import { DialogFooter } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -38,7 +36,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
 
 export function Announcements({
     tournamentId,
@@ -46,6 +43,7 @@ export function Announcements({
     isCompact = false,
     defaultAddOpen = false,
     mode = 'both',
+    refreshTrigger,
     onSuccess
 }: {
     tournamentId: string,
@@ -53,6 +51,7 @@ export function Announcements({
     isCompact?: boolean,
     defaultAddOpen?: boolean,
     mode?: 'both' | 'list' | 'form',
+    refreshTrigger?: number,
     onSuccess?: () => void
 }) {
     const { toast } = useToast();
@@ -67,37 +66,87 @@ export function Announcements({
     const [content, setContent] = useState("");
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        const result = await getAnnouncements(tournamentId);
-        if (result.success && result.data) {
-            setAnnouncements(result.data);
+    const fetchData = useCallback(async (showLoading = true) => {
+        if (showLoading) setIsLoading(true);
+        try {
+            const result = await getAnnouncements(tournamentId);
+            if (result.success && result.data) {
+                setAnnouncements(result.data);
+            }
+        } finally {
+            if (showLoading) setIsLoading(false);
         }
-        setIsLoading(false);
     }, [tournamentId]);
 
     useEffect(() => {
         if (mode === 'form') return;
-        const timer = setTimeout(() => {
-            fetchData();
-        }, 0);
-        return () => clearTimeout(timer);
-    }, [fetchData, mode]);
+        let isMounted = true;
+        (async () => {
+            const result = await getAnnouncements(tournamentId);
+            if (isMounted) {
+                if (result.success && result.data) {
+                    setAnnouncements(result.data);
+                }
+                setIsLoading(false);
+            }
+        })();
+        return () => { isMounted = false; };
+    }, [mode, tournamentId, refreshTrigger]);
+
+    useEffect(() => {
+        if (mode === 'form') return;
+        const handleSync = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (!customEvent.detail || customEvent.detail === tournamentId) {
+                fetchData(false);
+            }
+        };
+        window.addEventListener('announcement-updated', handleSync);
+        return () => window.removeEventListener('announcement-updated', handleSync);
+    }, [fetchData, mode, tournamentId]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim()) return;
 
         setIsSaving(true);
-        const result = await addAnnouncement(tournamentId, title, content);
+        const savedTitle = title.trim();
+        const savedContent = content.trim();
+
+        // Optimistic item
+        const tempId = `temp-${Date.now()}`;
+        const optimisticItem: Announcement = {
+            id: tempId,
+            tournament_id: tournamentId,
+            title: savedTitle,
+            content: savedContent,
+            is_pinned: false,
+            created_at: new Date().toISOString()
+        };
+
+        setAnnouncements(prev => [optimisticItem, ...prev]);
+
+        const result = await addAnnouncement(tournamentId, savedTitle, savedContent);
         if (result.success) {
             toast({ title: tCommon("success"), description: t("posted_success") });
             setTitle("");
             setContent("");
             setIsDialogOpen(false);
+
+            if (result.data) {
+                setAnnouncements(prev => [result.data!, ...prev.filter(a => a.id !== tempId && a.id !== result.data!.id)]);
+            }
+
+            // Dispatch event to sync all other Announcement components on screen
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('announcement-updated', { detail: tournamentId }));
+            }
+
             if (onSuccess) onSuccess();
-            fetchData();
+            fetchData(false);
         } else {
+            // Revert optimistic item if failed
+            setAnnouncements(prev => prev.filter(a => a.id !== tempId));
             toast({ title: "Error", description: result.error, variant: "destructive" });
         }
         setIsSaving(false);
@@ -108,21 +157,51 @@ export function Announcements({
         const id = deleteId;
         setDeleteId(null);
 
+        // Optimistic delete
+        setAnnouncements(prev => prev.filter(a => a.id !== id));
+
         const result = await deleteAnnouncement(id, tournamentId);
         if (result.success) {
-            fetchData();
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('announcement-updated', { detail: tournamentId }));
+            }
+            fetchData(false);
+        } else {
+            fetchData(false);
+            toast({ title: "Error", description: result.error, variant: "destructive" });
         }
     };
 
     const handleTogglePin = async (id: string, currentlyPinned: boolean) => {
-        await toggleAnnouncementPin(id, !currentlyPinned, tournamentId);
-        fetchData();
+        setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, is_pinned: !currentlyPinned } : a));
+        const res = await toggleAnnouncementPin(id, !currentlyPinned, tournamentId);
+        if (res.success) {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('announcement-updated', { detail: tournamentId }));
+            }
+            fetchData(false);
+        } else {
+            fetchData(false);
+        }
     };
+
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isDialogOpen) {
+            const timer = setTimeout(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop = 0;
+                }
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [isDialogOpen]);
 
     if (isLoading) {
         return (
             <div className="flex justify-center py-4">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
         );
     }
@@ -131,127 +210,159 @@ export function Announcements({
 
     if (mode === 'form') {
         return (
-            <div className="bg-card flex flex-col h-full overflow-hidden">
-                <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
-                    <div className="p-2 md:p-4 space-y-2 md:space-y-3 flex-1 overflow-y-auto">
-                        <div className="space-y-1">
-                            <Label htmlFor="announcement-title-mode">{t("title_placeholder")}</Label>
-                            <Input
-                                size="sm"
-                                id="announcement-title-mode"
-                                value={title}
-                                onChange={e => setTitle(e.target.value)}
-                                placeholder={t("title_placeholder")}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="announcement-content-mode">{t("content_placeholder")}</Label>
-                            <Textarea
-                                id="announcement-content-mode"
+            <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
+                <div ref={scrollContainerRef} className="p-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
+                    <div className="space-y-1">
+                        <Label htmlFor="announcement-title-mode" className="text-xs font-bold">
+                            {locale === "th" ? "หัวข้อประกาศ" : "Announcement Title"} <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            size="sm"
+                            id="announcement-title-mode"
+                            value={title}
+                            disabled={isSaving}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder={t("title_placeholder")}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-xs font-bold">
+                            {locale === "th" ? "รายละเอียดประกาศ" : "Announcement Content"}
+                        </Label>
+                        <div className="pro-editor-wrapper relative border rounded-sm overflow-hidden bg-background">
+                            <ReactQuill
+                                theme="snow"
                                 value={content}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                                onChange={setContent}
+                                readOnly={isSaving}
+                                className="pro-editor h-auto text-foreground"
                                 placeholder={t("content_placeholder")}
-                                className="resize-none min-h-[120px] text-xs"
+                                modules={{
+                                    toolbar: [
+                                        [{ 'header': [1, 2, false] }],
+                                        ['bold', 'underline'],
+                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                        ['clean']
+                                    ]
+                                }}
                             />
                         </div>
                     </div>
-                    <DialogFooter className="border-t p-2 md:p-4 shrink-0">
-                        <Button
-                            size="sm"
-                            type="submit"
-                            className="bg-node-4 w-full"
-                            disabled={isSaving || !title.trim()}
-                        >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                            {t("post")}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </div>
+                </div>
+                <DialogFooter className="p-3 sm:p-4 border-t bg-card shrink-0">
+                    <Button
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                        disabled={isSaving}
+                        onClick={() => {
+                            if (onSuccess) onSuccess();
+                        }}
+                    >
+                        {locale === "th" ? "ยกเลิก" : "Cancel"}
+                    </Button>
+                    <Button
+                        size="sm"
+                        type="submit"
+                        disabled={isSaving || !title.trim()}
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {locale === "th" ? "กำลังโพสต์..." : "Posting..."}
+                            </>
+                        ) : (
+                            locale === "th" ? "โพสต์ประกาศ" : "Post Announcement"
+                        )}
+                    </Button>
+                </DialogFooter>
+            </form>
         );
     }
 
     if (isCompact && mode === 'list') {
         return (
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2">
                 {announcements.length === 0 ? (
-                    <div className="p-4 text-center">
-                        <p className="text-[10px] text-center text-muted-foreground">
-                            {t("no_announcements")}
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={Megaphone}
+                        title={locale === "th" ? "ยังไม่มีประกาศ" : "No announcements yet"}
+                        description={locale === "th" ? "คลิก 'เพิ่มประกาศใหม่' เพื่อเพิ่มประกาศ" : "Click 'New Announcement' to add an announcement"}
+                    />
                 ) : (
-                    <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                    <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
                         {announcements.map(ann => (
                             <div
                                 key={ann.id}
                                 className={cn(
-                                    "p-2 transition-all relative overflow-hidden group/item",
-                                    ann.is_pinned ? "bg-node-4/5" : "hover:bg-muted/40"
+                                    "flex items-start justify-between p-4 hover:bg-muted/40 transition-colors gap-2",
+                                    ann.is_pinned && "bg-node-4/5"
                                 )}
                             >
-                                <div className="space-y-1 pr-6">
-                                    <div className="flex items-center gap-2">
-                                        {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
-                                        <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
-                                            {ann.title}
-                                        </h4>
+                                <div className="flex items-start gap-2 min-w-0 flex-1">
+                                    <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center shrink-0 border p-0.5 mt-0.5">
+                                        <Megaphone className={cn("h-4 w-4", ann.is_pinned ? "text-node-4" : "text-muted-foreground/60")} />
                                     </div>
-                                    {ann.content && (
-                                        <p className="text-muted-foreground text-[10px] leading-relaxed font-medium">
-                                            {ann.content}
-                                        </p>
-                                    )}
-                                    <div className="flex items-center justify-between pt-1">
-                                        <span className="text-[8px] font-black tracking-widest text-muted-foreground/30">
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            {ann.is_pinned && <Pin className="h-4 w-4 text-node-4 shrink-0 fill-node-4" />}
+                                            <span className="text-xs font-bold truncate leading-none mb-1 text-foreground">
+                                                {ann.title}
+                                            </span>
+                                        </div>
+                                        {ann.content && (
+                                            <div
+                                                className="text-xs text-muted-foreground leading-relaxed prose prose-sm max-w-none text-foreground"
+                                                dangerouslySetInnerHTML={{ __html: ann.content }}
+                                            />
+                                        )}
+                                        <span className="text-[9px] font-medium text-muted-foreground/50 mt-1">
                                             {formatDate(ann.created_at, "MMM d, HH:mm", locale)}
                                         </span>
                                     </div>
                                 </div>
                                 {isEditable && (
-                                    <div className="absolute top-1.5 right-1.5 z-10">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon-sm"
-                                                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                                >
-                                                    <MoreVertical className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-36 bg-card border shadow-xl p-1">
-                                            <DropdownMenuItem
+                                    <ActionMenu>
+                                        <ActionMenuTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="text-muted-foreground hover:text-foreground shrink-0"
+                                            >
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </ActionMenuTrigger>
+                                        <ActionMenuContent align="end" className="w-32 bg-card shadow-xl">
+                                            <ActionMenuItem
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
+                                                className="cursor-pointer text-xs flex items-center gap-2"
                                             >
                                                 {ann.is_pinned ? (
                                                     <>
-                                                        <PinOff className="h-3.5 w-3.5" />
+                                                        <PinOff className="h-4 w-4 text-muted-foreground" />
                                                         <span>{t("unpin")}</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Pin className="h-3.5 w-3.5" />
+                                                        <Pin className="h-4 w-4 text-muted-foreground" />
                                                         <span>{t("pin")}</span>
                                                     </>
                                                 )}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
+                                            </ActionMenuItem>
+                                            <ActionMenuItem
                                                 onClick={() => setDeleteId(ann.id)}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 text-destructive focus:text-destructive"
+                                                className="cursor-pointer text-xs flex items-center gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
                                             >
-                                                <Trash2 className="h-3.5 w-3.5" />
+                                                <Trash2 className="h-4 w-4" />
                                                 <span>{tCommon("delete")}</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                                            </ActionMenuItem>
+                                        </ActionMenuContent>
+                                    </ActionMenu>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
@@ -266,69 +377,22 @@ export function Announcements({
             {mode === 'both' && (
                 <div className="flex items-center justify-end relative z-10">
                     {isEditable && (
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
+                        <AddAnnouncementDialog
+                            tournamentId={tournamentId}
+                            open={isDialogOpen}
+                            onOpenChange={setIsDialogOpen}
+                            onSuccess={() => fetchData(false)}
+                            trigger={
                                 <Button
                                     variant="default"
                                     size={isCompact ? "sm" : "default"}
-                                    className={cn("bg-node-4 text-background hover:bg-node-4/90", isCompact && "h-7 text-xs px-2.5")}
+                                    className={cn("bg-node-4 text-background hover:bg-node-4/90 gap-1.5", isCompact && "h-8 text-xs px-2.5")}
                                 >
                                     <Plus className="h-4 w-4" />
-                                    {t("news")}
+                                    {locale === "th" ? "เพิ่มประกาศใหม่" : "New Announcement"}
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
-                                <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
-                                    <DialogTitle className="text-lg font-black tracking-tighter">{t("news")}</DialogTitle>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="absolute right-2 top-2"
-                                        onClick={() => setIsDialogOpen(false)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </DialogHeader>
-                                <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
-                                    <div className="p-2 md:p-4 space-y-2 md:space-y-3 flex-1 overflow-y-auto">
-                                        <div className="space-y-1">
-                                            <Label htmlFor="announcement-title">{t("title_placeholder")}</Label>
-                                            <Input
-                                                size="sm"
-                                                id="announcement-title"
-                                                value={title}
-                                                onChange={e => setTitle(e.target.value)}
-                                                placeholder={t("title_placeholder")}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Label htmlFor="announcement-content">{t("content_placeholder")}</Label>
-                                            <Textarea
-                                                id="announcement-content"
-                                                value={content}
-                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-                                                placeholder={t("content_placeholder")}
-                                                rows={4}
-                                                className="resize-none min-h-[100px] text-xs"
-                                            />
-                                        </div>
-                                    </div>
-                                    <DialogFooter className="border-t p-2 md:p-4 shrink-0">
-                                        <Button
-                                            size="sm"
-                                            type="submit"
-                                            className="w-full"
-                                            disabled={isSaving || !title.trim()}
-                                        >
-                                            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                                            {t("post")}
-                                        </Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                            }
+                        />
                     )}
                 </div>
             )}
@@ -342,13 +406,13 @@ export function Announcements({
                     className="py-12"
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-1 lg:gap-2">
+                <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
                     {announcements.map(ann => (
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-1 lg:p-2 border transition-all relative overflow-hidden group/item rounded-sm",
-                                ann.is_pinned ? "border-node-4/50" : "bg-card"
+                                "p-4 transition-all relative overflow-hidden group/item",
+                                ann.is_pinned ? "bg-node-4/5" : "hover:bg-muted/30"
                             )}
                         >
                             <div className="flex items-start justify-between gap-1 lg:gap-2 relative z-10">
@@ -365,9 +429,10 @@ export function Announcements({
                                     </div>
 
                                     {ann.content && (
-                                        <p className="text-muted-foreground/80 text-xs lg:text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                                            {ann.content}
-                                        </p>
+                                        <div
+                                            className="text-xs lg:text-sm leading-relaxed text-foreground prose prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: ann.content }}
+                                        />
                                     )}
 
                                     <div className="flex items-center gap-2">
@@ -379,14 +444,14 @@ export function Announcements({
 
                                 {isEditable && (
                                     <div className="shrink-0">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
+                                        <ActionMenu>
+                                            <ActionMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground">
                                                     <MoreVertical className="h-4 w-4" />
                                                 </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
+                                            </ActionMenuTrigger>
+                                            <ActionMenuContent align="end">
+                                                <ActionMenuItem
                                                     onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                     className="font-bold text-[10px] tracking-widest cursor-pointer"
                                                 >
@@ -401,16 +466,16 @@ export function Announcements({
                                                             {t("pin")}
                                                         </>
                                                     )}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
+                                                </ActionMenuItem>
+                                                <ActionMenuItem
                                                     onClick={() => setDeleteId(ann.id)}
                                                     className="font-bold text-[10px] tracking-widest text-destructive focus:text-destructive cursor-pointer"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                     {tCommon("delete")}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                                </ActionMenuItem>
+                                            </ActionMenuContent>
+                                        </ActionMenu>
                                     </div>
                                 )}
                             </div>
@@ -423,7 +488,7 @@ export function Announcements({
                 <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <Trash2 className="h-5 w-5 text-destructive" />
+                            <Trash2 className="h-4 w-4 text-destructive" />
                             {t("delete_announcement")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
@@ -431,7 +496,7 @@ export function Announcements({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -439,9 +504,8 @@ export function Announcements({
                                 e.preventDefault();
                                 confirmDelete();
                             }}
-                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all"
                         >
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {tCommon("delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -450,3 +514,4 @@ export function Announcements({
         </div>
     );
 }
+

@@ -1,0 +1,176 @@
+package service
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
+
+	"leagueflow-backend/internal/model"
+	"leagueflow-backend/internal/repository"
+)
+
+type TournamentService struct {
+	repo *repository.TournamentRepository
+}
+
+func NewTournamentService(repo *repository.TournamentRepository) *TournamentService {
+	return &TournamentService{repo: repo}
+}
+
+type CreateTournamentInput struct {
+	Name        string                 `json:"name"`
+	Description *string                `json:"description,omitempty"`
+	Format      model.TournamentFormat `json:"format"`
+	StartDate   string                 `json:"start_date"`
+	EndDate     string                 `json:"end_date"`
+	Location    *string                `json:"location,omitempty"`
+	BannerURL   *string                `json:"banner_url,omitempty"`
+	LogoURL     *string                `json:"logo_url,omitempty"`
+	Rules       *string                `json:"rules,omitempty"`
+	Settings    map[string]interface{} `json:"settings"`
+	Categories  []CreateCategoryInput  `json:"categories,omitempty"`
+}
+
+type CreateCategoryInput struct {
+	Name            string                 `json:"name"`
+	TeamLimit       int                    `json:"team_limit"`
+	MaxTeams        int                    `json:"max_teams"`
+	GenderType      string                 `json:"gender_type"`
+	Gender          string                 `json:"gender"`
+	MinAge          *int                   `json:"min_age,omitempty"`
+	MaxAge          *int                   `json:"max_age,omitempty"`
+	AgeCategoryID   *int                   `json:"age_category_id,omitempty"`
+	RegistrationFee float64                `json:"registration_fee"`
+	CanvasData      map[string]interface{} `json:"canvas_data,omitempty"`
+	RulesConfig     map[string]interface{} `json:"rules_config,omitempty"`
+}
+
+func (s *TournamentService) List(ctx context.Context, status string, organizerID *uuid.UUID) ([]*model.Tournament, error) {
+	return s.repo.List(ctx, status, organizerID)
+}
+
+func (s *TournamentService) GetByID(ctx context.Context, id uuid.UUID) (*model.Tournament, []*model.TournamentCategory, error) {
+	tournament, err := s.repo.GetByID(ctx, id)
+	if err != nil || tournament == nil {
+		return nil, nil, err
+	}
+
+	categories, err := s.repo.GetCategories(ctx, id)
+	if err != nil {
+		return tournament, nil, err
+	}
+
+	return tournament, categories, nil
+}
+
+func (s *TournamentService) Create(ctx context.Context, organizerID uuid.UUID, input CreateTournamentInput) (*model.Tournament, error) {
+	slug := strings.ToLower(strings.ReplaceAll(input.Name, " ", "-"))
+	slug = fmt.Sprintf("%s-%s", slug, uuid.New().String()[:8])
+
+	if input.Format == "" {
+		input.Format = model.FormatGroupStageKnockout
+	}
+	if input.Settings == nil {
+		input.Settings = make(map[string]interface{})
+	}
+
+	tournament := &model.Tournament{
+		OrganizerID: organizerID,
+		Name:        input.Name,
+		Slug:        slug,
+		Description: input.Description,
+		Format:      input.Format,
+		Status:      model.StatusDraft,
+		StartDate:   input.StartDate,
+		EndDate:     input.EndDate,
+		Location:    input.Location,
+		BannerURL:   input.BannerURL,
+		LogoURL:     input.LogoURL,
+		Rules:       input.Rules,
+		Settings:    input.Settings,
+	}
+
+	if err := s.repo.Create(ctx, tournament); err != nil {
+		return nil, err
+	}
+
+	// Create categories if provided
+	for _, catInput := range input.Categories {
+		_, _ = s.CreateCategory(ctx, tournament.ID, catInput)
+	}
+
+	return tournament, nil
+}
+
+func (s *TournamentService) Update(ctx context.Context, t *model.Tournament) error {
+	return s.repo.Update(ctx, t)
+}
+
+func (s *TournamentService) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *TournamentService) CreateCategory(ctx context.Context, tournamentID uuid.UUID, input CreateCategoryInput) (*model.TournamentCategory, error) {
+	if input.MaxTeams == 0 {
+		input.MaxTeams = input.TeamLimit
+	}
+	if input.MaxTeams == 0 {
+		input.MaxTeams = 16
+	}
+	if input.TeamLimit == 0 {
+		input.TeamLimit = input.MaxTeams
+	}
+	gender := input.GenderType
+	if gender == "" {
+		gender = input.Gender
+	}
+	if gender == "" {
+		gender = "open"
+	}
+
+	ageCatID := input.AgeCategoryID
+	if (ageCatID == nil || *ageCatID <= 0) && input.Name != "" {
+		id, err := s.repo.GetOrCreateAgeCategory(ctx, input.Name, input.MinAge, input.MaxAge)
+		if err == nil && id > 0 {
+			ageCatID = &id
+		}
+	}
+
+	category := &model.TournamentCategory{
+		TournamentID:    tournamentID,
+		Name:            input.Name,
+		TeamLimit:       input.TeamLimit,
+		MaxTeams:        input.MaxTeams,
+		GenderType:      gender,
+		AgeCategoryID:   ageCatID,
+		RegistrationFee: input.RegistrationFee,
+		CanvasData:      input.CanvasData,
+		RulesConfig:     input.RulesConfig,
+	}
+	if err := s.repo.CreateCategory(ctx, category); err != nil {
+		return nil, err
+	}
+	return category, nil
+}
+
+func (s *TournamentService) GetCategories(ctx context.Context, tournamentID uuid.UUID) ([]*model.TournamentCategory, error) {
+	return s.repo.GetCategories(ctx, tournamentID)
+}
+
+func (s *TournamentService) GetCategoryByID(ctx context.Context, categoryID uuid.UUID) (*model.TournamentCategory, error) {
+	return s.repo.GetCategoryByID(ctx, categoryID)
+}
+
+func (s *TournamentService) UpdateCategory(ctx context.Context, cat *model.TournamentCategory) error {
+	return s.repo.UpdateCategory(ctx, cat)
+}
+
+func (s *TournamentService) UpdateCategoryCanvas(ctx context.Context, categoryID uuid.UUID, canvasData map[string]interface{}) error {
+	return s.repo.UpdateCategoryCanvasData(ctx, categoryID, canvasData)
+}
+
+func (s *TournamentService) DeleteCategory(ctx context.Context, categoryID uuid.UUID) error {
+	return s.repo.DeleteCategory(ctx, categoryID)
+}

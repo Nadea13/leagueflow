@@ -40,6 +40,21 @@ export function getPositionOptions(sport?: string | null): PositionOption[] {
             { value: "Doubles", labelTh: "ประเภทคู่ (Doubles)", labelEn: "Doubles" },
             { value: "Player", labelTh: "นักกีฬา (Player)", labelEn: "Player" },
         ];
+    } else if (sportKey.includes("takraw") || sportKey.includes("ตะกร้อ")) {
+        playerPositions = [
+            { value: "Tekong", labelTh: "แบ็ก / ตัวเสิร์ฟ (Tekong/Server)", labelEn: "Tekong / Server" },
+            { value: "Killer", labelTh: "ตัวฟาด / ตัวทำ (Killer/Striker)", labelEn: "Killer / Striker" },
+            { value: "Feeder", labelTh: "ตัวชง / ตัวตั้ง (Feeder/Setter)", labelEn: "Feeder / Setter" },
+            { value: "Sub", labelTh: "ตัวสำรอง (Substitute)", labelEn: "Substitute" },
+        ];
+    } else if (sportKey.includes("cricket") || sportKey.includes("คริกเก็ต")) {
+        playerPositions = [
+            { value: "Batsman", labelTh: "ผู้ตี (Batsman)", labelEn: "Batsman" },
+            { value: "Bowler", labelTh: "ผู้ขว้าง (Bowler)", labelEn: "Bowler" },
+            { value: "All-Rounder", labelTh: "ออลราวด์เดอร์ (All-Rounder)", labelEn: "All-Rounder" },
+            { value: "Wicketkeeper", labelTh: "ผู้รักษาประตูวิกเก็ต (Wicketkeeper)", labelEn: "Wicketkeeper" },
+            { value: "Fielder", labelTh: "ผู้เล่นสนาม (Fielder)", labelEn: "Fielder" },
+        ];
     } else if (sportKey.includes("esport") || sportKey.includes("e-sport") || sportKey.includes("game")) {
         playerPositions = [
             { value: "IGL", labelTh: "IGL - กัปตันทีม (In-Game Leader)", labelEn: "IGL - In-Game Leader" },

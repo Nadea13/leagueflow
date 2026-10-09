@@ -198,8 +198,8 @@ export function Bracket({ matches, canvasData, isPublic = false }: BracketProps)
 
     return (
         <ReactFlowProvider>
-            {hasCanvasData ? (
-                <CanvasBracket canvasData={canvasData!} />
+            {hasCanvasData && canvasData ? (
+                <CanvasBracket canvasData={canvasData} />
             ) : (
                 <LegacyBracket matches={matches} isPublic={isPublic} />
             )}
@@ -321,7 +321,7 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
         >
             <div className="flex justify-between items-center px-2 md:px-3 py-1.5 border-b">
                 <span className="text-[10px] font-black tracking-widest text-muted-foreground flex items-center gap-2 md:gap-3">
-                    {isFinal && <Trophy className="h-3 w-3 text-primary" />}
+                    {isFinal && <Trophy className="h-4 w-4 text-primary" />}
                     {t("match")} {match.match_index != null ? `#${match.match_index}` : ""}
                 </span>
                 <div className="flex items-center gap-1">
@@ -384,7 +384,7 @@ function TeamRow({
             )}
         >
             <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
-                <div className="w-5 h-5 border shrink-0 flex items-center justify-center overflow-hidden">
+                <div className="h-4 w-4 border shrink-0 flex items-center justify-center overflow-hidden">
                     {logoUrl ? (
                         <Image src={logoUrl} width={20} height={20} className="w-full h-full object-contain" alt="" unoptimized />
                     ) : (

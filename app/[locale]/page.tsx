@@ -2,7 +2,7 @@ import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { PublicNavbar } from "@/components/layout/public-navbar";
-import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { FaqSection } from "@/components/landing/faq-section";
 import { FeaturesSection } from "@/components/landing/features-section";
@@ -15,10 +15,8 @@ import { getLocale } from "next-intl/server";
 
 export default async function Home() {
   const locale = await getLocale();
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getServerSession();
+  const user = session?.user || null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -90,11 +88,11 @@ export default async function Home() {
                         {/* Match 1 */}
                         <div className="w-full h-[120px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
                           {/* Single Output Handle on Right Center */}
-                          <div className="absolute w-2.5 h-2.5 bg-card border border-border rounded-full -right-[5px] top-1/2 -translate-y-1/2 z-20" />
+                          <div className="absolute h-4 w-4 bg-card border border-border rounded-full -right-[5px] top-1/2 -translate-y-1/2 z-20" />
 
                           <div className="flex items-center px-4 py-2 border-b justify-between bg-muted/20 rounded-t-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                              <div className="h-4 w-4 bg-node-2 rounded flex items-center justify-center">
                                 <span className="text-background text-[10px] font-bold">VS</span>
                               </div>
                               <span className="text-[10px] font-black tracking-wide text-node-2">
@@ -124,11 +122,11 @@ export default async function Home() {
                         {/* Match 2 */}
                         <div className="w-full h-[120px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
                           {/* Single Output Handle on Right Center */}
-                          <div className="absolute w-2.5 h-2.5 bg-card border border-border rounded-full -right-[5px] top-1/2 -translate-y-1/2 z-20" />
+                          <div className="absolute h-4 w-4 bg-card border border-border rounded-full -right-[5px] top-1/2 -translate-y-1/2 z-20" />
 
                           <div className="flex items-center px-4 py-2 border-b justify-between bg-muted/20 rounded-t-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                              <div className="h-4 w-4 bg-node-2 rounded flex items-center justify-center">
                                 <span className="text-background text-[10px] font-bold">VS</span>
                               </div>
                               <span className="text-[10px] font-black tracking-wide text-node-2">
@@ -161,10 +159,10 @@ export default async function Home() {
                         {/* Match 3 (Finals) */}
                         <div className="w-full h-[120px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
                           {/* Single Input Handle on Left Center */}
-                          <div className="absolute w-2.5 h-2.5 bg-card border border-border rounded-full -left-[5px] top-1/2 -translate-y-1/2 z-20" />
+                          <div className="absolute h-4 w-4 bg-card border border-border rounded-full -left-[5px] top-1/2 -translate-y-1/2 z-20" />
                           <div className="flex items-center px-4 py-2 border-b justify-between bg-muted/20 rounded-t-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                              <div className="h-4 w-4 bg-node-2 rounded flex items-center justify-center">
                                 <span className="text-background text-[10px] font-bold">VS</span>
                               </div>
                               <span className="text-[10px] font-black tracking-wide text-node-2">

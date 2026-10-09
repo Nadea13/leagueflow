@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { searchMasterPlayers } from "@/actions/common/user";
@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 import { Player } from "@/types/index";
 import { Header } from "@/components/ui/header";
+import { resolveStorageUrl } from "@/lib/storage-utils";
 
 export interface UserRegisteredTeam {
     id: string;
@@ -58,6 +59,10 @@ interface MasterPlayerSearchResult {
 
 interface MasterPlayerRow {
     id: string;
+    first_name_local?: string | null;
+    last_name_local?: string | null;
+    first_name_intl?: string | null;
+    last_name_intl?: string | null;
     first_name_th?: string | null;
     last_name_th?: string | null;
     first_name_en?: string | null;
@@ -182,12 +187,22 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
         try {
             const res = await searchMasterPlayers(val);
             if (res.success && res.data) {
-                const mapped = (res.data as MasterPlayerRow[]).map((mp) => ({
-                    id: mp.id,
-                    name: (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim(),
-                    date_of_birth: mp.birthday,
-                    tel: mp.tel
-                }));
+                const mapped = (res.data as MasterPlayerRow[]).map((mp) => {
+                    const localFirst = mp.first_name_local || mp.first_name_th;
+                    const localLast = mp.last_name_local || mp.last_name_th;
+                    const intlFirst = mp.first_name_intl || mp.first_name_en;
+                    const intlLast = mp.last_name_intl || mp.last_name_en;
+
+                    const localName = [localFirst, localLast && localLast !== '-' ? localLast : null].filter(Boolean).join(" ").trim();
+                    const intlName = [intlFirst, intlLast && intlLast !== '-' ? intlLast : null].filter(Boolean).join(" ").trim();
+
+                    return {
+                        id: mp.id,
+                        name: localName || intlName || "Unnamed Player",
+                        date_of_birth: mp.birthday,
+                        tel: mp.tel
+                    };
+                });
                 const uniqueMapped = mapped.filter((item, index, self) =>
                     index === self.findIndex((t) => t.name === item.name)
                 );
@@ -393,9 +408,9 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                             {/* Photo Display */}
                                             <div className="relative">
                                                 <div className="h-24 w-24 rounded-full border flex items-center justify-center overflow-hidden bg-muted">
-                                                    {player.photo_url ? (
+                                                    {resolveStorageUrl(player.photo_url) ? (
                                                         <Image
-                                                            src={player.photo_url}
+                                                            src={resolveStorageUrl(player.photo_url) || ""}
                                                             alt={player.name}
                                                             width={56}
                                                             height={56}
@@ -487,7 +502,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                                         onClick={() => handlePhotoChange(idx, null)}
                                                         className="absolute -top-0 -right-0 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90 shadow-md transition-transform z-10"
                                                     >
-                                                        <X className="h-3 w-3" />
+                                                        <X className="h-4 w-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -514,10 +529,10 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                                         }}
                                                     />
                                                     {focusedBulkIndex === idx && (isBulkSearching || bulkSearchResults.length > 0) && (
-                                                        <div className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-md border border-border bg-card text-foreground shadow-2xl max-h-[150px] overflow-y-auto custom-scrollbar">
+                                                        <div className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-sm border border-border bg-card text-foreground shadow-2xl max-h-[150px] overflow-y-auto custom-scrollbar">
                                                             {isBulkSearching ? (
                                                                 <div className="flex flex-col items-center justify-center py-4 gap-1">
-                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                                                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                                                     <span className="text-[8px] font-black tracking-widest text-muted-foreground/40">Searching...</span>
                                                                 </div>
                                                             ) : (
@@ -532,7 +547,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                                                             <div className="flex flex-col">
                                                                                 <span className="font-bold text-[10px] tracking-tight group-hover:text-primary">{gp.name}</span>
                                                                             </div>
-                                                                            <ArrowRight className="h-3 w-3 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                                            <ArrowRight className="h-4 w-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                                                                         </button>
                                                                     ))}
                                                                 </div>
@@ -581,7 +596,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                         size="sm"
                                         onClick={addBulkRow}
                                     >
-                                        <Plus className="w-3.5 h-3.5 mr-1" />
+                                        <Plus className="h-4 w-4" />
                                         เพิ่มช่องแถวนักกีฬา
                                     </Button>
                                 </div>
@@ -596,7 +611,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                             >
                                 {isPending ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        <Loader2 className="w-4 h-4 animate-spin" />
                                         กำลังบันทึกข้อมูลและส่งรายชื่อ...
                                     </>
                                 ) : (
@@ -610,3 +625,4 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
         </Dialog>
     );
 }
+

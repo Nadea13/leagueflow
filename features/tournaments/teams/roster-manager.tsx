@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Player, TournamentTeam } from "@/types/index";
-import { getTournamentPlayersDirect, deletePlayer } from "@/actions/tournaments/player";
+import { getTournamentPlayersDirect, addTournamentPlayer, deleteTournamentPlayer, updateTournamentPlayer } from "@/actions/tournaments/player";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
 
 import { AddPlayerForm } from "@/features/teams/add-player-form";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Tab } from "@/components/ui/tab";
-import { Trash2, Users, LayoutGrid, Eye, X } from "lucide-react";
+import { Users, LayoutGrid, Eye, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -48,19 +48,16 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
     const [teamName, setTeamName] = useState(team.name);
     const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
 
+    const tournamentTeamId = team.id;
 
     const fetchPlayers = useCallback(async () => {
-        const result = await getTournamentPlayersDirect(team.id);
+        const result = await getTournamentPlayersDirect(tournamentTeamId);
         if (result.success && result.data) {
             setPlayers(result.data);
         } else {
-            toast({
-                title: tCommon("error"),
-                description: t("no_players"),
-                variant: "destructive",
-            });
+            setPlayers([]);
         }
-    }, [team.id, tCommon, t, toast]);
+    }, [tournamentTeamId]);
 
     useEffect(() => {
         if (open) {
@@ -72,7 +69,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
     const confirmDeletePlayer = async () => {
         if (!playerToDelete) return;
 
-        const result = await deletePlayer(playerToDelete);
+        const result = await deleteTournamentPlayer(playerToDelete, tournamentTeamId);
         setPlayerToDelete(null);
         if (result.success) {
             toast({
@@ -93,7 +90,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="icon" className="bg-background/50 backdrop-blur-sm border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all">
+                    <Button variant="outline" size="icon-sm" className="bg-background/50 backdrop-blur-sm border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all">
                         {readOnly ? (
                             <Eye className="h-4 w-4" />
                         ) : (
@@ -125,10 +122,10 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                         </div>
                         <div className="flex items-center gap-1 lg:gap-2">
                             <Header level={2}>{teamName}</Header>
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline">
                                 {team.sport?.toUpperCase()}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline">
                                 {players.length} {tCommon("players")}
                             </Badge>
                         </div>
@@ -159,9 +156,10 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                     <div className={cn("space-y-1 md:space-y-2", mobileTab !== 'roster' && "hidden")}>
                         {!(readOnly || team.managed_by_manager) && (
                             <AddPlayerForm
-                                teamId={team.id}
+                                teamId={tournamentTeamId}
                                 onSuccess={fetchPlayers}
                                 effectivelyLocked={readOnly}
+                                addPlayerFn={addTournamentPlayer}
                             />
                         )}
 
@@ -171,6 +169,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                             effectivelyLocked={readOnly}
                             refreshPlayers={fetchPlayers}
                             onDeletePlayer={setPlayerToDelete}
+                            updatePlayerFn={updateTournamentPlayer}
                             t={t}
                             tCommon={tCommon}
                         />
@@ -188,7 +187,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                 </div>
 
                 <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-                    <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
+                    <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none flex items-center gap-2">
                                 {tCommon("delete") || "Delete"}
@@ -206,9 +205,8 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                     e.preventDefault();
                                     confirmDeletePlayer();
                                 }}
-                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
+                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                             >
-                                <Trash2 className="h-4 w-4" />
                                 {tCommon("delete") || "Delete"}
                             </AlertDialogAction>
                         </AlertDialogFooter>

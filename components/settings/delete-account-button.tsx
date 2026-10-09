@@ -1,19 +1,30 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { deleteAccount } from "@/actions/common/user";
 
 export function DeleteAccountButton({ email }: { email: string }) {
     const t = useTranslations("DashboardSettings");
+    const tCommon = useTranslations("Common");
     const [isOpen, setIsOpen] = useState(false);
     const [confirmText, setConfirmText] = useState("");
     const [isPending, startTransition] = useTransition();
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            setConfirmText("");
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTop = 0;
+            }
+        }
+    }, [isOpen]);
 
     const handleDelete = () => {
         startTransition(async () => {
@@ -34,61 +45,59 @@ export function DeleteAccountButton({ email }: { email: string }) {
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="sm:max-w-[480px] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-sm">
-                <div className="flex flex-col h-full overflow-hidden">
-                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                        <DialogTitle className="text-base font-bold">
-                            {t("delete_confirm_title")}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs">
-                            {t("delete_confirm_desc")}
-                        </DialogDescription>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="absolute right-2 top-2"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </DialogHeader>
+            <DialogContent className="max-h-[90vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="p-4 border-b shrink-0">
+                    <DialogTitle>{t("delete_confirm_title")}</DialogTitle>
+                </DialogHeader>
 
-                    <div className="p-2 md:p-4 space-y-2">
-                        <p className="text-xs font-bold text-foreground">
-                            {t("type_to_confirm", { text: email })}
-                        </p>
-                        <div>
-                            <Input 
-                                size="sm"
-                                id="confirm-delete" 
-                                value={confirmText} 
-                                onChange={(e) => setConfirmText(e.target.value)} 
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        if (confirmText === email && !isPending) {
+                            handleDelete();
+                        }
+                    }}
+                    className="flex flex-col flex-1 min-h-0"
+                >
+                    <div ref={scrollContainerRef} className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
+                        <div className="space-y-2">
+                            <DialogDescription className="text-sm">
+                                {t("delete_confirm_desc")}
+                            </DialogDescription>
+                            <DialogDescription className="text-sm font-semibold text-foreground">
+                                {t("type_to_confirm", { text: email })}
+                            </DialogDescription>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Input
+                                id="confirm-delete"
+                                value={confirmText}
+                                onChange={(e) => setConfirmText(e.target.value)}
                                 placeholder={email}
                                 autoComplete="off"
                             />
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4 flex justify-end gap-2">
+                    <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
                         <Button
                             type="button"
                             variant="outline"
-                            size="sm"
                             onClick={() => setIsOpen(false)}
+                            disabled={isPending}
                         >
-                            Cancel
+                            {tCommon("cancel")}
                         </Button>
-                        <Button 
+                        <Button
+                            type="submit"
                             variant="destructive"
-                            size="sm"
-                            onClick={handleDelete} 
                             disabled={isPending || confirmText !== email}
                         >
+                            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                             {t("delete_button")}
                         </Button>
                     </DialogFooter>
-                </div>
+                </form>
             </DialogContent>
         </Dialog>
     );

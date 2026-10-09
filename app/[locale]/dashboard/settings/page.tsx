@@ -1,25 +1,56 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
 import { SettingsView } from "@/components/settings/settings-view";
+import { ApiClient } from "@/lib/api-client";
+import { useSearchParams } from "next/navigation";
 
-export default async function SettingsPage({
-    searchParams
-}: {
-    searchParams: Promise<{ tab?: string }>;
-}) {
-    const { tab } = await searchParams;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+export default function SettingsPage() {
+    const searchParams = useSearchParams();
+    const tab = searchParams.get("tab") || "general";
 
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const [userProfile, setUserProfile] = useState<any>(null);
+    const [_isLoading, setIsLoading] = useState(true);
 
-    const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+    const fetchProfile = async () => {
+        try {
+            const profile = await ApiClient.fetch<any>('/auth/me');
+            setUserProfile(profile);
+        } catch (err) {
+            console.error("Failed to fetch settings profile:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    return <SettingsView user={user} profile={profile || undefined} activeTab={tab || "profile"} />;
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const userObj = {
+        id: userProfile?.id || "",
+        email: userProfile?.email || "",
+        user_metadata: {
+            full_name: userProfile?.full_name || "",
+            avatar_url: userProfile?.avatar_url || null,
+        },
+    } as any;
+
+    const profileObj = {
+        id: userProfile?.id || "",
+        email: userProfile?.email || "",
+        full_name: userProfile?.full_name || "",
+        role: userProfile?.role || "organizer",
+        profile_img: userProfile?.avatar_url || null,
+        phone: userProfile?.phone || "",
+    };
+
+    return (
+        <SettingsView 
+            user={userObj} 
+            profile={profileObj} 
+            activeTab={tab} 
+            onProfileUpdated={fetchProfile}
+        />
+    );
 }

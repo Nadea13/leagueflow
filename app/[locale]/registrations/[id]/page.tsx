@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
+import { ApiClient } from "@/lib/api-client";
 import { RegistrationForm } from "@/features/registrations/registration-form";
 import { getMyTeams } from "@/actions/manager/team";
 import { Team } from "@/types";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getTranslations } from "next-intl/server";
@@ -19,19 +20,19 @@ import {
     Users,
     Clock,
     ArrowUpRight,
-    AlertCircle,
-    ArrowLeft,
-    FileText
+    ArrowLeft
 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { Header } from "@/components/ui/header";
 import { cn } from "@/lib/utils";
+import { getLandingSportIcon } from "@/components/shared/sport-icons";
 
 import {
     DocumentSubmissionClient,
     TournamentDetails,
     UserRegisteredTeam
 } from "@/features/registrations/document-submission-client";
+import { RegistrationTabSwitcher } from "@/features/registrations/registration-tab-switcher";
 
 interface RegisterPageProps {
     params: Promise<{ id: string; locale: string }>;
@@ -47,54 +48,37 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
     const tournamentCategoryId = typeof categoryParam === "string" ? categoryParam : undefined;
     const t = await getTranslations({ locale, namespace: "Registration" });
     const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const session = await getServerSession();
+    const user = session?.user || null;
 
-    // 1. Fetch tournament details
-    const { data: tournament, error } = await supabase
-        .from("tournaments")
-        .select(`
-            id, name, description, status, start_date, end_date,
-            is_registration_open, bank_account_number, bank_name, bank_account_name,
-            location_name, google_map_url, document_deadline, logo_img, cover_img,
-            sports:sport_id(sport_name)
-        `)
-        .eq("id", id)
-        .is("deleted_at", null)
-        .single();
-
-    if (error || !tournament) {
+    // 1. Fetch tournament details & categories via Go API
+    let tournament: any = null;
+    let categories: any[] = [];
+    try {
+        const resp = await ApiClient.fetch<{ tournament: any; categories: any[] }>(`/tournaments/${id}`);
+        tournament = resp?.tournament;
+        categories = resp?.categories || [];
+    } catch {
         notFound();
     }
 
-    // 2. Fetch categories
-    const { data: categories } = await supabase
-        .from("tournament_categories")
-        .select(`
-            id,
-            gender_type,
-            max_teams,
-            registration_fee,
-            age_categories (
-                category_name
-            )
-        `)
-        .eq("tournament_id", id)
-        .is("deleted_at", null);
+    if (!tournament) {
+        notFound();
+    }
+
+    const settings = typeof tournament.settings === 'object' && tournament.settings !== null ? tournament.settings : {};
+    const isRegistrationOpen = tournament.is_registration_open ?? settings.is_registration_open ?? (tournament.status === 'registration_open');
 
     const activeCategory = tournamentCategoryId
-        ? categories?.find(c => String(c.id) === tournamentCategoryId)
+        ? categories?.find((c: any) => String(c.id) === tournamentCategoryId)
         : categories?.[0];
 
     const resolvedCategoryId = activeCategory?.id;
     const registrationFee = activeCategory?.registration_fee ?? 0;
 
-    type CategoryItem = NonNullable<typeof categories>[number];
-
-    const getCategoryDisplayName = (cat: CategoryItem | null | undefined) => {
+    const getCategoryDisplayName = (cat: any) => {
         if (!cat) return t("default_category");
-        const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
-        const ageName = ageCategoriesData?.category_name || t("general");
+        const ageName = cat.age_categories?.category_name || cat.category_name || t("general");
         const gender = cat.gender_type === 'open' ? t("gender_open")
             : cat.gender_type === 'male' ? t("gender_male")
                 : cat.gender_type === 'female' ? t("gender_female")
@@ -104,96 +88,163 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
 
     const categoryName = getCategoryDisplayName(activeCategory);
 
-    // 3. Fetch registered teams (bypass RLS for public view using adminSupabase)
-    const { data: registeredTeams } = resolvedCategoryId
-        ? await adminSupabase
-            .from("tournament_teams")
-            .select(`
-                id,
-                registration_status,
-                payment_status,
-                team:teams (
-                    id,
-                    name,
-                    logo_img
-                )
-            `)
-            .eq("tournament_category_id", resolvedCategoryId)
-            .neq("registration_status", "rejected")
-            .is("deleted_at", null)
-            .order("created_at", { ascending: true })
-        : { data: [] };
+    // 3. Fetch registered teams
+    // 3. Fetch registered teams (for all categories to ensure document submission tab shows all user registered teams)
+    let allTournamentTeams: any[] = [];
+    if (categories && categories.length > 0) {
+        try {
+            const teamFetches = categories.map(async (cat: any) => {
+                try {
+                    const raw = await ApiClient.fetch<any[]>(`/tournaments/${id}/teams?category_id=${cat.id}`);
+                    return (raw || []).map((tt: any) => ({
+                        ...tt,
+                        tournament_category: cat
+                    }));
+                } catch {
+                    return [];
+                }
+            });
+            const results = await Promise.all(teamFetches);
+            allTournamentTeams = results.flat();
+        } catch {
+            allTournamentTeams = [];
+        }
+    } else if (resolvedCategoryId) {
+        try {
+            const raw = await ApiClient.fetch<any[]>(`/tournaments/${id}/teams?category_id=${resolvedCategoryId}`);
+            allTournamentTeams = (raw || []).map((tt: any) => ({
+                ...tt,
+                tournament_category: activeCategory
+            }));
+        } catch {
+            allTournamentTeams = [];
+        }
+    }
+
+    const registeredTeams = allTournamentTeams
+        .filter((tt: any) => {
+            const catId = tt.tournament_category?.id || tt.category_id || tt.tournament_category_id;
+            return !resolvedCategoryId || String(catId) === String(resolvedCategoryId);
+        })
+        .filter((tt: any) => tt.registration_status !== "rejected")
+        .map((tt: any) => ({
+            id: tt.id,
+            registration_status: tt.registration_status,
+            payment_status: tt.payment_status,
+            contact_name: tt.contact_name,
+            contact_phone: tt.contact_phone,
+            team: tt.team ? {
+                id: tt.team.id,
+                name: tt.team.name,
+                logo_img: tt.team.logo_img || tt.team.logo_url
+            } : {
+                id: tt.team_id,
+                name: tt.team_name || "Team",
+                logo_img: tt.logo_url || null
+            }
+        }));
 
     const teamsResult = await getMyTeams();
     const myTeams = (teamsResult.success ? (teamsResult.data as Team[]) : []) || [];
     const myTeamIds = myTeams.map((t) => t.id);
 
     // Fetch user's registered teams in this tournament for document submission
-    const { data: rawUserTeams } = await supabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            contact_name,
-            contact_phone,
-            team:teams (
-                id,
-                name,
-                logo_img
-            ),
-            tournament_categories!inner (
-                id,
-                tournament_id,
-                gender_type,
-                age_categories (
-                    category_name
-                )
-            )
-        `)
-        .eq("tournament_categories.tournament_id", id)
-        .in(
-            "team_id",
-            myTeamIds.length > 0 ? myTeamIds : ["00000000-0000-0000-0000-000000000000"]
-        )
-        .is("deleted_at", null);
+    let userRegisteredTeams: UserRegisteredTeam[] = (allTournamentTeams || [])
+        .filter((tt: any) => {
+            const teamId = tt.team?.id || tt.team_id;
+            return teamId && myTeamIds.includes(teamId);
+        })
+        .map((item: any) => {
+            const cat = item.tournament_category || categories.find((c: any) => String(c.id) === String(item.category_id || item.tournament_category_id)) || activeCategory;
+            const ageCategoriesData = (Array.isArray(cat?.age_categories) ? cat.age_categories[0] : cat?.age_categories) as unknown as { category_name: string | null } | null;
+            return {
+                id: item.id,
+                contact_name: item.contact_name || "",
+                contact_phone: item.contact_phone || "",
+                team: item.team ? {
+                    id: item.team.id,
+                    name: item.team.name,
+                    logo_img: item.team.logo_img || item.team.logo_url || null
+                } : {
+                    id: item.team_id,
+                    name: item.team_name || "Team",
+                    logo_img: item.logo_url || null
+                },
+                tournament_categories: cat ? {
+                    id: cat.id,
+                    gender_type: cat.gender_type,
+                    age_categories: {
+                        category_name: ageCategoriesData?.category_name || cat.category_name || "General"
+                    }
+                } : null
+            };
+        });
 
-    const userRegisteredTeams: UserRegisteredTeam[] = (rawUserTeams || []).map((item) => {
-        const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
-        const catData = Array.isArray(item.tournament_categories)
-            ? item.tournament_categories[0]
-            : item.tournament_categories;
-        const ageCatData = (
-            catData && Array.isArray(catData.age_categories)
-                ? catData.age_categories[0]
-                : catData?.age_categories || null
-        ) as { category_name: string | null } | null;
+    // Fallback: If no user teams found from ApiClient, try Supabase directly
+    if (userRegisteredTeams.length === 0 && myTeamIds.length > 0) {
+        try {
+            const { data: rawUserTeams } = await supabase
+                .from("tournament_teams")
+                .select(`
+                    id,
+                    contact_name,
+                    contact_phone,
+                    team:teams (
+                        id,
+                        name,
+                        logo_img
+                    ),
+                    tournament_categories (
+                        id,
+                        tournament_id,
+                        gender_type,
+                        age_categories (
+                            category_name
+                        )
+                    )
+                `)
+                .in("team_id", myTeamIds)
+                .is("deleted_at", null);
 
-        return {
-            id: item.id,
-            contact_name: item.contact_name,
-            contact_phone: item.contact_phone,
-            team: teamData
-                ? {
-                      id: teamData.id,
-                      name: teamData.name,
-                      logo_img: teamData.logo_img
-                  }
-                : null,
-            tournament_categories: catData
-                ? {
-                      id: catData.id,
-                      gender_type: catData.gender_type,
-                      age_categories: ageCatData
-                          ? {
+            const filtered = (rawUserTeams || []).filter((item: any) => {
+                const cat = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
+                return String(cat?.tournament_id) === String(id);
+            });
+
+            if (filtered.length > 0) {
+                userRegisteredTeams = filtered.map((item: any) => {
+                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
+                    const catData = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
+                    const ageCatData = (catData && Array.isArray(catData.age_categories) ? catData.age_categories[0] : catData?.age_categories || null) as { category_name: string | null } | null;
+                    return {
+                        id: item.id,
+                        contact_name: item.contact_name || "",
+                        contact_phone: item.contact_phone || "",
+                        team: teamData ? {
+                            id: teamData.id,
+                            name: teamData.name,
+                            logo_img: teamData.logo_img
+                        } : null,
+                        tournament_categories: catData ? {
+                            id: catData.id,
+                            gender_type: catData.gender_type,
+                            age_categories: ageCatData ? {
                                 category_name: ageCatData.category_name
-                            }
-                          : null
-                  }
-                : null
-        };
-    });
+                            } : null
+                        } : null
+                    };
+                });
+            }
+        } catch {
+            // Ignore fallback error
+        }
+    }
 
-    const sportsData = (Array.isArray(tournament.sports) ? tournament.sports[0] : tournament.sports) as unknown as { sport_name: string | null } | null;
-    const sportName = sportsData?.sport_name || "Sport";
+    const sportName = tournament.sport_name || settings.sport_name || "Sport";
+    const coverImg = tournament.banner_url || tournament.cover_img || settings.cover_img || settings.banner_url || null;
+    const logoImg = tournament.logo_url || tournament.logo_img || settings.logo_img || settings.logo_url || null;
+    const locationName = tournament.location_name || tournament.location || settings.location_name || settings.location || null;
+    const googleMapUrl = tournament.google_map_url || settings.google_map_url || null;
 
     const tournamentDetails: TournamentDetails = {
         id: tournament.id,
@@ -202,17 +253,21 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
         status: tournament.status || "draft",
         start_date: tournament.start_date,
         end_date: tournament.end_date,
-        document_deadline: tournament.document_deadline,
-        location_name: tournament.location_name,
-        cover_img: tournament.cover_img,
-        logo_img: tournament.logo_img,
+        document_deadline: tournament.document_deadline || settings.document_deadline,
+        location_name: locationName,
+        cover_img: coverImg,
+        logo_img: logoImg,
         sport_name: sportName,
-        is_registration_open: tournament.is_registration_open || false
+        is_registration_open: isRegistrationOpen
     };
 
-    const isFull = (registeredTeams?.length || 0) >= (activeCategory?.max_teams || 8);
+    const categoryMaxTeams = Number(activeCategory?.max_teams || activeCategory?.team_limit || 0) > 0
+        ? Number(activeCategory?.max_teams || activeCategory?.team_limit)
+        : (Number(tournament.max_teams || settings.max_teams || 0) > 0 ? Number(tournament.max_teams || settings.max_teams) : 8);
+
+    const isFull = (registeredTeams?.length || 0) >= categoryMaxTeams;
     const isPastDeadline = tournament.document_deadline ? new Date(tournament.document_deadline) < new Date() : false;
-    const isRegistrationDisabled = isFull || isPastDeadline || !tournament.is_registration_open;
+    const isRegistrationDisabled = isFull || isPastDeadline || !isRegistrationOpen;
 
     // Check if tournament has meaningful text description (strips HTML tags and entities left by rich text editor)
     const strippedDescription = (tournament.description || "")
@@ -222,12 +277,12 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
     const hasDescription = strippedDescription.length > 0;
 
     return (
-        <div className="relative flex flex-col min-h-screen bg-background overflow-x-hidden">
+        <div className="relative flex flex-col min-h-screen bg-background">
             {/* Full-page Background Cover with Light Tint & Blur */}
-            {tournament.cover_img && (
+            {coverImg && (
                 <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                     <Image
-                        src={tournament.cover_img}
+                        src={coverImg}
                         alt={tournament.name}
                         fill
                         priority
@@ -249,9 +304,9 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             <div className="flex items-center gap-1 md:gap-2">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    size="icon-sm"
                                     asChild
-                                    className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                                    className="h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                                 >
                                     <Link href="/registrations">
                                         <ArrowLeft className="h-4 w-4" />
@@ -268,39 +323,24 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                             {tournament.name}
                                         </span>
                                     </Header>
-                                    <Badge variant="outline" className={tournament.cover_img ? "bg-card/50 backdrop-blur-md border-border/60" : ""}>
-                                        {sportName}
-                                    </Badge>
+                                    <div className={cn(
+                                        "h-9 w-9 rounded-full flex items-center justify-center shrink-0 shadow-xs border backdrop-blur-xs transition-colors",
+                                        coverImg
+                                            ? "bg-card/50 border-border/60 text-foreground"
+                                            : "bg-muted/50 text-foreground border-border/60"
+                                    )}>
+                                        {getLandingSportIcon(sportName, "h-4 w-4")}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-sm border">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=registration${tournamentCategoryId ? `&category=${tournamentCategoryId}` : ""}`}>
-                                        <span>ลงทะเบียน</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=documents${initialTeamId ? `&team=${initialTeamId}` : ""}`}>
-                                        <FileText className="h-3.5 w-3.5" />
-                                        <span>ส่งเอกสาร</span>
-                                        {userRegisteredTeams.length > 0 && (
-                                            <Badge variant="outline" className="px-1 py-0 text-[10px] h-4">
-                                                {userRegisteredTeams.length}
-                                            </Badge>
-                                        )}
-                                    </Link>
-                                </Button>
-                            </div>
+                            <RegistrationTabSwitcher
+                                tournamentId={tournament.id}
+                                activeTab={activeTab as "registration" | "documents"}
+                                tournamentCategoryId={tournamentCategoryId}
+                                initialTeamId={initialTeamId}
+                                documentCount={userRegisteredTeams.length}
+                                basePath="/registrations"
+                            />
                         </div>
 
                         <DocumentSubmissionClient
@@ -311,66 +351,6 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             hideHeader={true}
                         />
                     </div>
-                ) : !tournament.is_registration_open || isRegistrationDisabled ? (
-                    <div className="space-y-2 md:space-y-4">
-                        <div className="flex items-center justify-between gap-2 md:gap-4 mb-2 md:mb-4">
-                            <div className="flex items-center gap-2 md:gap-4">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    asChild
-                                    className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
-                                >
-                                    <Link href="/registrations">
-                                        <ArrowLeft className="h-4 w-4" />
-                                    </Link>
-                                </Button>
-                                <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
-                                    {tournament.name}
-                                </h1>
-                            </div>
-                            <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-sm border">
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=registration`}>
-                                        <span>ลงทะเบียน</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=documents`}>
-                                        <FileText className="h-3.5 w-3.5" />
-                                        <span>ส่งเอกสาร</span>
-                                        {userRegisteredTeams.length > 0 && (
-                                            <Badge variant="outline" className="px-1 py-0 text-[10px] h-4">
-                                                {userRegisteredTeams.length}
-                                            </Badge>
-                                        )}
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-                        <EmptyState
-                            title={t("registration_closed_title")}
-                            description={
-                                isFull
-                                    ? t("registration_closed_full_desc")
-                                    : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))
-                            }
-                            icon={AlertCircle}
-                            action={
-                                <p className="text-sm font-bold text-primary/60 tracking-widest">{t("contact_organizer")}</p>
-                            }
-                        />
-                    </div>
                 ) : (
                     <div className="space-y-2 md:space-y-4">
                         {/* Title & Badges */}
@@ -378,9 +358,9 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             <div className="flex items-center gap-1 md:gap-2">
                                 <Button
                                     variant="ghost"
-                                    size="icon"
+                                    size="icon-sm"
                                     asChild
-                                    className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                                    className="h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                                 >
                                     <Link href="/registrations">
                                         <ArrowLeft className="h-4 w-4" />
@@ -397,39 +377,24 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                             {tournament.name}
                                         </span>
                                     </Header>
-                                    <Badge variant="outline" className={tournament.cover_img ? "bg-card/50 backdrop-blur-md border-border/60" : ""}>
-                                        {sportName}
-                                    </Badge>
+                                    <div className={cn(
+                                        "h-9 w-9 rounded-full flex items-center justify-center shrink-0 shadow-xs border backdrop-blur-xs transition-colors",
+                                        coverImg
+                                            ? "bg-card/50 border-border/60 text-foreground"
+                                            : "bg-muted/50 text-foreground border-border/60"
+                                    )}>
+                                        {getLandingSportIcon(sportName, "h-4 w-4")}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-sm border">
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=registration${tournamentCategoryId ? `&category=${tournamentCategoryId}` : ""}`}>
-                                        <span>ลงทะเบียน</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    asChild
-                                    className="h-8 text-xs font-bold gap-1.5"
-                                >
-                                    <Link href={`/registrations/${tournament.id}?tab=documents${initialTeamId ? `&team=${initialTeamId}` : ""}`}>
-                                        <FileText className="h-3.5 w-3.5" />
-                                        <span>ส่งเอกสาร</span>
-                                        {userRegisteredTeams.length > 0 && (
-                                            <Badge variant="outline" className="px-1 py-0 text-[10px] h-4">
-                                                {userRegisteredTeams.length}
-                                            </Badge>
-                                        )}
-                                    </Link>
-                                </Button>
-                            </div>
+                            <RegistrationTabSwitcher
+                                tournamentId={tournament.id}
+                                activeTab={activeTab as "registration" | "documents"}
+                                tournamentCategoryId={tournamentCategoryId}
+                                initialTeamId={initialTeamId}
+                                documentCount={userRegisteredTeams.length}
+                                basePath="/registrations"
+                            />
                         </div>
 
                         {/* Grid Layout: 5 Columns on Desktop */}
@@ -437,19 +402,18 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             {/* Left side (3 Columns): Tournament Info, Registered Teams, details */}
                             <div className="lg:col-span-3 space-y-2 md:space-y-4 order-1">
                                 {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description & Cover) */}
-                                {(tournament.cover_img || hasDescription) && (
+                                {(coverImg || hasDescription) && (
                                     <Card 
                                         className={cn(
                                             "border rounded-sm overflow-hidden",
-                                            hasDescription ? "" : "",
-                                            tournament.cover_img ? "bg-card/50 backdrop-blur-xl shadow-lg" : "bg-card"
+                                            coverImg ? "bg-card/50 backdrop-blur-xl border-border/60 shadow-lg" : "bg-card"
                                         )}
                                         id="tour-registration-details"
                                     >
-                                        {tournament.cover_img && (
+                                        {coverImg && (
                                             <div className="relative w-full aspect-[2/1] overflow-hidden">
                                                 <Image
-                                                    src={tournament.cover_img}
+                                                    src={coverImg}
                                                     alt={tournament.name}
                                                     fill
                                                     priority
@@ -459,14 +423,14 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                         )}
                                         {hasDescription && (
                                             <>
-                                                <CardHeader className={cn("flex flex-row items-center space-y-0", tournament.cover_img ? "pt-2 md:pt-4" : "pt-4")}>
+                                                <CardHeader className={cn("flex flex-row items-center space-y-0", coverImg ? "pt-2 md:pt-4" : "pt-4")}>
                                                     <CardTitle>{t("details")}</CardTitle>
                                                 </CardHeader>
                                                 <CardContent className="space-y-2 md:space-y-4 px-2 lg:px-4">
                                                     <div className="text-sm text-muted-foreground space-y-2 leading-relaxed">
                                                         <div
                                                             className="text-foreground/95 whitespace-pre-line break-words [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-4 [&_p]:mb-2 [&_a]:text-primary [&_a]:underline [&_h1]:text-2xl [&_h1]:font-black [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2"
-                                                            dangerouslySetInnerHTML={{ __html: tournament.description! }}
+                                                            dangerouslySetInnerHTML={{ __html: tournament.description || "" }}
                                                         />
                                                     </div>
                                                 </CardContent>
@@ -479,54 +443,62 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 <Card 
                                     className={cn(
                                         "border rounded-sm overflow-hidden py-0",
-                                        tournament.cover_img ? "bg-card/50 backdrop-blur-xl shadow-lg" : "bg-card"
+                                        coverImg ? "bg-card/50 backdrop-blur-xl border-border/60 shadow-lg" : "bg-card"
                                     )}
                                     id="tour-registration-info"
                                 >
-                                    <CardContent className="px-0 py-0 space-y-0">
+                                    <CardContent className="p-0">
                                         <div className="grid text-sm divide-y divide-border">
-                                            <div className="flex items-start gap-1 md:gap-2 px-2 md:px-4 py-2 md:py-3">
-                                                <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                                <div className="space-y-1">
-                                                    <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("dates")}</p>
-                                                    <p className="text-foreground">
+                                            <div className="flex items-center gap-3 px-3 md:px-4 py-2.5">
+                                                <div className="h-9 w-9 rounded-full bg-muted/50 border border-border/60 backdrop-blur-xs shadow-xs text-muted-foreground flex items-center justify-center shrink-0">
+                                                    <Calendar className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-0.5 min-w-0">
+                                                    <p className="font-bold text-[11px] text-muted-foreground uppercase tracking-wider">{t("dates")}</p>
+                                                    <p className="text-sm font-medium text-foreground">
                                                         {tournament.start_date ? formatDate(tournament.start_date, "d MMMM yyyy", locale) : "-"} - {tournament.end_date ? formatDate(tournament.end_date, "d MMMM yyyy", locale) : "-"}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-1 md:gap-2 px-2 md:px-4 py-2 md:py-3">
-                                                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                                <div className="space-y-1">
-                                                    <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("location")}</p>
-                                                    <p className="text-foreground">{tournament.location_name || t("no_location")}</p>
-                                                    {tournament.google_map_url && (
+                                            <div className="flex items-center gap-3 px-3 md:px-4 py-2.5">
+                                                <div className="h-9 w-9 rounded-full bg-muted/50 border border-border/60 backdrop-blur-xs shadow-xs text-muted-foreground flex items-center justify-center shrink-0">
+                                                    <MapPin className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-0.5 min-w-0">
+                                                    <p className="font-bold text-[11px] text-muted-foreground uppercase tracking-wider">{t("location")}</p>
+                                                    <p className="text-sm font-medium text-foreground">{locationName || t("no_location")}</p>
+                                                    {googleMapUrl && (
                                                         <a
-                                                            href={tournament.google_map_url}
+                                                            href={googleMapUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="inline-flex items-center gap-1 text-xs text-primary font-bold hover:underline group"
                                                         >
                                                             {t("view_map")}
-                                                            <ArrowUpRight className="h-3 w-3" />
+                                                            <ArrowUpRight className="h-4 w-4" />
                                                         </a>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="flex items-start gap-1 md:gap-2 px-2 md:px-4 py-2 md:py-3">
-                                                <DollarSign className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                                <div className="space-y-1">
-                                                    <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("registration_fee")}</p>
-                                                    <p className="text-foreground font-black text-primary">
+                                            <div className="flex items-center gap-3 px-3 md:px-4 py-2.5">
+                                                <div className="h-9 w-9 rounded-full bg-muted/50 border border-border/60 backdrop-blur-xs shadow-xs text-muted-foreground flex items-center justify-center shrink-0">
+                                                    <DollarSign className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-0.5 min-w-0">
+                                                    <p className="font-bold text-[11px] text-muted-foreground uppercase tracking-wider">{t("registration_fee")}</p>
+                                                    <p className="text-sm font-black text-primary">
                                                         {Number(registrationFee || 0) === 0 ? t("free") : `${Number(registrationFee).toLocaleString()} ${locale === "th" ? "บาท" : "THB"}`}
                                                     </p>
                                                 </div>
                                             </div>
                                             {tournament.document_deadline && (
-                                                <div className="flex items-start gap-1 md:gap-2 px-2 md:px-4 py-2 md:py-3">
-                                                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                                    <div className="space-y-1">
-                                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("deadline")}</p>
-                                                        <p className="text-foreground">
+                                                <div className="flex items-center gap-3 px-3 md:px-4 py-2.5">
+                                                    <div className="h-9 w-9 rounded-full bg-muted/50 border border-border/60 backdrop-blur-xs shadow-xs text-muted-foreground flex items-center justify-center shrink-0">
+                                                        <Clock className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="space-y-0.5 min-w-0">
+                                                        <p className="font-bold text-[11px] text-muted-foreground uppercase tracking-wider">{t("deadline")}</p>
+                                                        <p className="text-sm font-medium text-foreground">
                                                             {formatDate(tournament.document_deadline, "d MMMM yyyy", locale)}
                                                         </p>
                                                     </div>
@@ -540,7 +512,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 <Card 
                                     className={cn(
                                         "border rounded-sm overflow-hidden py-0 space-y-0",
-                                        tournament.cover_img ? "bg-card/50 backdrop-blur-xl shadow-lg" : "bg-card"
+                                        coverImg ? "bg-card/50 backdrop-blur-xl border-border/60 shadow-lg" : "bg-card"
                                     )}
                                     id="tour-registration-teams"
                                 >
@@ -549,7 +521,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                             {t("registered_list", { category: categoryName })}
                                         </CardTitle>
                                         <div className="text-xs text-muted-foreground font-medium">
-                                            {t("teams_count", { current: registeredTeams?.length || 0, max: activeCategory?.max_teams || 8 })}
+                                            {t("teams_count", { current: registeredTeams?.length || 0, max: categoryMaxTeams })}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="px-0 py-0">
@@ -563,7 +535,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                                 key={reg.id}
                                                                 className={cn(
                                                                     "flex items-center justify-between px-3 md:px-4 py-2.5 transition-colors",
-                                                                    tournament.cover_img
+                                                                    coverImg
                                                                         ? "hover:bg-card/80"
                                                                         : "hover:bg-muted/20"
                                                                 )}
@@ -603,16 +575,16 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             </div>
 
                             {/* Right side (2 Columns): Tournament Registration Form */}
-                            <div className="lg:col-span-2 order-2 space-y-4">
+                            <div className="lg:col-span-2 order-2 lg:sticky lg:top-24 self-start h-fit space-y-4">
                                 <RegistrationForm
                                     tournament={{
                                         id: tournament.id,
                                         name: tournament.name,
                                         registration_fee: Number(registrationFee || 0),
-                                        bank_account_number: tournament.bank_account_number || "",
-                                        bank_name: tournament.bank_name || "",
-                                        bank_account_name: tournament.bank_account_name || "",
-                                        is_registration_open: tournament.is_registration_open || false,
+                                        bank_account_number: tournament.bank_account_number || settings.bank_account_number || "",
+                                        bank_name: tournament.bank_name || settings.bank_name || "",
+                                        bank_account_name: tournament.bank_account_name || settings.bank_account_name || "",
+                                        is_registration_open: isRegistrationOpen,
                                         status: tournament.status || "draft"
                                     }}
                                     tournamentCategoryId={resolvedCategoryId ? String(resolvedCategoryId) : undefined}
@@ -621,7 +593,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                     isFull={isFull}
                                     isPastDeadline={isPastDeadline}
                                     isRegistrationDisabled={isRegistrationDisabled}
-                                    className={tournament.cover_img ? "bg-card/75 backdrop-blur-xl border-border/60 shadow-lg" : ""}
+                                    className={coverImg ? "bg-card/50 backdrop-blur-xl border-border/60 shadow-lg" : "bg-card"}
                                 />
                             </div>
                         </div>

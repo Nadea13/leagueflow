@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, BracketCanvasData } from "@/types/index";
 import { validateTournamentAccess } from "@/lib/security";
+import { ApiClient } from "@/lib/api-client";
 
 interface MatchNodeData {
     matches?: Array<{
@@ -26,16 +26,19 @@ export async function saveBracketCanvas(
         return { success: false, error: access.error };
     }
 
-    const supabase = await createClient();
-
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
     let targetCategoryId = inputCategoryId;
     if (!targetCategoryId) {
-        // Fetch first category as fallback
-        const { data: categories } = await supabase
-            .from("tournament_categories")
-            .select("id")
-            .eq("tournament_id", tournamentId);
-        targetCategoryId = categories && categories.length > 0 ? categories[0].id : undefined;
+        try {
+            const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+            if (tourRes.ok) {
+                const tourData = await tourRes.json();
+                const categories = tourData.categories || [];
+                targetCategoryId = categories.length > 0 ? categories[0].id : undefined;
+            }
+        } catch (e) {
+            console.error("Error fetching tournament categories fallback:", e);
+        }
     }
 
     if (!targetCategoryId) {
@@ -45,28 +48,29 @@ export async function saveBracketCanvas(
     const categoryId = targetCategoryId;
 
     // 1. Fetch teams for auto-mapping placeholders to IDs
-    const { data: tournamentTeams } = await supabase
-        .from('tournament_teams')
-        .select('id, team_id, team:teams(name)')
-        .eq('tournament_category_id', categoryId);
-
-    const teams = (tournamentTeams || []).map((tt) => {
-        const teamObj = Array.isArray(tt.team) ? tt.team[0] : tt.team;
-        return {
-            id: tt.id as string, // tournament_teams row ID
-            team_id: tt.team_id as string, // global team ID
-            name: (teamObj?.name as string) || ""
-        };
-    });
+    let teams: Array<{ id: string; team_id: string; name: string }> = [];
+    try {
+        const rawTeams = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/teams?category_id=${categoryId}`);
+        teams = (rawTeams || []).map((tt: any) => {
+            const teamObj = tt.team || {};
+            return {
+                id: tt.id as string,
+                team_id: (tt.team_id || tt.team?.id) as string,
+                name: (teamObj.name || tt.team_name || "") as string
+            };
+        });
+    } catch (e) {
+        console.error("Error fetching tournament teams in saveBracketCanvas:", e);
+    }
 
     // Fetch all active matches in the category to resolve connections
-    const { data: dbMatches } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('tournament_category_id', categoryId)
-        .is('deleted_at', null);
-
-    const activeDbMatches = dbMatches || [];
+    let activeDbMatches: any[] = [];
+    try {
+        const rawMatches = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/categories/${categoryId}/matches`);
+        activeDbMatches = rawMatches || [];
+    } catch (e) {
+        console.error("Error fetching active matches in saveBracketCanvas:", e);
+    }
 
     // Helper to resolve team ID from connected edges on the server
     const resolveTeamId = (nodeId: string, slot: 'a' | 'b', matchIndex: number): string | null => {
@@ -139,7 +143,7 @@ export async function saveBracketCanvas(
                     if (dbM && dbM.status === 'finished') {
                         const hScore = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: number | string }).total) || 0 : Number(dbM.home_score) || 0;
                         const aScore = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: number | string }).total) || 0 : Number(dbM.away_score) || 0;
-                        if (hScore < aScore) return dbM.home_team_id;
+                        if (hScore > aScore) return dbM.home_team_id;
                         if (aScore < hScore) return dbM.away_team_id;
                     }
                 }
@@ -149,9 +153,10 @@ export async function saveBracketCanvas(
         return null;
     };
 
-    // 2. Process matches in nodes — create new or update existing
+    // 2. Process matches in nodes — prepare for sync
     const updatedNodes = [...canvasData.nodes];
-    const validMatchIds = new Set<string>();
+    const matchesToSync: any[] = [];
+    const validMatchIds: string[] = [];
     
     for (const node of updatedNodes) {
         if (node.type === 'matchNode') {
@@ -168,121 +173,96 @@ export async function saveBracketCanvas(
                 const resolvedHomeId = resolveTeamId(node.id, 'a', i);
                 const resolvedAwayId = resolveTeamId(node.id, 'b', i);
                 
-                const baseRecord = {
+                const matchId = match.dbId || match.matchId;
+                if (matchId) {
+                    validMatchIds.push(matchId);
+                }
+
+                const scheduledAt = match.match_date && match.match_time 
+                    ? `${match.match_date}T${match.match_time}:00Z` 
+                    : null;
+
+                matchesToSync.push({
+                    id: matchId || undefined,
                     tournament_category_id: categoryId,
                     node_id: node.id,
                     placeholder_home: match.placeholderA || null,
                     placeholder_away: match.placeholderB || null,
+                    placeholder_a: match.placeholderA || null,
+                    placeholder_b: match.placeholderB || null,
                     home_team_id: resolvedHomeId || homeTeam?.team_id || null,
                     away_team_id: resolvedAwayId || awayTeam?.team_id || null,
-                    scheduled_at: match.match_date && match.match_time 
-                        ? `${match.match_date}T${match.match_time}:00Z` 
-                        : null,
-                    round: 1, // Default round
-                    stage: (matches.length > 1 ? 'group' : 'knockout') as 'group' | 'knockout',
-                    match_index: i + 1
-                };
-
-                const insertRecord = {
-                    ...baseRecord,
-                    status: 'scheduled' as const,
+                    scheduled_at: scheduledAt,
+                    scheduled_time: scheduledAt,
+                    round: 1,
+                    round_number: 1,
+                    stage: matches.length > 1 ? 'group' : 'knockout',
+                    match_index: i + 1,
+                    match_number: i + 1,
+                    status: 'scheduled',
                     is_manual: true
-                };
-
-                const matchId = match.dbId || match.matchId;
-
-                // 1. Try to find existing match by ID
-                let existingMatch = matchId
-                    ? activeDbMatches.find(m => m.id === matchId)
-                    : undefined;
-
-                // 2. If no match by ID, check if a match for this node and match_index already exists
-                if (!existingMatch) {
-                    existingMatch = activeDbMatches.find(m => m.node_id === node.id && m.match_index === (i + 1));
-                }
-
-                if (existingMatch) {
-                    // Update existing match (preserve status, scores, etc.)
-                    await supabase
-                        .from('matches')
-                        .update(baseRecord)
-                        .eq('id', existingMatch.id);
-                    
-                    matches[i] = { ...match, dbId: existingMatch.id };
-                    validMatchIds.add(existingMatch.id);
-                } else if (matchId) {
-                    // Check if match exists in DB (outside activeDbMatches cache)
-                    const { data: dbExisting } = await supabase
-                        .from('matches')
-                        .select('id')
-                        .eq('id', matchId)
-                        .is('deleted_at', null)
-                        .single();
-
-                    if (dbExisting) {
-                        await supabase
-                            .from('matches')
-                            .update(baseRecord)
-                            .eq('id', matchId);
-                        matches[i] = { ...match, dbId: matchId };
-                        validMatchIds.add(matchId);
-                    } else {
-                        const { data: newMatch } = await supabase
-                            .from('matches')
-                            .insert(insertRecord)
-                            .select('id')
-                            .single();
-                        
-                        if (newMatch) {
-                            matches[i] = { ...match, dbId: newMatch.id };
-                            validMatchIds.add(newMatch.id);
-                        }
-                    }
-                } else {
-                    // Create new
-                    const { data: newMatch } = await supabase
-                        .from('matches')
-                        .insert(insertRecord)
-                        .select('id')
-                        .single();
-                    
-                    if (newMatch) {
-                        matches[i] = { ...match, dbId: newMatch.id };
-                        validMatchIds.add(newMatch.id);
-                    }
-                }
+                });
             }
         }
     }
 
-    // 3. Soft-delete all matches in this category that are no longer on the canvas
-    //    (Handles deleted nodes, deleted submatches, and orphaned fixtures with null node_id)
-    const orphanedMatchIds = (activeDbMatches || [])
-        .filter(m => !validMatchIds.has(m.id))
-        .map(m => m.id);
+    // 3. Sync matches to Go backend API
+    try {
+        const syncResp = await ApiClient.fetch<{ message: string; matches: any[] }>(`/tournaments/${tournamentId}/categories/${categoryId}/sync-matches`, {
+            method: 'POST',
+            body: JSON.stringify({
+                matches: matchesToSync,
+                valid_ids: validMatchIds
+            })
+        });
 
-    if (orphanedMatchIds.length > 0) {
-        await supabase
-            .from('matches')
-            .update({ deleted_at: new Date().toISOString() })
-            .in('id', orphanedMatchIds);
+        const syncedMatches = syncResp?.matches || [];
+
+        // Map synced match IDs back into node matches
+        for (const node of updatedNodes) {
+            if (node.type === 'matchNode') {
+                const nodeData = node.data as MatchNodeData;
+                const matches = nodeData.matches || [];
+                for (let i = 0; i < matches.length; i++) {
+                    const match = matches[i];
+                    const synced = syncedMatches.find(sm => sm.node_id === node.id && sm.match_index === (i + 1));
+                    if (synced && synced.id) {
+                        matches[i] = { ...match, dbId: synced.id, matchId: synced.id };
+                    }
+                }
+            }
+        }
+    } catch (syncErr) {
+        console.error("Error syncing matches to backend:", syncErr);
     }
 
-    // 5. Save the final updated canvas data
+    // 4. Save the final updated canvas data to backend
     const returnData: BracketCanvasData = {
         ...canvasData,
         nodes: updatedNodes
     };
 
-    const { error } = await supabase
-        .from("tournament_categories")
-        .update({ canvas_data: returnData })
-        .eq("id", categoryId);
+    try {
+        const updateRes = await fetch(`${apiUrl}/tournaments/${tournamentId}/categories/${categoryId}/canvas`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ canvas_data: returnData }),
+        });
 
-    if (error) {
-        return { success: false, error: error.message };
+        if (!updateRes.ok) {
+            const errData = await updateRes.json().catch(() => ({}));
+            return { success: false, error: errData.error || `Failed to update canvas data: HTTP ${updateRes.status}` };
+        }
+    } catch (err) {
+        console.error("Failed to save canvas data to backend:", err);
+        return { success: false, error: err instanceof Error ? err.message : "Failed to save canvas data" };
     }
 
+    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
+
     return { success: true, data: returnData };
 }

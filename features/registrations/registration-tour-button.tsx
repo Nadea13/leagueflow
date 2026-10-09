@@ -79,9 +79,9 @@ export function RegistrationTourButton() {
     return (
         <Button 
             variant="ghost" 
-            size="icon" 
+            size="icon-sm" 
             onClick={startTour} 
-            className="flex items-center text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
+            className="h-8 w-8 flex items-center text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
         >
             <HelpCircle className="h-4 w-4" />
         </Button>

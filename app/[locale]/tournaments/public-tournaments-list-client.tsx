@@ -9,7 +9,7 @@ import { getPublicTournaments } from "@/actions/public";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tab, TabOption } from "@/components/ui/tab";
 import { Header } from "@/components/ui/header";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { TournamentSearchHeader } from "@/features/tournaments/public/tournament-search-bar";
 
 interface SportItem {
@@ -93,10 +93,44 @@ export function PublicTournamentsListClient({
         return matchesSearch && matchesSport;
     });
 
-    // Categorize status: upcoming, ongoing, completed
-    const upcomingTournaments = filteredTournaments.filter(t => (t as ExtendedTournament).status === "upcoming");
-    const ongoingTournaments = filteredTournaments.filter(t => (t as ExtendedTournament).status === "ongoing" || (t.status as string) === "active");
-    const completedTournaments = filteredTournaments.filter(t => (t as ExtendedTournament).status === "finished" || (t.status as string) === "completed");
+    // Helper to check if a tournament has passed its document submission deadline
+    const isPastDocumentDeadline = (docDeadline?: string | null) => {
+        if (!docDeadline) return false;
+        const deadlineDate = new Date(docDeadline);
+        if (isNaN(deadlineDate.getTime())) return false;
+        if (docDeadline.length <= 10) {
+            deadlineDate.setHours(23, 59, 59, 999);
+        }
+        return new Date() > deadlineDate;
+    };
+
+    // Categorize status: upcoming (registration phase), ongoing, completed
+    const ongoingTournaments = filteredTournaments.filter(t => {
+        const s = ((t as ExtendedTournament).status || "").toLowerCase();
+        return s === "ongoing" || s === "active";
+    });
+
+    const completedTournaments = filteredTournaments.filter(t => {
+        const s = ((t as ExtendedTournament).status || "").toLowerCase();
+        return s === "finished" || s === "completed";
+    });
+
+    // Upcoming / Registration Phase:
+    // Tournaments that are upcoming/open for registration/draft/published, AND not ongoing, completed, or cancelled.
+    // When on /registrations (onlyUpcoming=true), even if teams are full, it remains visible until document_deadline has passed!
+    const upcomingTournaments = filteredTournaments.filter(t => {
+        const s = ((t as ExtendedTournament).status || "").toLowerCase();
+        if (s === "ongoing" || s === "active" || s === "finished" || s === "completed" || s === "cancelled") {
+            return false;
+        }
+        
+        // If document deadline is specified and has passed, remove from upcoming registration list
+        if (isPastDocumentDeadline(t.document_deadline)) {
+            return false;
+        }
+
+        return true;
+    });
 
     const statusTabOptions: TabOption<StatusTabValue>[] = [
         { value: "all", label: `ทั้งหมด (${filteredTournaments.length})` },
@@ -142,18 +176,18 @@ export function PublicTournamentsListClient({
 
             {/* Status Tabs */}
             {showTabs && (
-                <div className="w-full overflow-x-auto scrollbar-none">
+                <div className="w-full">
                     <Tab
                         options={statusTabOptions}
                         value={activeStatusTab}
                         onChange={(val) => setActiveStatusTab(val)}
-                        className="bg-card w-max min-w-full"
+                        className="w-max min-w-full"
                     />
                 </div>
             )}
 
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4 bg-muted/5 border border-dashed rounded-xl mt-6">
+                <div className="flex flex-col items-center justify-center py-20 gap-4 bg-muted/5 border border-dashed rounded-sm mt-6">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <p className="text-muted-foreground font-semibold text-sm">กำลังโหลดรายการแข่งขัน...</p>
                 </div>
@@ -165,7 +199,7 @@ export function PublicTournamentsListClient({
                     className="bg-card rounded-sm border"
                 />
             ) : !showTabs ? (
-                <div className="flex flex-col gap-3">
+                    <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                     {displayTournaments.map((tournament) => (
                         <PublicTournamentCard key={tournament.id} tournament={tournament} href={getCardHref(tournament.id)} />
                     ))}
@@ -174,7 +208,7 @@ export function PublicTournamentsListClient({
                 <div>
                     {/* Tab: All */}
                     {activeStatusTab === "all" && (
-                        <div className="flex flex-col gap-3">
+                            <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                             {filteredTournaments.map((tournament) => (
                                 <PublicTournamentCard key={tournament.id} tournament={tournament} href={getCardHref(tournament.id)} />
                             ))}
@@ -190,7 +224,7 @@ export function PublicTournamentsListClient({
                                 className="bg-card rounded-sm border"
                             />
                         ) : (
-                            <div className="flex flex-col gap-3">
+                                <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                                 {upcomingTournaments.map((tournament) => (
                                     <PublicTournamentCard key={tournament.id} tournament={tournament} href={getCardHref(tournament.id)} />
                                 ))}
@@ -207,7 +241,7 @@ export function PublicTournamentsListClient({
                                 className="bg-card rounded-sm border"
                             />
                         ) : (
-                            <div className="flex flex-col gap-3">
+                                <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                                 {ongoingTournaments.map((tournament) => (
                                     <PublicTournamentCard key={tournament.id} tournament={tournament} href={getCardHref(tournament.id)} />
                                 ))}
@@ -224,7 +258,7 @@ export function PublicTournamentsListClient({
                                 className="bg-card rounded-sm border"
                             />
                         ) : (
-                            <div className="flex flex-col gap-3">
+                                <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                                 {completedTournaments.map((tournament) => (
                                     <PublicTournamentCard key={tournament.id} tournament={tournament} href={getCardHref(tournament.id)} />
                                 ))}
@@ -236,3 +270,4 @@ export function PublicTournamentsListClient({
         </div>
     );
 }
+

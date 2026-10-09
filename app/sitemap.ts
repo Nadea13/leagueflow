@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { createClient } from '@supabase/supabase-js';
 import { getSiteUrl } from '@/lib/site-url';
 
 const locales = ['th', 'en'];
@@ -41,16 +40,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Attempt to fetch public tournaments for dynamic sitemap indexing
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (supabaseUrl && supabaseAnonKey) {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: tournaments } = await supabase
-        .from('tournaments')
-        .select('id, updated_at')
-        .limit(100);
-
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    const res = await fetch(`${apiUrl}/tournaments`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const { data: tournaments } = await res.json();
       if (tournaments && tournaments.length > 0) {
         for (const t of tournaments) {
           for (const locale of locales) {

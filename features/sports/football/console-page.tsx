@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { getPlayers } from "@/actions/tournaments/player";
 import { updateMatch, advanceStage, updateCategoryRulesConfig } from "@/actions/tournaments/general";
 import { getPenaltyShootout } from "@/actions/tournaments/penalty";
-import { createClient } from "@/lib/supabase/client";
+import { useMatchWebSocket } from "@/hooks/use-match-websocket";
+import { ApiClient } from "@/lib/api-client";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Logo } from "@/components/shared/logo";
 
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -29,9 +27,7 @@ import {
 import {
     Timer,
     ArrowLeft,
-    Target,
     Undo,
-    Ban,
     Activity,
     Square,
     Repeat,
@@ -42,23 +38,17 @@ import {
     BarChart2,
     Users,
     Volleyball,
-    XCircle,
-    CalendarRange,
     Cloud,
     CloudOff,
     RefreshCw,
     HelpCircle,
-    PieChart,
     MoveRight,
     Crosshair,
     FlagTriangleRight,
     CornerUpRight,
     Scissors,
     ArrowUpRight,
-    Check,
     Settings,
-    RotateCcw,
-    X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -70,19 +60,19 @@ import { Match, Player, EventType, MatchEvent, PenaltyShot } from "@/types";
 import { MatchTimeControl } from "./console/time-control";
 import { Scoreboard } from "./console/scoreboard";
 import { EventLog } from "./console/log";
-import { MatchEventDialog } from "./console/event-dialog";
-import { WalkoverDialog } from "./console/walkover-dialog";
-import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
-import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
+import { MatchEventDialog } from "@/features/dialogs";
+import { WalkoverDialog } from "@/features/dialogs";
+import { PenaltyShootoutDialog } from "@/features/dialogs";
+import { AddTimeDialog, SetTimeDialog } from "@/features/dialogs";
 import { BroadcastDialog } from "@/features/broadcast";
-import { RosterSelectionDialog } from "./console/roster-selection-dialog";
+import { RosterSelectionDialog } from "@/features/dialogs";
+import { FootballSettingsDialog, FootballStatisticsDialog } from "@/features/dialogs";
 import { MatchStatisticsBox } from "./console/statistics-box";
+import { TeamRosterDialog } from "@/components/teams/team-roster-dialog";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
 import { Header } from "@/components/ui/header";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 
 interface ConsolePageProps {
     match: Match;
@@ -99,12 +89,24 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const locale = useLocale();
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
-    const tPublic = useTranslations("PublicView");
+    const _tPublic = useTranslations("PublicView");
     const { toast } = useToast();
-    const supabase = createClient();
 
     // --- State ---
-    const [match, setMatch] = useState<Match>(initialMatch);
+    const [match, setMatch] = useState<Match>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem(`leagueflow-match-snapshot-${initialMatch.id}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.id === initialMatch.id) {
+                        return { ...initialMatch, ...parsed };
+                    }
+                }
+            } catch (_) { }
+        }
+        return initialMatch;
+    });
     const [homePlayers, setHomePlayers] = useState<Player[]>([]);
     const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
     const [playersLoading, setPlayersLoading] = useState(true);
@@ -113,12 +115,29 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         'yellow_card', 'save', 'injury', 'corner', 'missed_shot',
         'bad_pass', 'offside'
     ];
-    const ALL_STATS_KEYS = [
-        'possession', 'goal', 'total_shots', 'missed_shot', 'pass',
-        'bad_pass', 'cross', 'corner', 'save', 'foul', 'penalty',
-        'yellow_card', 'red_card', 'offside'
-    ];
     const DEFAULT_STATS_KEYS = ['goal', 'yellow_card', 'red_card'];
+    const ALL_LOG_EVENT_TYPES = [
+        'goal',
+        'penalty_shot',
+        'yellow_card',
+        'red_card',
+        'substitution',
+        'foul',
+        'save',
+        'corner',
+        'offside',
+        'missed_shot',
+        'pass',
+        'bad_pass',
+        'cross',
+        'possession',
+        'injury',
+        'var',
+        'period_lifecycle',
+        'add_time',
+        'match_paused',
+        'walkover',
+    ];
     const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
         if (Array.isArray(rulesConfig?.custom_actions)) {
             return rulesConfig.custom_actions as string[];
@@ -130,7 +149,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     const parsed = JSON.parse(savedCustom);
                     if (Array.isArray(parsed)) return parsed;
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
         return ALL_CUSTOMIZABLE_ACTIONS;
     });
@@ -142,7 +161,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             try {
                 const saved = localStorage.getItem("leagueflow-scoreboard-possession");
                 if (saved !== null) return saved === "true";
-            } catch (_) {}
+            } catch (_) { }
         }
         return true;
     });
@@ -157,9 +176,24 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     const parsed = JSON.parse(savedStats);
                     if (Array.isArray(parsed)) return parsed;
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
         return DEFAULT_STATS_KEYS;
+    });
+    const [visibleLogs, setVisibleLogs] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.visible_logs)) {
+            return rulesConfig.visible_logs as string[];
+        }
+        if (typeof window !== "undefined") {
+            try {
+                const savedLogs = localStorage.getItem("leagueflow-visible-logs");
+                if (savedLogs) {
+                    const parsed = JSON.parse(savedLogs);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) { }
+        }
+        return ALL_LOG_EVENT_TYPES;
     });
     const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
 
@@ -178,7 +212,23 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 } else {
                     setVisibleStats(DEFAULT_STATS_KEYS);
                 }
-            } catch (_) {}
+            } catch (_) { }
+        }
+
+        if (Array.isArray(rulesConfig?.visible_logs)) {
+            setVisibleLogs(rulesConfig.visible_logs as string[]);
+        } else if (typeof window !== "undefined") {
+            try {
+                const savedLogs = localStorage.getItem("leagueflow-visible-logs");
+                if (savedLogs) {
+                    const parsed = JSON.parse(savedLogs);
+                    if (Array.isArray(parsed)) {
+                        setVisibleLogs(parsed);
+                    }
+                } else {
+                    setVisibleLogs(ALL_LOG_EVENT_TYPES);
+                }
+            } catch (_) { }
         }
 
         if (Array.isArray(rulesConfig?.custom_actions)) {
@@ -192,7 +242,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         setCustomActionTypes(parsed);
                     }
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
 
         if (typeof rulesConfig?.scoreboard_possession === 'boolean') {
@@ -203,7 +253,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 if (savedScoreboardPoss !== null) {
                     setShowScoreboardPossession(savedScoreboardPoss === "true");
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
     }, [rulesConfig]);
 
@@ -218,16 +268,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             }
             return next;
         });
-    };
-
-    const resetCustomActions = (types: string[]) => {
-        setCustomActionTypes(types);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("leagueflow-custom-actions", JSON.stringify(types));
-        }
-        if (!readOnly && match.tournament_category_id) {
-            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { custom_actions: types }).catch(console.error);
-        }
     };
 
     const toggleScoreboardPossession = (enabled: boolean) => {
@@ -253,93 +293,118 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         });
     };
 
-    const resetVisibleStats = (stats: string[]) => {
-        setVisibleStats(stats);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("leagueflow-visible-stats", JSON.stringify(stats));
-        }
-        if (!readOnly && match.tournament_category_id) {
-            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { visible_stats: stats }).catch(console.error);
-        }
+    const toggleVisibleLog = (logType: string) => {
+        setVisibleLogs((prev) => {
+            const next = prev.includes(logType) ? prev.filter((t) => t !== logType) : [...prev, logType];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-visible-logs", JSON.stringify(next));
+            }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { visible_logs: next }).catch(console.error);
+            }
+            return next;
+        });
     };
 
     // Hooks
-    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
+    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent, handleIncomingEvent, handleIncomingDelete } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
     const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId, events);
 
-    // Match updates queue state
-    const [matchQueue, setMatchQueue] = useState<{
+    type MatchQueueItem = {
         id: string;
         data: Parameters<typeof updateMatch>[1];
         status: "pending" | "syncing" | "failed";
-    }[]>([]);
+    };
+
+    // Match updates queue state
+    const [matchQueue, setMatchQueue] = useState<MatchQueueItem[]>([]);
     const [isMatchSyncing, setIsMatchSyncing] = useState(false);
+    const isMatchSyncingRef = useRef(false);
+    const matchQueueRef = useRef<MatchQueueItem[]>([]);
+    matchQueueRef.current = matchQueue;
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const savedEventsKey = `leagueflow-pending-events-${match.id}`;
             const savedMatchKey = `leagueflow-pending-match-${match.id}`;
-            console.log(`[LocalStorage Monitor] Events Queue Key (${savedEventsKey}):`, localStorage.getItem(savedEventsKey));
-            console.log(`[LocalStorage Monitor] Match Queue Key (${savedMatchKey}):`, localStorage.getItem(savedMatchKey));
             const saved = localStorage.getItem(savedMatchKey);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    setTimeout(() => {
+                    if (Array.isArray(parsed)) {
                         setMatchQueue(parsed);
-                    }, 0);
+                    }
                 } catch (_) { }
             }
         }
     }, [match.id]);
 
-    const saveMatchQueue = useCallback((newQueueOrUpdater: typeof matchQueue | ((prev: typeof matchQueue) => typeof matchQueue)) => {
-        setMatchQueue(prev => {
-            const next = typeof newQueueOrUpdater === "function" ? newQueueOrUpdater(prev) : newQueueOrUpdater;
-            if (typeof window !== "undefined") {
-                localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(next));
-            }
-            return next;
-        });
+    const persistMatchQueue = useCallback((newQueue: MatchQueueItem[]) => {
+        setMatchQueue(newQueue);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
+        }
     }, [match.id]);
 
     const syncMatchQueue = useCallback(async () => {
-        if (isMatchSyncing || readOnly) return;
+        if (isMatchSyncingRef.current || readOnly) return;
 
-        let itemsToProcess: typeof matchQueue = [];
-        setMatchQueue(prev => {
-            itemsToProcess = prev.filter(item => item.status === 'pending' || item.status === 'failed');
-            return prev;
-        });
+        const currentQueue = matchQueueRef.current;
+        const pendingItems = currentQueue.filter((item: MatchQueueItem) => item.status === 'pending');
 
-        if (itemsToProcess.length === 0) return;
+        if (pendingItems.length === 0) return;
 
+        isMatchSyncingRef.current = true;
         setIsMatchSyncing(true);
 
-        for (const item of itemsToProcess) {
-            saveMatchQueue(prev => prev.map(m => m.id === item.id ? { ...m, status: 'syncing' as const } : m));
+        let workingQueue = [...currentQueue];
+
+        for (const item of pendingItems) {
+            workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'syncing' as const } : m);
+            matchQueueRef.current = workingQueue;
+            persistMatchQueue(workingQueue);
 
             try {
-                const res = await updateMatch(match.id, item.data, tournamentId);
-                if (res.success) {
-                    saveMatchQueue(prev => {
-                        const next = prev.filter(m => m.id !== item.id);
-                        console.log(`[MatchQueue Sync Success] Item ${item.id} synced & removed. Remaining:`, next.length);
-                        return next;
-                    });
+                let success = false;
+                try {
+                    const res = await updateMatch(match.id, item.data, tournamentId);
+                    if (res.success) {
+                        success = true;
+                    }
+                } catch (_serverActionErr) {
+                    console.warn("Server action updateMatch failed, attempting direct API fallback...", _serverActionErr);
+                }
+
+                if (!success) {
+                    // Direct API fallback using local JWT
+                    try {
+                        await ApiClient.fetch(`/matches/${match.id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(item.data),
+                        });
+                        success = true;
+                    } catch (apiErr) {
+                        console.error("Direct API Fallback error:", apiErr);
+                    }
+                }
+
+                if (success) {
+                    workingQueue = workingQueue.filter(m => m.id !== item.id);
+                    matchQueueRef.current = workingQueue;
+                    persistMatchQueue(workingQueue);
                 } else {
-                    saveMatchQueue(prev => {
-                        const next = prev.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
-                        console.error(`[MatchQueue Sync Failed] Item ${item.id} failed:`, res.error);
-                        return next;
-                    });
+                    workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
+                    matchQueueRef.current = workingQueue;
+                    persistMatchQueue(workingQueue);
                 }
             } catch (_err) {
-                saveMatchQueue(prev => prev.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m));
+                workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
+                matchQueueRef.current = workingQueue;
+                persistMatchQueue(workingQueue);
             }
         }
+        isMatchSyncingRef.current = false;
         setIsMatchSyncing(false);
-    }, [match.id, tournamentId, isMatchSyncing, readOnly, saveMatchQueue]);
+    }, [match.id, tournamentId, readOnly, persistMatchQueue]);
 
     // Auto-sync match queue on online event
     useEffect(() => {
@@ -352,32 +417,29 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         }
     }, [syncMatchQueue]);
 
-    // Trigger sync automatically when queue receives new items
-    useEffect(() => {
-        if (matchQueue.some(item => item.status === 'pending')) {
-            syncMatchQueue();
-        }
-    }, [matchQueue, syncMatchQueue]);
-
     const queueMatchUpdate = useCallback(async (data: Parameters<typeof updateMatch>[1]) => {
         const newItem = { id: `match-${Date.now()}`, data, status: 'pending' as const };
-        saveMatchQueue(prev => [...prev, newItem]);
+        const nextQueue = [...matchQueueRef.current, newItem];
+        matchQueueRef.current = nextQueue;
+        persistMatchQueue(nextQueue);
         setMatch(prev => ({ ...prev, ...data }));
         setTimeout(() => {
             syncMatchQueue();
         }, 50);
-    }, [saveMatchQueue, syncMatchQueue]);
+    }, [persistMatchQueue, syncMatchQueue]);
 
-    const isHalfTime = !isRunning && events.length > 0 && (() => {
-        const lastTimerEvent = events.find(e =>
-            e.event_type === 'kick_off' ||
-            e.event_type === 'match_resumed' ||
-            e.event_type === 'match_paused' ||
-            e.event_type === 'half_time' ||
-            e.event_type === 'full_time'
-        );
-        return lastTimerEvent?.event_type === 'half_time';
-    })();
+    const lastPeriodEvent = events.find(e =>
+        e.event_type === 'first_half' ||
+        e.event_type === 'half_time' ||
+        e.event_type === 'second_half' ||
+        e.event_type === 'full_time' ||
+        e.event_type === 'extra_time' ||
+        e.event_type === 'extra_time_half_time' ||
+        e.event_type === 'extra_time_second_half' ||
+        e.event_type === 'penalties'
+    );
+    const lastPeriodEventType = lastPeriodEvent?.event_type;
+    const isHalfTime = !isRunning && lastPeriodEventType === 'half_time';
 
     // Lineup / Roster Selection States
     const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
@@ -386,11 +448,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     // Dialog States
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
+    const [teamInfoTarget, setTeamInfoTarget] = useState<'home' | 'away' | null>(null);
     const [woDialogOpen, setWoDialogOpen] = useState(false);
     const [addTimeDialogOpen, setAddTimeDialogOpen] = useState(false);
     const [setTimeDialogOpen, setSetTimeDialogOpen] = useState(false);
     const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
     const [statsDialogOpen, setStatsDialogOpen] = useState(false);
+    const [penaltyDialogOpen, setPenaltyDialogOpen] = useState(false);
     const [_penaltyShots, setPenaltyShots] = useState<PenaltyShot[]>([]);
 
     // Event Selection State
@@ -448,30 +512,29 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     };
 
     useEffect(() => {
+        let isMounted = true;
         const loadPlayers = async () => {
             setPlayersLoading(true);
-            const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
-                const { data: ttData } = await supabase
-                    .from("tournament_teams")
-                    .select("id")
-                    .eq("team_id", teamId)
-                    .eq("tournament_category_id", match.tournament_category_id)
-                    .is("deleted_at", null)
-                    .maybeSingle();
-
-                const targetId = ttData?.id || teamId;
-                const res = await getPlayers(targetId);
-                if (res.success && res.data) setter(res.data);
-            };
-            const promises = [];
-            if (match.home_team_id) promises.push(fetchTeam(match.home_team_id, setHomePlayers));
-            if (match.away_team_id) promises.push(fetchTeam(match.away_team_id, setAwayPlayers));
-
-            await Promise.all(promises);
-            setPlayersLoading(false);
+            try {
+                const homeId = match.home_team_id || match.home_team?.id;
+                const awayId = match.away_team_id || match.away_team?.id;
+                const [homeRes, awayRes] = await Promise.all([
+                    homeId ? getPlayers(homeId) : Promise.resolve({ success: true, data: [] }),
+                    awayId ? getPlayers(awayId) : Promise.resolve({ success: true, data: [] })
+                ]);
+                if (isMounted) {
+                    if (homeRes.success && homeRes.data) setHomePlayers(homeRes.data);
+                    if (awayRes.success && awayRes.data) setAwayPlayers(awayRes.data);
+                }
+            } catch (err) {
+                console.error("Error loading team players:", err);
+            } finally {
+                if (isMounted) setPlayersLoading(false);
+            }
         };
         loadPlayers();
-    }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
+        return () => { isMounted = false; };
+    }, [match.home_team_id, match.away_team_id, match.home_team?.id, match.away_team?.id]);
 
     const fetchShots = useCallback(async () => {
         const res = await getPenaltyShootout(match.id);
@@ -484,30 +547,50 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         fetchShots();
     }, [fetchShots]);
 
+    // Persist match state snapshot to localStorage for 0ms render & offline resilience
     useEffect(() => {
-        const supabase = createClient();
-        const channel = supabase
-            .channel(`match-${match.id}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
-                const newData = payload.new as Match;
-                setMatch(prev => {
-                    // Avoid unnecessary state re-creation if data hasn't changed
-                    if (prev.home_score === newData.home_score &&
-                        prev.away_score === newData.away_score &&
-                        prev.status === newData.status &&
-                        prev.timer_status === newData.timer_status &&
-                        prev.current_minute === newData.current_minute) {
-                        return prev;
-                    }
-                    return { ...prev, ...newData };
-                });
-            })
-            .subscribe();
+        if (typeof window !== "undefined" && match.id) {
+            localStorage.setItem(`leagueflow-match-snapshot-${match.id}`, JSON.stringify(match));
+        }
+    }, [match]);
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [match.id]);
+    // 100% Realtime WebSocket Connection
+    useMatchWebSocket(match.id, {
+        onScoreUpdate: (payload) => {
+            setMatch((prev) => ({
+                ...prev,
+                home_score: payload.home_score,
+                away_score: payload.away_score,
+                status: (payload.status as Match["status"]) || prev.status
+            }));
+        },
+        onMatchEvent: (payload) => {
+            if (payload?.event) {
+                handleIncomingEvent(payload.event);
+            }
+        },
+        onMatchEventDelete: (payload) => {
+            if (payload?.event_id) {
+                handleIncomingDelete(payload.event_id);
+            }
+        },
+        onMatchUpdate: (payload) => {
+            if (payload?.match) {
+                setMatch((prev) => ({
+                    ...prev,
+                    ...payload.match
+                }));
+            }
+        },
+        onStatusChange: (payload) => {
+            if (payload?.status) {
+                setMatch((prev) => ({
+                    ...prev,
+                    status: payload.status as Match["status"]
+                }));
+            }
+        }
+    });
 
     // --- Computed Data ---
     const isHomeTeam = (id: string) => id === match.home_team_id || id === match.home_team?.id;
@@ -559,16 +642,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const handleStartMatch = async () => {
         if (readOnly) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
-        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
         // Optimistic UI Update
         setIsRunning(true);
 
         try {
-            await addEvent(resolvedTeamId || null, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
+            await addEvent(null, 'first_half', currentMinute, null, { start_timestamp: Date.now() }, "First Half");
             await queueMatchUpdate({ status: 'live', timer_status: 'playing', elapsed_before_pause: time, current_minute: currentMinute });
-            toast({ title: t("match_started") || "Match Started" });
+            toast({ title: t("first_half") || t("match_started") || "First Half Started" });
         } catch (error) {
             console.error("Start match error:", error);
         }
@@ -577,15 +658,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const handlePauseMatch = async () => {
         if (readOnly) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
-        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
-            await addEvent(resolvedTeamId || null, 'match_paused', currentMinute, null, {}, "Match Paused");
-            await queueMatchUpdate({ timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await addEvent(null, 'match_paused', currentMinute, null, {}, "Match Paused");
+            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
             toast({ title: t("match_paused") || "Match Paused" });
         } catch (error) {
             console.error("Pause match error:", error);
@@ -595,34 +674,116 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const handleHalfTime = async () => {
         if (readOnly) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
-        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
-            await addEvent(resolvedTeamId || null, 'half_time', currentMinute, null, {}, "Half Time");
-            await queueMatchUpdate({ timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await addEvent(null, 'half_time', currentMinute, null, {}, "Half Time");
+            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
             toast({ title: t("half_time") || "Half Time" });
         } catch (error) {
             console.error("Half time error:", error);
         }
     };
 
-    const handleResumeMatch = async () => {
+    const handleRegularFullTime = async () => {
         if (readOnly) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
-        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
+
+        // Optimistic UI Update
+        setIsRunning(false);
+
+        try {
+            await addEvent(null, 'full_time', currentMinute, null, {}, "End Regular Time");
+            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            toast({ title: t("regular_full_time") || "End of Regular Time" });
+        } catch (error) {
+            console.error("Regular full time error:", error);
+        }
+    };
+
+    const handleStartExtraTime = async () => {
+        if (readOnly) return;
+        const currentMinute = Math.floor(time / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(true);
 
         try {
-            await addEvent(resolvedTeamId || null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
-            await queueMatchUpdate({ timer_status: 'playing', current_minute: currentMinute });
-            toast({ title: t("match_resumed") || "Match Resumed" });
+            await addEvent(null, 'extra_time', currentMinute, null, { start_timestamp: Date.now() }, "Extra Time");
+            await queueMatchUpdate({ status: 'live', timer_status: 'playing', current_minute: currentMinute });
+            toast({ title: t("start_extra_time") || "Extra Time Started" });
+        } catch (error) {
+            console.error("Start extra time error:", error);
+        }
+    };
+
+    const handleExtraTimeHalfTime = async () => {
+        if (readOnly) return;
+        const currentMinute = Math.floor(time / 60) + 1;
+
+        // Optimistic UI Update
+        setIsRunning(false);
+
+        try {
+            await addEvent(null, 'extra_time_half_time', currentMinute, null, {}, "Extra Time Half Time");
+            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            toast({ title: t("pause_extra_time") || "Extra Time Break" });
+        } catch (error) {
+            console.error("Extra time half time error:", error);
+        }
+    };
+
+    const handleStartPenalties = async () => {
+        if (readOnly) return;
+        const currentMinute = Math.floor(time / 60) + 1;
+
+        // Optimistic UI Update
+        setIsRunning(false);
+
+        // Open Penalty Shootout Dialog immediately
+        setPenaltyDialogOpen(true);
+
+        try {
+            if (lastPeriodEventType !== 'penalties') {
+                await addEvent(null, 'penalties', currentMinute, null, {}, "Penalty Shootout");
+                await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+                toast({ title: t("start_penalties") || "Penalty Shootout Started" });
+            }
+        } catch (error) {
+            console.error("Start penalties error:", error);
+        }
+    };
+
+    const handleResumeMatch = async () => {
+        if (readOnly) return;
+        const currentMinute = Math.floor(time / 60) + 1;
+
+        // Optimistic UI Update
+        setIsRunning(true);
+
+        try {
+            let eventTypeToLog: EventType = 'match_resumed';
+            let eventLabel = "Match Resumed";
+
+            if (lastPeriodEventType === 'half_time') {
+                eventTypeToLog = 'second_half';
+                eventLabel = "Second Half";
+            } else if (lastPeriodEventType === 'extra_time_half_time') {
+                eventTypeToLog = 'extra_time_second_half';
+                eventLabel = "Extra Time 2nd Half";
+            }
+
+            await addEvent(null, eventTypeToLog, currentMinute, null, { start_timestamp: Date.now() }, eventLabel);
+            await queueMatchUpdate({ status: 'live', timer_status: 'playing', current_minute: currentMinute });
+
+            const toastTitle = eventTypeToLog === 'second_half'
+                ? (t("second_half") || "Second Half Started")
+                : eventTypeToLog === 'extra_time_second_half'
+                    ? (t("extra_time_second_half") || "Extra Time 2nd Half Started")
+                    : (t("match_resumed") || "Match Resumed");
+            toast({ title: toastTitle });
         } catch (error) {
             console.error("Resume match error:", error);
         }
@@ -637,11 +798,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
                 const currentMinute = Math.floor(time / 60) + 1;
-                const teamId = match.home_team_id || match.away_team_id;
-                const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
                 setIsRunning(false);
-                await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
+                await addEvent(null, 'full_time', currentMinute, null, {}, "Full Time");
                 await queueMatchUpdate({ status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute });
 
                 // Auto-advance if possible
@@ -965,9 +1124,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         status={match.status}
                         isRunning={isRunning}
                         readOnly={false}
+                        lastPeriodEventType={lastPeriodEventType}
                         onStart={handleStartMatch}
                         onPause={handlePauseMatch}
                         onHalfTime={handleHalfTime}
+                        onRegularFullTime={handleRegularFullTime}
+                        onStartExtraTime={handleStartExtraTime}
+                        onExtraTimeHalfTime={handleExtraTimeHalfTime}
+                        onStartPenalties={handleStartPenalties}
                         onResume={handleResumeMatch}
                         onEnd={handleEndMatch}
                         onSetTime={() => setSetTimeDialogOpen(true)}
@@ -981,10 +1145,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const quickActionsBox = (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-action-panel">
             <div className="relative z-10 space-y-2 lg:space-y-4">
-                <div className={cn(
-                    "grid gap-1 lg:gap-2",
-                    readOnly ? "grid-cols-2 lg:grid-cols-1" : "grid-cols-3 lg:grid-cols-1"
-                )}>
+                <div className="grid grid-cols-2 lg:grid-cols-1 gap-1 lg:gap-2">
                     {!readOnly && (
                         <Button
                             variant="outline"
@@ -1011,35 +1172,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         <BarChart2 className="h-4 w-4 text-primary" />
                         <span className="inline text-xs font-semibold">{t("match_statistics") || "สถิติการแข่งขัน"}</span>
                     </Button>
-                    {match.status === 'finished' && homeScore === awayScore ? (
-                        <PenaltyShootoutDialog
-                            matchId={match.id}
-                            homeTeamId={match.home_team_id}
-                            awayTeamId={match.away_team_id}
-                            homeTeamName={match.home_team?.name || 'Home'}
-                            awayTeamName={match.away_team?.name || 'Away'}
-                            onUpdate={fetchShots}
-                            readOnly={readOnly}
-                            trigger={
-                                <Button
-                                    variant="outline"
-                                    className="w-full flex justify-center lg:justify-start items-center col-span-2 lg:col-span-1"
-                                >
-                                    <Target className="h-4 w-4 text-primary" />
-                                    <span className="inline text-xs font-semibold">{t("penalty_shootout")}</span>
-                                </Button>
-                            }
-                        />
-                    ) : (!readOnly ? (
-                        <Button
-                            variant="outline"
-                            disabled
-                            className="w-full flex justify-center lg:justify-start items-center opacity-50 cursor-not-allowed"
-                        >
-                            <Target className="h-4 w-4 text-muted-foreground" />
-                            <span className="hidden lg:inline">{t("penalty_shootout")}</span>
-                        </Button>
-                    ) : null)}
                 </div>
             </div>
         </div>
@@ -1101,8 +1233,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <div className="flex items-center gap-1 lg:gap-2 w-full">
                         <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                            size="icon-sm"
+                            className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                             asChild
                         >
                             <Link href={backUrl}>
@@ -1207,8 +1339,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 <div className="flex items-center gap-1 lg:gap-2 w-full">
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                        size="icon-sm"
+                        className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                         asChild
                     >
                         <Link href={backUrl}>
@@ -1229,22 +1361,30 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <span className="relative flex h-2 w-2 shrink-0">
                                 <span className={cn(
                                     "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
+                                    (isHalfTime || (lastPeriodEventType === 'full_time' && !isRunning) || lastPeriodEventType === 'extra_time_half_time') ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
                                 )}></span>
                                 <span className={cn(
                                     "relative inline-flex rounded-full h-2 w-2",
-                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
+                                    (isHalfTime || (lastPeriodEventType === 'full_time' && !isRunning) || lastPeriodEventType === 'extra_time_half_time') ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
                                 )}></span>
                             </span>
                             <span className="text-[10px] font-black tracking-widest whitespace-nowrap">
-                                {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
+                                {(() => {
+                                    if (match.status === 'finished') return tMatch("status_finished");
+                                    if (lastPeriodEventType === 'half_time') return (t("half_time") || "HALF TIME").toUpperCase();
+                                    if (lastPeriodEventType === 'full_time' && !isRunning) return (t("regular_full_time") || "END REGULAR TIME").toUpperCase();
+                                    if (lastPeriodEventType === 'extra_time_half_time') return (t("extra_time_half_time") || "ET HALF TIME").toUpperCase();
+                                    if (lastPeriodEventType === 'penalties') return (t("penalties") || "PENALTIES").toUpperCase();
+                                    if (lastPeriodEventType === 'extra_time' || lastPeriodEventType === 'extra_time_second_half') return (t("extra_time") || "EXTRA TIME").toUpperCase();
+                                    return match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status);
+                                })()}
                             </span>
                         </div>
 
                         {/* Undo Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={handleUndo}
                             title={t("undo") || "ย้อนกลับ (Undo)"}
                         >
@@ -1254,7 +1394,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={startConsoleTutorial}
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
@@ -1264,7 +1404,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         {/* Settings Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={() => setCustomizeDialogOpen(true)}
                             title={t("settings") || "ตั้งค่า"}
                         >
@@ -1348,14 +1488,22 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             awayScore={awayScore}
                             events={events}
                             onTeamClick={(teamId) => {
-                                if (readOnly || match.status !== 'live') return;
-                                setSelectedTeamId(teamId);
-                                setEventDialogOpen(true);
+                                if (teamId === match.home_team_id || teamId === match.home_team?.id) {
+                                    setTeamInfoTarget('home');
+                                } else if (teamId === match.away_team_id || teamId === match.away_team?.id) {
+                                    setTeamInfoTarget('away');
+                                }
                             }}
                             timerTime={time}
                             timerReadOnly={readOnly || match.status === 'finished'}
-                            timerCustomText={match.status === 'finished' ? "FT" : isHalfTime ? "HT" : null}
-                            addedTime={isHalfTime || match.status === 'finished' ? null : addedTime}
+                            timerCustomText={
+                                match.status === 'finished' ? "FT" :
+                                    lastPeriodEventType === 'half_time' ? "HT" :
+                                        (lastPeriodEventType === 'full_time' && !isRunning) ? "FT" :
+                                            lastPeriodEventType === 'extra_time_half_time' ? "ET HT" :
+                                                lastPeriodEventType === 'penalties' ? "PSO" : null
+                            }
+                            addedTime={(isHalfTime || (lastPeriodEventType === 'full_time' && !isRunning) || match.status === 'finished' || lastPeriodEventType === 'penalties') ? null : addedTime}
                             showPossession={showScoreboardPossession}
                         />
 
@@ -1377,6 +1525,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             readOnly={readOnly}
                             onDelete={deleteEvent}
                             players={allPlayers}
+                            visibleLogs={visibleLogs}
                         />
                     </section>
                 </div>
@@ -1384,29 +1533,36 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
             {/* Dialogs */}
             <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} opponentPlayers={selectedTeamId === match.home_team_id ? awayPlayers : homePlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
+            <PenaltyShootoutDialog
+                open={penaltyDialogOpen}
+                onOpenChange={setPenaltyDialogOpen}
+                matchId={match.id}
+                homeTeamId={match.home_team_id || match.home_team?.id || null}
+                awayTeamId={match.away_team_id || match.away_team?.id || null}
+                homeTeamName={match.home_team?.name || 'Home'}
+                awayTeamName={match.away_team?.name || 'Away'}
+                homePlayers={homePlayers}
+                awayPlayers={awayPlayers}
+                readOnly={readOnly}
+            />
             <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} readOnly={readOnly} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />
             <AddTimeDialog open={addTimeDialogOpen} onOpenChange={setAddTimeDialogOpen} onSave={(mins) => {
                 const minute = Math.floor(time / 60) + 1;
-                const teamId = match.home_team_id || match.away_team_id;
-                const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
-                addEvent(resolvedTeamId!, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
+                addEvent(null, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
                 setAddTimeDialogOpen(false);
             }} />
-            <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
-                <DialogContent showCloseButton={false} className="sm:max-w-md bg-card rounded-sm overflow-hidden p-0">
-                    <MatchStatisticsBox
-                        match={match}
-                        events={events}
-                        homeScore={homeScore}
-                        awayScore={awayScore}
-                        visibleStats={visibleStats}
-                        onClose={() => setStatsDialogOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
+            <FootballStatisticsDialog
+                open={statsDialogOpen}
+                onOpenChange={setStatsDialogOpen}
+                match={match}
+                events={events}
+                homeScore={homeScore}
+                awayScore={awayScore}
+                visibleStats={visibleStats}
+            />
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
                 <AlertDialogContent className="bg-card border rounded-sm shadow-2xl sm:max-w-md z-[60]">
@@ -1437,360 +1593,44 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             </AlertDialog>
 
             {/* Settings Dialog */}
-            <Dialog open={customizeDialogOpen} onOpenChange={setCustomizeDialogOpen}>
-                <DialogContent showCloseButton={false} className="sm:max-w-xl max-h-[85vh] flex flex-col bg-card rounded-sm p-0 overflow-hidden border shadow-2xl">
-                    <DialogHeader className="p-4 border-b shrink-0 bg-card relative pr-12">
-                        <div>
-                            <DialogTitle className="text-base font-bold">
-                                {t("settings") || "ตั้งค่า"}
-                            </DialogTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {locale === "th" ? "จัดการการแสดงผลปุ่ม สถิติ และกระดานคะแนน" : "Manage buttons, statistics, and scoreboard display"}
-                            </p>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
-                            onClick={() => setCustomizeDialogOpen(false)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </DialogHeader>
+            <FootballSettingsDialog
+                open={customizeDialogOpen}
+                onOpenChange={setCustomizeDialogOpen}
+                match={match}
+                readOnly={readOnly}
+                showScoreboardPossession={showScoreboardPossession}
+                onToggleScoreboardPossession={toggleScoreboardPossession}
+                customActionTypes={customActionTypes}
+                onToggleCustomAction={toggleCustomAction}
+                visibleLogs={visibleLogs}
+                onToggleVisibleLog={toggleVisibleLog}
+                visibleStats={visibleStats}
+                onToggleVisibleStat={toggleVisibleStat}
+                onPostponeMatch={handlePostponeMatch}
+                onWalkover={() => setWoDialogOpen(true)}
+                onAbandonMatch={handleAbandonMatch}
+            />
 
-                    {/* Scrollable Content Body */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {/* SECTION 1: Display Settings (Moved to first) */}
-                        <section id="settings-section-display" className="space-y-2.5">
-                            <div>
-                                <h3 className="text-sm font-bold text-foreground">
-                                    {t("tab_display") || "การแสดงผล"}
-                                </h3>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {locale === "th" ? "ปรับแต่งส่วนแสดงผลของกระดานคะแนนและหน้าจอการแข่งขัน" : "Configure scoreboard display and view options"}
-                                </p>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                <div className="flex items-center justify-between p-3 rounded-sm border bg-card hover:bg-muted/10 transition-colors">
-                                    <div className="space-y-0.5 pr-4">
-                                        <div className="flex items-center gap-2">
-                                            <PieChart className="h-4 w-4 text-primary" />
-                                            <Label htmlFor="possession-switch" className="text-sm font-semibold cursor-pointer">
-                                                {t("scoreboard_possession") || "แสดงการครองบอลบนสกอร์บอร์ด"}
-                                            </Label>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t("scoreboard_possession_desc") || "เปิด/ปิดการแสดงผลแถบการครองบอล (Possession) บนกระดานคะแนน"}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        id="possession-switch"
-                                        checked={showScoreboardPossession}
-                                        onCheckedChange={toggleScoreboardPossession}
-                                        className="cursor-pointer shrink-0"
-                                    />
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* SECTION 2: Action Buttons */}
-                        <section id="settings-section-actions" className="space-y-2.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div className="space-y-0.5">
-                                    <h3 className="text-sm font-bold text-foreground">
-                                        {t("tab_buttons") || "ปุ่มเหตุการณ์"}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {t("select_action_to_toggle") || "คลิกเพื่อเปิด/ปิดปุ่มที่ต้องการใช้งาน"}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-1 self-end sm:self-auto">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetCustomActions(ALL_CUSTOMIZABLE_ACTIONS)}
-                                    >
-                                        <RotateCcw className="h-3 w-3 mr-1" />
-                                        {t("show_all") || "แสดงทั้งหมด"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                                        onClick={() => resetCustomActions([])}
-                                    >
-                                        {t("hide_all") || "ซ่อนทั้งหมด"}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Action Items List */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {/* Goal indicator (Permanent) */}
-                                <div className="flex items-center justify-between p-2.5 rounded-sm border bg-primary/5 border-primary/20 col-span-1 sm:col-span-2">
-                                    <div className="flex items-center gap-2.5">
-                                        <Volleyball className="h-4 w-4 text-emerald-500 shrink-0" />
-                                        <span className="text-sm font-bold text-foreground">
-                                            {t("goal") || "ประตู"}
-                                        </span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                                        {t("always_visible") || "แสดงตลอด"}
-                                    </span>
-                                </div>
-
-                                {/* Customizable Action Buttons */}
-                                {[
-                                    { type: 'yellow_card', label: t("cards") || "คาดโทษ (ใบเตือน)", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
-                                    { type: 'substitution', label: t("substitution") || "เปลี่ยนตัว", icon: Repeat, iconColor: 'text-blue-500' },
-                                    { type: 'foul', label: t("foul") || "ฟาวล์", icon: Activity, iconColor: 'text-orange-500' },
-                                    { type: 'corner', label: t("corner") || "เตะมุม", icon: Flag, iconColor: 'text-foreground' },
-                                    { type: 'save', label: t("save") || "เซฟ", icon: Shield, iconColor: 'text-teal-500' },
-                                    { type: 'injury', label: t("injury") || "บาดเจ็บ", icon: Stethoscope, iconColor: 'text-rose-500' },
-                                    { type: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair, iconColor: 'text-rose-400' },
-                                    { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight, iconColor: 'text-emerald-500' },
-                                    { type: 'bad_pass', label: t("bad_pass") || "ออกข้าง", icon: ArrowUpRight, iconColor: 'text-amber-500' },
-                                    { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight, iconColor: 'text-cyan-500' },
-                                    { type: 'possession', label: t("possession_action") || "การครองบอล (ตัดบอล)", icon: Scissors, iconColor: 'text-indigo-500' },
-                                    { type: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight, iconColor: 'text-orange-500' },
-                                ].map((item) => {
-                                    const isSelected = customActionTypes.includes(item.type);
-                                    return (
-                                        <button
-                                            key={item.type}
-                                            type="button"
-                                            onClick={() => toggleCustomAction(item.type)}
-                                            className={cn(
-                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
-                                                isSelected
-                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
-                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
-                                                <span className="text-xs font-semibold truncate">{item.label}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="text-xs text-muted-foreground pt-1">
-                                <span>{customActionTypes.length} / {ALL_CUSTOMIZABLE_ACTIONS.length} {locale === "th" ? "ปุ่มที่เลือกแสดง" : "actions visible"}</span>
-                            </div>
-                        </section>
-
-                        {/* SECTION 3: Match Statistics */}
-                        <section id="settings-section-stats" className="space-y-2.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                                <div className="space-y-0.5">
-                                    <h3 className="text-sm font-bold text-foreground">
-                                        {t("tab_stats") || "สถิติการแข่งขัน"}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {t("customize_stats_desc") || "เลือกรายการสถิติที่ต้องการให้แสดงในหน้าต่างสถิติการแข่งขัน"}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-1 self-end sm:self-auto">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(DEFAULT_STATS_KEYS)}
-                                    >
-                                        <RotateCcw className="h-3 w-3 mr-1" />
-                                        {locale === "th" ? "ค่าเริ่มต้น" : "Default"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(ALL_STATS_KEYS)}
-                                    >
-                                        {t("show_all") || "แสดงทั้งหมด"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                                        onClick={() => resetVisibleStats([])}
-                                    >
-                                        {t("hide_all") || "ซ่อนทั้งหมด"}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Stats Items List */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {[
-                                    { key: 'possession', label: t("possession") || "การครองบอล", icon: PieChart, iconColor: 'text-indigo-500' },
-                                    { key: 'goal', label: t("goal") || "ประตู", icon: Volleyball, iconColor: 'text-emerald-500' },
-                                    { key: 'total_shots', label: t("total_shots") || "โอกาสยิงประตู", icon: Target, iconColor: 'text-blue-500' },
-                                    { key: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair, iconColor: 'text-rose-400' },
-                                    { key: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight, iconColor: 'text-emerald-500' },
-                                    { key: 'bad_pass', label: t("bad_pass") || "ออกข้าง", icon: ArrowUpRight, iconColor: 'text-amber-500' },
-                                    { key: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight, iconColor: 'text-cyan-500' },
-                                    { key: 'corner', label: t("corner") || "เตะมุม", icon: Flag, iconColor: 'text-foreground' },
-                                    { key: 'save', label: t("save") || "เซฟ", icon: Shield, iconColor: 'text-teal-500' },
-                                    { key: 'foul', label: t("foul") || "ฟาวล์", icon: Activity, iconColor: 'text-orange-500' },
-                                    { key: 'penalty', label: t("penalty") || "จุดโทษ", icon: Target, iconColor: 'text-red-500' },
-                                    { key: 'yellow_card', label: t("yellow_card") || "ใบเหลือง", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
-                                    { key: 'red_card', label: t("red_card") || "ใบแดง", icon: Square, iconColor: 'text-rose-500 fill-rose-500' },
-                                    { key: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight, iconColor: 'text-orange-500' },
-                                ].map((item) => {
-                                    const isSelected = visibleStats.includes(item.key);
-                                    return (
-                                        <button
-                                            key={item.key}
-                                            type="button"
-                                            onClick={() => toggleVisibleStat(item.key)}
-                                            className={cn(
-                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
-                                                isSelected
-                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
-                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
-                                                <span className="text-xs font-semibold truncate">{item.label}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="text-xs text-muted-foreground pt-1">
-                                <span>{visibleStats.length} / {ALL_STATS_KEYS.length} {locale === "th" ? "สถิติที่เลือกแสดง" : "statistics visible"}</span>
-                            </div>
-                        </section>
-
-                        {/* SECTION 4: Danger Zone */}
-                        <section id="settings-section-danger" className="space-y-2.5">
-                            <div>
-                                <h3 className="text-sm font-bold text-destructive">
-                                    {t("danger_zone") || "โซนอันตราย (การจัดการสถานะแมตช์)"}
-                                </h3>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {t("danger_zone_desc") || "การดำเนินการเหล่านี้จะส่งผลกระทบต่อผลการแข่งขันหรือตารางเวลาโดยตรง โปรดใช้ความระมัดระวัง"}
-                                </p>
-                            </div>
-
-                            <div className="space-y-2 pt-1">
-                                {/* เลื่อนการแข่งขัน (Postpone Match) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-border bg-card hover:bg-muted/10 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarRange className="h-4 w-4 text-amber-500" />
-                                            <span className="text-xs font-bold text-foreground">
-                                                {t("postponed") || "เลื่อนการแข่งขัน"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "เปลี่ยนสถานะแมตช์กลับเป็นรอแข่งขัน และล้างวัน/เวลาของแมตช์" : "Reschedule match and reset match date/time"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            handlePostponeMatch();
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer"
-                                    >
-                                        <CalendarRange className="h-3.5 w-3.5 mr-1.5" />
-                                        {t("postponed") || "เลื่อนการแข่งขัน"}
-                                    </Button>
-                                </div>
-
-                                {/* จบการแข่งขันก่อนเวลา (Walkover / Early Finish) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <Ban className="h-4 w-4 text-destructive" />
-                                            <span className="text-xs font-bold text-destructive">
-                                                {t("walkover") || "จบการแข่งขันก่อนเวลา"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "บันทึกผลชนะบาย (3-0 หรือ 0-3) และยุติการแข่งขันทันที" : "Award walkover victory (3-0 or 0-3) and end match"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                            setWoDialogOpen(true);
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
-                                    >
-                                        <Ban className="h-3.5 w-3.5 mr-1.5" />
-                                        {t("walkover") || "จบการแข่งขันก่อนเวลา"}
-                                    </Button>
-                                </div>
-
-                                {/* ยกเลิกการแข่งขัน (Abandon Match) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <XCircle className="h-4 w-4 text-destructive" />
-                                            <span className="text-xs font-bold text-destructive">
-                                                {t("abandoned") || "ยกเลิกการแข่งขัน"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "ยกเลิกแมตช์นี้ (Canceled) โดยไม่มีผลคะแนนแพ้ชนะ" : "Cancel and abandon this match without recorded winner"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                            handleAbandonMatch();
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
-                                    >
-                                        <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                                        {t("abandoned") || "ยกเลิกการแข่งขัน"}
-                                    </Button>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* Dialog Footer */}
-                    <DialogFooter className="p-3 border-t bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-2">
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                            {locale === "th" ? "การตั้งค่าจะถูกบันทึกอัตโนมัติ" : "Settings saved automatically"}
-                        </span>
-                        <Button
-                            size="sm"
-                            className="h-8 text-xs font-semibold px-5 cursor-pointer ml-auto"
-                            onClick={() => setCustomizeDialogOpen(false)}
-                        >
-                            <Check className="h-3.5 w-3.5 mr-1" />
-                            {tCommon("done") || "เสร็จสิ้น"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Team Roster & Info Dialog (ตัวจริง, ตัวสำรอง, ทีมงาน) */}
+            {teamInfoTarget && (
+                <TeamRosterDialog
+                    open={!!teamInfoTarget}
+                    onOpenChange={(open) => {
+                        if (!open) setTeamInfoTarget(null);
+                    }}
+                    teamName={teamInfoTarget === 'home' ? (match.home_team?.name || t("home")) : (match.away_team?.name || t("away"))}
+                    teamLogo={teamInfoTarget === 'home' ? match.home_team?.logo_url : match.away_team?.logo_url}
+                    description={teamInfoTarget === 'home' ? match.home_team?.description : match.away_team?.description}
+                    contactName={teamInfoTarget === 'home' ? match.home_team?.contact_name : match.away_team?.contact_name}
+                    contactPhone={teamInfoTarget === 'home' ? match.home_team?.contact_phone : match.away_team?.contact_phone}
+                    players={teamInfoTarget === 'home' ? homePlayers : awayPlayers}
+                    activeLineupIds={teamInfoTarget === 'home' ? homeLineup : awayLineup}
+                    events={events}
+                    teamId={teamInfoTarget === 'home' ? match.home_team_id : match.away_team_id}
+                    sport="football"
+                />
+            )}
         </div>
     );
 }
+

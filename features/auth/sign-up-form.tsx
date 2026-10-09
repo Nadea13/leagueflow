@@ -7,14 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OtpInput } from "@/components/ui/otp-input";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, MailCheck, ArrowLeft, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Turnstile } from "@/components/ui/turnstile";
+import { ApiClient } from "@/lib/api-client";
 
-import { sendSignUpOtp, verifySignUpOtp, completeProfile } from "@/actions/common/auth";
-import { createClient } from "@/lib/supabase/client";
-
-type Step = 'email' | 'otp' | 'profile';
+type SignUpStep = 'email' | 'otp' | 'password';
 
 export function SignUpForm() {
     const t = useTranslations('SignUp');
@@ -22,17 +19,13 @@ export function SignUpForm() {
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
-    const supabase = createClient();
 
-    // Step state
-    const [step, setStep] = useState<Step>('email');
+    // Multi-step: 1. Send OTP -> 2. Verify OTP -> 3. Set Password
+    const [step, setStep] = useState<SignUpStep>('email');
 
     // Form data
     const [email, setEmail] = useState("");
-    const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [otp, setOtp] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -41,227 +34,239 @@ export function SignUpForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Helper: ดึง default name จาก email (เช่น nathanon.idea@gmail.com -> Nathanon Idea)
+    const extractDefaultName = (emailStr: string): string => {
+        if (!emailStr || !emailStr.includes('@')) return "League User";
+        const usernamePart = emailStr.split('@')[0];
+        // Clean special characters (. _ -) to space and capitalize
+        const cleaned = usernamePart
+            .replace(/[._-]+/g, ' ')
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        return cleaned || usernamePart;
+    };
+
+    // Step 1: Send 6-digit OTP code to email
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append('email', email);
-            if (turnstileToken) {
-                formData.append('turnstile_token', turnstileToken);
-            }
-
-            const result = await sendSignUpOtp(formData, locale);
-
-            if (!result.success) {
-                setError(result.error || tCommon('something_went_wrong'));
-                return;
-            }
+            await ApiClient.fetch('/auth/send-otp', {
+                method: 'POST',
+                body: JSON.stringify({ email }),
+            });
 
             toast({
-                title: t('otp_sent_title'),
-                description: t('otp_sent_desc'),
+                title: t('otp_sent_title') || "รหัสยืนยันถูกส่งแล้ว",
+                description: t('otp_sent_desc') || `ระบบได้ส่งรหัส OTP 6 หลักไปยัง ${email}`,
             });
+
             setStep('otp');
-        } catch (_err) {
-            setError(tCommon('something_went_wrong'));
+        } catch (err: any) {
+            setError(err.message || tCommon('something_went_wrong'));
         } finally {
             setIsLoading(false);
         }
     };
 
+    // Step 2: Verify OTP code with Redis -> ข้ามไปหน้า Set Password ทันที
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append('email', email);
-            formData.append('otp', otp);
-
-            const result = await verifySignUpOtp(formData, locale);
-
-            if (!result.success) {
-                setError(result.error || "Invalid OTP code");
-                return;
-            }
+            await ApiClient.fetch('/auth/verify-otp', {
+                method: 'POST',
+                body: JSON.stringify({ email, otp }),
+            });
 
             toast({
-                title: t('email_verified_title'),
-                description: t('email_verified_desc'),
+                title: t('email_verified_title') || "ยืนยันอีเมลสำเร็จ",
+                description: "กรุณาตั้งรหัสผ่านสำหรับเข้าสู่ระบบ",
             });
-            setStep('profile');
-        } catch (_err) {
-            setError(tCommon('something_went_wrong'));
+
+            setStep('password');
+        } catch (err: any) {
+            setError(err.message || "รหัส OTP ไม่ถูกต้องหรือหมดอายุ");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleCompleteProfile = async (e: React.FormEvent) => {
+    // Step 3: Set Password and Complete Registration (ใช้ชื่อ default จากอีเมล)
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
 
         if (password !== confirmPassword) {
-            setError(t('passwords_dont_match'));
+            setError(t('password_mismatch') || "รหัสผ่านไม่ตรงกัน");
             setIsLoading(false);
             return;
         }
 
+        if (password.length < 6) {
+            setError(t('password_too_short') || "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+            setIsLoading(false);
+            return;
+        }
+
+        // ดึงชื่อเริ่มต้นจาก email
+        const defaultFullName = extractDefaultName(email);
+
         try {
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('phone', phone);
-            formData.append('password', password);
-            formData.append('confirmPassword', confirmPassword);
-
-            const result = await completeProfile(formData, locale);
-
-            if (!result.success) {
-                setError(result.error || tCommon('something_went_wrong'));
-                return;
-            }
-
-            // Sign out the OTP session so they have to login with password
-            await supabase.auth.signOut();
-
-            toast({
-                title: t('success_title'),
-                description: t('success_desc'),
+            const resp = await ApiClient.fetch<{
+                access_token: string;
+                refresh_token: string;
+                user: any;
+            }>('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    password,
+                    full_name: defaultFullName,
+                    role: 'organizer',
+                }),
             });
 
-            router.push(`/${locale}/sign-in`);
-        } catch (_err) {
-            setError(tCommon('something_went_wrong'));
+            if (resp.access_token) {
+                ApiClient.setToken(resp.access_token);
+                toast({
+                    title: t('success_title') || "สร้างบัญชีสำเร็จ",
+                    description: `ยินดีต้อนรับ ${resp.user.full_name}!`,
+                });
+
+                router.push(`/${locale}/dashboard`);
+                router.refresh();
+            }
+        } catch (err: any) {
+            setError(err.message || tCommon('something_went_wrong'));
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full space-y-3">
             {error && (
-                <div className="mb-4 text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
+                <div className="text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
                     {error}
                 </div>
             )}
 
+            {/* STEP 1: Enter Email to Receive OTP */}
             {step === 'email' && (
-                <form onSubmit={handleSendOtp} className="space-y-1 md:space-y-2">
+                <form onSubmit={handleSendOtp} className="space-y-3">
                     <div className="space-y-1">
-                        <Label>{t('email')}</Label>
-                        <div className="relative">
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder={t('email_placeholder')}
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2 ml-1">
-                            {t('email_hint')}
-                        </p>
+                        <Label htmlFor="email">{t('email') || "อีเมล"}</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder={t('email_placeholder') || "name@example.com"}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            disabled={isLoading}
+                        />
                     </div>
-                    <Turnstile onVerify={(token) => setTurnstileToken(token)} onExpire={() => setTurnstileToken("")} />
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+
+                    <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                        disabled={isLoading || !email}
+                    >
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                {t('sending_otp')}
+                                <Loader2 className="bio9kl.p8h88-4 w-4 animate-spin" />
+                                {t('sending_otp') || "กำลังส่งรหัส OTP..."}
                             </>
                         ) : (
-                            t('verify_email')
+                            t('send_otp') || "รับรหัสยืนยัน OTP"
                         )}
                     </Button>
                 </form>
             )}
 
+            {/* STEP 2: Enter 6-digit OTP */}
             {step === 'otp' && (
-                <form onSubmit={handleVerifyOtp} className="space-y-3 md:space-y-4">
-                    <div className="space-y-2">
-                        <Label className="text-center block text-sm font-medium">{t('otp_label')}</Label>
-                        <div className="py-2">
-                            <OtpInput
-                                value={otp}
-                                onChange={setOtp}
-                                length={6}
-                                disabled={isLoading}
-                                autoFocus={true}
-                            />
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    <div className="text-center space-y-1">
+                        <div className="flex justify-center">
+                            <MailCheck className="w-10 h-10 text-primary" />
                         </div>
-                        <p className="text-xs text-muted-foreground text-center mt-1">
-                            {t('otp_hint')} <strong>{email}</strong>
+                        <p className="text-sm text-muted-foreground">
+                            กรอกรหัส 6 หลักที่ส่งไปยัง <b>{email}</b>
                         </p>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading || otp.length < 6}>
+
+                    <div className="flex justify-center py-2">
+                        <OtpInput
+                            value={otp}
+                            onChange={setOtp}
+                            length={6}
+                            disabled={isLoading}
+                        />
+                    </div>
+
+                    <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                        disabled={isLoading || otp.length < 6}
+                    >
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                {t('verifying')}
+                                <Loader2 className="bio9kl.p8h88-4 w-4 animate-spin" />
+                                กำลังตรวจสอบรหัส...
                             </>
                         ) : (
-                            t('confirm_code')
+                            "ยืนยันรหัส OTP"
                         )}
                     </Button>
-                    <div className="text-center">
-                        <button 
-                            type="button" 
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                        <button
+                            type="button"
                             onClick={() => setStep('email')}
-                            className="text-sm text-primary hover:underline"
-                            disabled={isLoading}
+                            className="flex items-center gap-1 hover:text-foreground"
                         >
-                            {t('change_email')}
+                            <ArrowLeft className="h-4 w-4" /> เปลี่ยนอีเมล
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSendOtp}
+                            disabled={isLoading}
+                            className="hover:underline text-primary"
+                        >
+                            ส่งรหัสอีกครั้ง
                         </button>
                     </div>
                 </form>
             )}
 
-            {step === 'profile' && (
-                <form onSubmit={handleCompleteProfile} className="space-y-1 md:space-y-2">
-                    <div className="space-y-1">
-                        <Label>{t('full_name')}</Label>
-                        <div className="relative">
-                            <Input
-                                id="fullName"
-                                type="text"
-                                placeholder={t('full_name_placeholder')}
-                                value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
+            {/* STEP 3: Set Password Directly (Default name auto-generated from email) */}
+            {step === 'password' && (
+                <form onSubmit={handleRegister} className="space-y-3">
+                    <div className="text-center space-y-1 pb-1">
+                        <div className="flex justify-center">
+                            <KeyRound className="w-8 h-8 text-primary" />
                         </div>
+                        <p className="text-sm font-medium text-foreground">
+                            ตั้งรหัสผ่านสำหรับ <b>{email}</b>
+                        </p>
                     </div>
 
                     <div className="space-y-1">
-                        <Label>{t('phone')}</Label>
-                        <div className="relative">
-                            <Input
-                                id="phone"
-                                type="tel"
-                                placeholder={t('phone_placeholder')}
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-1">
-                        <Label>{t('password')}</Label>
+                        <Label htmlFor="password">{t('password') || "รหัสผ่านใหม่"}</Label>
                         <div className="relative">
                             <Input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                placeholder={t('password_placeholder')}
+                                placeholder={t('password_placeholder') || "อย่างน้อย 6 ตัวอักษร"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -271,40 +276,42 @@ export function SignUpForm() {
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                disabled={isLoading}
+                                tabIndex={-1}
                             >
                                 {showPassword ? (
-                                    <EyeOff className="h-4 w-4" />
+                                    <EyeOff className="w-4 h-4" />
                                 ) : (
-                                    <Eye className="h-4 w-4" />
+                                    <Eye className="w-4 h-4" />
                                 )}
                             </button>
                         </div>
                     </div>
 
                     <div className="space-y-1">
-                        <Label>{t('confirm_password')}</Label>
-                        <div className="relative">
-                            <Input
-                                id="confirmPassword"
-                                type={showPassword ? "text" : "password"}
-                                placeholder={t('confirm_password_placeholder')}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
+                        <Label htmlFor="confirmPassword">{t('confirm_password') || "ยืนยันรหัสผ่านอีกครั้ง"}</Label>
+                        <Input
+                            id="confirmPassword"
+                            type={showPassword ? "text" : "password"}
+                            placeholder={t('confirm_password_placeholder') || "กรอกรหัสผ่านตรงกัน"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            disabled={isLoading}
+                        />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button
+                        type="submit"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                        disabled={isLoading}
+                    >
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                {t('completing_setup')}
+                                <Loader2 className="bio9kl.p8h88-4 w-4 animate-spin" />
+                                กำลังตั้งรหัสผ่านและสร้างบัญชี...
                             </>
                         ) : (
-                            t('register')
+                            "สร้างบัญชีและเข้าสู่ระบบ"
                         )}
                     </Button>
                 </form>

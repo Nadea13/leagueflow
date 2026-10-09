@@ -1,8 +1,8 @@
-
-import { createAdminClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { ApiClient } from "@/lib/api-client";
 import { ConsolePage as FootballConsolePage } from "@/features/sports/football/console-page";
 import { VolleyballConsolePage } from "@/features/sports/volleyball/console-page";
-import { MatchEvent } from "@/types";
+import { MatchEvent, Match } from "@/types";
 
 export default async function AdminMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
@@ -12,125 +12,108 @@ export default async function AdminMatchConsole(props: {
     const resolvedParams = await props.searchParams;
     const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
 
-    const supabase = createAdminClient();
-
-    // Fetch the match details
-    const { data: rawMatch, error: matchError } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('id', matchId)
-        .single();
-
-    if (matchError || !rawMatch) {
-        console.error("Match fetch error:", matchError, "Match ID:", matchId);
-        return <div className="p-8 text-red-500">Error fetching match: {JSON.stringify(matchError, null, 2)}</div>;
+    // 1. Fetch the match details from Go REST API
+    let rawMatch: any = null;
+    try {
+        rawMatch = await ApiClient.fetch<any>(`/matches/${matchId}`);
+    } catch (err) {
+        console.error("Match fetch error from Go API:", err, "Match ID:", matchId);
     }
 
-    // Fetch home and away teams manually to bypass missing/stale foreign key schema cache issues
-    let home_team = null;
-    let away_team = null;
-
-    if (rawMatch.home_team_id) {
-        const { data: ht } = await supabase
-            .from('teams')
-            .select('id, name, logo_img, description, contact_name, contact_phone')
-            .eq('id', rawMatch.home_team_id)
-            .maybeSingle();
-        if (ht) {
-            home_team = {
-                id: ht.id,
-                name: String(ht.name || 'Unknown Team'),
-                logo_url: ht.logo_img ? String(ht.logo_img) : null,
-                description: ht.description || null,
-                contact_name: ht.contact_name || null,
-                contact_phone: ht.contact_phone || null
-            };
-        } else {
-            const { data: tt } = await supabase
-                .from('tournament_teams')
-                .select('id, name, logo_url, description, contact_name, contact_phone')
-                .eq('id', rawMatch.home_team_id)
-                .maybeSingle();
-            if (tt) {
-                home_team = {
-                    id: tt.id,
-                    name: String(tt.name || 'Unknown Team'),
-                    logo_url: tt.logo_url ? String(tt.logo_url) : null,
-                    description: tt.description || null,
-                    contact_name: tt.contact_name || null,
-                    contact_phone: tt.contact_phone || null
-                };
-            }
-        }
+    if (!rawMatch || !rawMatch.id) {
+        notFound();
     }
 
-    if (rawMatch.away_team_id) {
-        const { data: at } = await supabase
-            .from('teams')
-            .select('id, name, logo_img, description, contact_name, contact_phone')
-            .eq('id', rawMatch.away_team_id)
-            .maybeSingle();
-        if (at) {
-            away_team = {
-                id: at.id,
-                name: String(at.name || 'Unknown Team'),
-                logo_url: at.logo_img ? String(at.logo_img) : null,
-                description: at.description || null,
-                contact_name: at.contact_name || null,
-                contact_phone: at.contact_phone || null
-            };
-        } else {
-            const { data: tt } = await supabase
-                .from('tournament_teams')
-                .select('id, name, logo_url, description, contact_name, contact_phone')
-                .eq('id', rawMatch.away_team_id)
-                .maybeSingle();
-            if (tt) {
-                away_team = {
-                    id: tt.id,
-                    name: String(tt.name || 'Unknown Team'),
-                    logo_url: tt.logo_url ? String(tt.logo_url) : null,
-                    description: tt.description || null,
-                    contact_name: tt.contact_name || null,
-                    contact_phone: tt.contact_phone || null
-                };
-            }
-        }
+    // 2. Fetch Tournament & Categories via Go API
+    let tournamentData: any = null;
+    let categories: any[] = [];
+    try {
+        const resp = await ApiClient.fetch<{ tournament: any; categories: any[] }>(`/tournaments/${id}`);
+        tournamentData = resp?.tournament;
+        categories = resp?.categories || [];
+    } catch (e) {
+        console.error("Error fetching tournament from Go API:", e);
     }
 
-    const match = {
+    // 3. Fetch initial events
+    let rawEvents: any[] = [];
+    try {
+        rawEvents = await ApiClient.fetch<any[]>(`/matches/${matchId}/events`);
+    } catch {
+        rawEvents = [];
+    }
+
+    // Format home & away teams
+    const home_team = rawMatch.home_team ? {
+        id: rawMatch.home_team.id,
+        name: String(rawMatch.home_team.name || 'Unknown Team'),
+        logo_url: rawMatch.home_team.logo_url || rawMatch.home_team.logo_img || null,
+        description: rawMatch.home_team.description || null,
+        contact_name: rawMatch.home_team.contact_name || null,
+        contact_phone: rawMatch.home_team.contact_phone || null
+    } : ((rawMatch.ph_home || rawMatch.placeholder_home) ? {
+        id: 'placeholder_home',
+        name: String(rawMatch.ph_home || rawMatch.placeholder_home),
+        logo_url: null,
+    } : null);
+
+    const away_team = rawMatch.away_team ? {
+        id: rawMatch.away_team.id,
+        name: String(rawMatch.away_team.name || 'Unknown Team'),
+        logo_url: rawMatch.away_team.logo_url || rawMatch.away_team.logo_img || null,
+        description: rawMatch.away_team.description || null,
+        contact_name: rawMatch.away_team.contact_name || null,
+        contact_phone: rawMatch.away_team.contact_phone || null
+    } : ((rawMatch.ph_away || rawMatch.placeholder_away) ? {
+        id: 'placeholder_away',
+        name: String(rawMatch.ph_away || rawMatch.placeholder_away),
+        logo_url: null,
+    } : null);
+
+    const match: Match = {
         ...rawMatch,
+        tournament_id: id,
+        category_id: rawMatch.category_id || rawMatch.tournament_category_id,
+        tournament_category_id: rawMatch.category_id || rawMatch.tournament_category_id,
+        idx_match: rawMatch.idx_match ?? rawMatch.match_index ?? 0,
+        match_index: rawMatch.idx_match ?? rawMatch.match_index ?? 0,
+        next_node_id: rawMatch.next_node_id || rawMatch.winner_to_node_id || null,
+        winner_to_node_id: rawMatch.next_node_id || rawMatch.winner_to_node_id || null,
+        ph_home: rawMatch.ph_home || rawMatch.placeholder_home || null,
+        ph_away: rawMatch.ph_away || rawMatch.placeholder_away || null,
+        placeholder_home: rawMatch.ph_home || rawMatch.placeholder_home || null,
+        placeholder_away: rawMatch.ph_away || rawMatch.placeholder_away || null,
+        elapsed_seconds: rawMatch.elapsed_seconds ?? rawMatch.elapsed_before_pause ?? 0,
+        elapsed_before_pause: rawMatch.elapsed_seconds ?? rawMatch.elapsed_before_pause ?? 0,
+        minute: rawMatch.minute ?? rawMatch.current_minute ?? null,
+        current_minute: rawMatch.minute ?? rawMatch.current_minute ?? null,
+        score_detail: rawMatch.score_detail || {},
         home_team,
-        away_team
+        away_team,
+        home_score: typeof rawMatch.home_score === 'object' && rawMatch.home_score !== null && 'total' in rawMatch.home_score
+            ? Number((rawMatch.home_score as { total?: number }).total) || 0
+            : Number(rawMatch.home_score) || 0,
+        away_score: typeof rawMatch.away_score === 'object' && rawMatch.away_score !== null && 'total' in rawMatch.away_score
+            ? Number((rawMatch.away_score as { total?: number }).total) || 0
+            : Number(rawMatch.away_score) || 0,
     };
 
-    // Fetch the tournament and sport
-    const { data: tournament } = await supabase
-        .from('tournaments')
-        .select('name, sports(sport_name)')
-        .eq('id', id)
-        .single();
+    const sportName = (tournamentData?.sport_name || tournamentData?.sports?.sport_name || 'football').toLowerCase();
 
-    const sportName = (tournament?.sports as unknown as { sport_name: string } | null)?.sport_name?.toLowerCase();
+    const formattedEvents: MatchEvent[] = (rawEvents || []).map((e: any) => {
+        const detailObj = e.detail || e.extra_info || {};
+        const eventType = e.type || e.event_type || 'goal';
+        return {
+            ...e,
+            type: eventType,
+            event_type: eventType,
+            detail: detailObj,
+            extra_info: detailObj,
+            player_name: detailObj.player_name || e.player_name || (e.player?.name || "Unknown"),
+        };
+    });
 
-    // Fetch initial events
-    const { data: events } = await supabase
-        .from('match_events')
-        .select(`
-            id, match_id, team_id, player_id, event_type, minute, extra_info, created_at,
-            player:players(name)
-        `)
-        .eq('match_id', matchId)
-        .order('created_at', { ascending: true });
-
-    // Transformer for events
-    const formattedEvents = (events || []).map(e => ({
-        ...e,
-        player_name: (e.player as unknown as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as unknown as { name: string } | null)?.name : undefined),
-        player: undefined
-    }));
-
-    const categoryId = typeof resolvedParams.category === 'string' ? resolvedParams.category : rawMatch.tournament_category_id;
+    const categoryId = typeof resolvedParams.category === 'string' ? resolvedParams.category : (rawMatch.category_id || rawMatch.tournament_category_id);
     const backParams = new URLSearchParams();
     if (categoryId) backParams.set('category', categoryId);
     if (fromTab) backParams.set('tab', fromTab);
@@ -138,22 +121,16 @@ export default async function AdminMatchConsole(props: {
         ? `/dashboard/tournaments/${id}?${backParams.toString()}`
         : `/dashboard/tournaments/${id}`;
 
-    // Fetch category rules_config if available
+    // Extract category rules_config if available
     let maxSets = 3;
     let rulesConfig: Record<string, unknown> | null = null;
-    if (rawMatch.tournament_category_id) {
-        const { data: categoryData } = await supabase
-            .from('tournament_categories')
-            .select('rules_config')
-            .eq('id', rawMatch.tournament_category_id)
-            .maybeSingle();
+    const categoryData = categories.find((c: any) => String(c.id) === String(rawMatch.category_id || rawMatch.tournament_category_id || categoryId));
 
-        if (categoryData?.rules_config && typeof categoryData.rules_config === 'object') {
-            rulesConfig = categoryData.rules_config as Record<string, unknown>;
-            const rules = rulesConfig as { max_sets?: number };
-            if (rules.max_sets) {
-                maxSets = Number(rules.max_sets);
-            }
+    if (categoryData?.rules_config && typeof categoryData.rules_config === 'object') {
+        rulesConfig = categoryData.rules_config as Record<string, unknown>;
+        const rules = rulesConfig as { max_sets?: number };
+        if (rules.max_sets) {
+            maxSets = Number(rules.max_sets);
         }
     }
 
@@ -162,9 +139,9 @@ export default async function AdminMatchConsole(props: {
             <VolleyballConsolePage
                 match={match}
                 tournamentId={id}
-                tournamentName={tournament?.name || undefined}
+                tournamentName={tournamentData?.name || undefined}
                 readOnly={false}
-                initialEvents={formattedEvents as MatchEvent[]}
+                initialEvents={formattedEvents}
                 backUrl={backUrl}
                 maxSets={maxSets}
                 rulesConfig={rulesConfig}
@@ -176,9 +153,9 @@ export default async function AdminMatchConsole(props: {
         <FootballConsolePage
             match={match}
             tournamentId={id}
-            tournamentName={tournament?.name || undefined}
+            tournamentName={tournamentData?.name || undefined}
             readOnly={false}
-            initialEvents={formattedEvents as MatchEvent[]}
+            initialEvents={formattedEvents}
             backUrl={backUrl}
             rulesConfig={rulesConfig}
         />

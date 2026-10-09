@@ -1,0 +1,459 @@
+"use client";
+
+import { useState, useEffect, useRef, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
+import { Plus, ImageIcon, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { createTournament } from "@/actions/tournaments/general";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ActionResponse, Sport } from "@/types/index";
+import { getSports } from "@/actions/manager/team";
+import { LogoUploader } from "@/components/shared/logo-uploader";
+import { RadioBtn } from "@/components/ui/radio-btn";
+import { DatePicker, DateRangePicker } from "@/components/ui/date-picker";
+import { ApiClient } from "@/lib/api-client";
+
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+const MapPicker = dynamic(() => import("@/features/tournaments/settings/map-picker"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full aspect-[2/1] rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
+            <span className="text-xs text-muted-foreground">Loading interactive map...</span>
+        </div>
+    )
+});
+
+const initialState: ActionResponse = {
+    success: false,
+    error: undefined,
+};
+
+interface TournamentCreateProps {
+    iconOnlyMobile?: boolean;
+    isDisabled?: boolean;
+}
+
+export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }: TournamentCreateProps) {
+    const t = useTranslations("Dialog");
+    const tCommon = useTranslations("Common");
+    const { toast } = useToast();
+    const locale = useLocale();
+    const isThai = locale === 'th';
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+
+    const [open, setOpen] = useState(false);
+    const [name, setName] = useState<string>("");
+    const [startDate, setStartDate] = useState<string>("");
+    const [endDate, setEndDate] = useState<string>("");
+    const [docDeadline, setDocDeadline] = useState<string>("");
+    const [sportsList, setSportsList] = useState<Sport[]>([]);
+    const [selectedSport, setSelectedSport] = useState<string>("");
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+    const [coverFile, setCoverFile] = useState<File | null>(null);
+    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+    const [description, setDescription] = useState<string>("");
+    const [locationName, setLocationName] = useState<string>("");
+    const [googleMapUrl, setGoogleMapUrl] = useState<string>("");
+    const coverInputRef = useRef<HTMLInputElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Reset scroll to top on dialog open
+    useEffect(() => {
+        if (open) {
+            const timer = setTimeout(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop = 0;
+                }
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [open]);
+
+    // Load sports dynamically from database
+    useEffect(() => {
+        if (open) {
+            ApiClient.getToken();
+            async function loadSports() {
+                const res = await getSports();
+                if (res.success && res.data) {
+                    setSportsList(res.data);
+                }
+            }
+            loadSports();
+        }
+    }, [open]);
+
+    const handleButtonClick = (e: React.MouseEvent) => {
+        if (isDisabled) {
+            e.preventDefault();
+            e.stopPropagation();
+            toast({
+                title: isThai ? "เกิดข้อผิดพลาด" : "Error",
+                description: isThai
+                    ? "คุณถึงขีดจำกัดการสร้างทัวร์นาเมนต์สำหรับแพ็คเกจของคุณแล้ว กรุณาอัพเกรดแพ็คเกจ"
+                    : "You have reached the tournament creation limit for your plan. Please upgrade your plan.",
+                variant: "destructive"
+            });
+            return;
+        }
+        setOpen(true);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!name.trim() || !selectedSport || !startDate || !endDate) {
+            toast({
+                title: isThai ? "ข้อมูลไม่ครบถ้วน" : "Required Fields Missing",
+                description: isThai ? "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน" : "Please fill in all required fields.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (endDate < startDate) {
+            toast({
+                title: isThai ? "วันที่ไม่ถูกต้อง" : "Invalid Dates",
+                description: isThai ? "วันสิ้นสุดการแข่งขันต้องไม่อยู่ก่อนวันเริ่มต้น" : "End date cannot be earlier than start date.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        startTransition(async () => {
+            const formData = new FormData();
+            formData.append("name", name.trim());
+            formData.append("sport_id", selectedSport);
+            formData.append("start_date", startDate);
+            formData.append("end_date", endDate);
+            formData.append("document_deadline", docDeadline || "");
+            formData.append("location_name", locationName || "");
+            formData.append("google_map_url", googleMapUrl || "");
+            formData.append("description", description || "");
+
+            if (logoFile) {
+                formData.append("logo_img", logoFile);
+            }
+            if (coverFile) {
+                formData.append("cover_img", coverFile);
+            }
+
+            const res = await createTournament(initialState, formData);
+            if (res.success) {
+                toast({
+                    title: isThai ? "สร้างทัวร์นาเมนต์สำเร็จ" : "Tournament Created",
+                    description: isThai ? "สร้างข้อมูลการแข่งขันเรียบร้อยแล้ว" : "Tournament has been created successfully.",
+                });
+                setLogoFile(null);
+                setLogoPreviewUrl(null);
+                setCoverFile(null);
+                setCoverPreviewUrl(null);
+                setName("");
+                setStartDate("");
+                setEndDate("");
+                setDocDeadline("");
+                setDescription("");
+                setLocationName("");
+                setGoogleMapUrl("");
+                setSelectedSport("");
+                setOpen(false);
+                router.refresh();
+            } else {
+                toast({
+                    title: isThai ? "เกิดข้อผิดพลาด" : "Error",
+                    description: res.error || (isThai ? "ไม่สามารถสร้างทัวร์นาเมนต์ได้" : "Failed to create tournament"),
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    size="sm"
+                    className={iconOnlyMobile ? "h-8 w-8 p-0 lg:h-8 lg:w-auto lg:px-3 gap-1.5" : "gap-1.5"}
+                    onClick={handleButtonClick}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span className={iconOnlyMobile ? "hidden lg:inline" : ""}>{t("create_button")}</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
+                    <DialogHeader>
+                        <DialogTitle>{t("create_title")}</DialogTitle>
+                        <DialogDescription>{t("create_desc")}</DialogDescription>
+                    </DialogHeader>
+
+                    <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col space-y-4">
+                        {/* Cover & Logo Section */}
+                        <div className="space-y-1">
+                            <div className="relative pb-10">
+                                <div
+                                    onClick={() => coverInputRef.current?.click()}
+                                    className="relative aspect-[2/1] w-full border-2 border-dashed hover:border-primary/50 transition-all rounded-sm overflow-hidden flex flex-col items-center justify-center cursor-pointer group"
+                                >
+                                    {coverPreviewUrl ? (
+                                        <>
+                                            <Image
+                                                src={coverPreviewUrl}
+                                                alt="Cover Preview"
+                                                fill
+                                                className="object-cover p-1 rounded-sm transition-transform group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="font-bold text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        coverInputRef.current?.click();
+                                                    }}
+                                                >
+                                                    {isThai ? "เปลี่ยนรูป" : "Change Image"}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="font-bold text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCoverFile(null);
+                                                        setCoverPreviewUrl(null);
+                                                        if (coverInputRef.current) coverInputRef.current.value = "";
+                                                    }}
+                                                >
+                                                    {isThai ? "ลบรูป" : "Remove"}
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 pb-12">
+                                            <div className="group p-3 bg-muted rounded-full text-muted-foreground transition-transform group-hover:bg-primary/10 group-hover:text-primary">
+                                                <ImageIcon className="h-4 w-4" />
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs font-bold text-muted-foreground">
+                                                    {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
+                                                </p>
+                                                <p className="text-[11px] text-muted-foreground/60">
+                                                    (1440x720)
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 bg-card rounded-full shadow-md">
+                                    <LogoUploader
+                                        id="logo_img"
+                                        name="logo_img"
+                                        initialUrl={logoPreviewUrl}
+                                        onFileChange={(file: File | null) => {
+                                            setLogoFile(file);
+                                            if (file) {
+                                                setLogoPreviewUrl(URL.createObjectURL(file));
+                                            } else {
+                                                setLogoPreviewUrl(null);
+                                            }
+                                        }}
+                                        onRemove={() => {
+                                            setLogoFile(null);
+                                            setLogoPreviewUrl(null);
+                                        }}
+                                        disabled={isPending}
+                                        uploadLabel={isThai ? "อัปโหลดโลโก้" : "Upload Logo"}
+                                        clickToUploadLabel={isThai ? "คลิกเพื่อเปลี่ยน" : "Click to Change"}
+                                        previewLabel={isThai ? "ตัวอย่าง" : "Preview"}
+                                        imageFit="contain"
+                                    />
+                                </div>
+
+                                <input
+                                    id="cover_img"
+                                    name="cover_img"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    ref={coverInputRef}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setCoverFile(file);
+                                            setCoverPreviewUrl(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Tournament Name */}
+                        <div className="space-y-1">
+                            <Label>{t("name")} <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                size="sm"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder={isThai ? "เช่น ฟุตบอลเยาวชน ชิงถ้วยนายก ครั้งที่ 1" : "e.g. Youth Champions League 2026"}
+                                disabled={isPending}
+                                required
+                            />
+                        </div>
+
+                        {/* Sport Select */}
+                        <div className="space-y-1">
+                            <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
+                            <RadioBtn
+                                name="sport_id"
+                                value={selectedSport}
+                                onChange={setSelectedSport}
+                                sports={sportsList}
+                                disabled={isPending}
+                                placeholder={isThai ? "เลือกประเภทกีฬา..." : "Select sport..."}
+                            />
+                        </div>
+
+                        {/* Tournament Period & Deadline */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {/* Tournament Period: Date Range */}
+                            <div className="space-y-1">
+                                <Label>
+                                    {isThai ? "ระยะเวลาการแข่งขัน (เริ่ม - สิ้นสุด)" : "Tournament Period (Start - End)"} <span className="text-destructive">*</span>
+                                </Label>
+                                <DateRangePicker
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    onChange={({ startDate: s, endDate: e }) => {
+                                        setStartDate(s);
+                                        setEndDate(e);
+                                    }}
+                                    size="sm"
+                                    minYear={new Date().getFullYear() - 1}
+                                    maxYear={new Date().getFullYear() + 5}
+                                    defaultViewYear={new Date().getFullYear()}
+                                    placeholder={isThai ? "เลือกวันเริ่มต้น - สิ้นสุดการแข่งขัน" : "Select start - end date"}
+                                    disabled={isPending}
+                                />
+                            </div>
+
+                            {/* Document Deadline */}
+                            <div className="space-y-1">
+                                <Label>{t("document_deadline") || (isThai ? "วันปิดรับเอกสาร" : "Document Deadline")}</Label>
+                                <DatePicker
+                                    value={docDeadline}
+                                    onChange={setDocDeadline}
+                                    size="sm"
+                                    clearable
+                                    minYear={new Date().getFullYear() - 1}
+                                    maxYear={new Date().getFullYear() + 5}
+                                    defaultViewYear={new Date().getFullYear()}
+                                    placeholder={isThai ? "เลือกวันปิดรับเอกสาร (ถ้ามี)" : "Select document deadline (optional)"}
+                                    disabled={isPending}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Location / Venue Name */}
+                        <div className="space-y-1">
+                            <Label>{isThai ? "สถานที่จัดการแข่งขัน" : "Location / Venue Name"}</Label>
+                            <Input
+                                id="location_name"
+                                name="location_name"
+                                size="sm"
+                                value={locationName}
+                                onChange={(e) => setLocationName(e.target.value)}
+                                placeholder={isThai ? "เช่น สนามกีฬาเฉลิมพระเกียรติ 80 พรรษา" : "e.g. National Stadium Bangkok"}
+                                disabled={isPending}
+                            />
+                        </div>
+
+                        {/* Map Picker */}
+                        <div className="space-y-1">
+                            <MapPicker
+                                value={googleMapUrl}
+                                onChange={(url) => setGoogleMapUrl(url)}
+                                onLocationNameSelect={(locName) => setLocationName(locName)}
+                            />
+                        </div>
+
+                        {/* Description (Rich Text) */}
+                        <div className="space-y-1">
+                            <Label>{isThai ? "รายละเอียดเพิ่มเติม" : "Description / Details"}</Label>
+                            <div className="pro-editor-wrapper relative">
+                                <ReactQuill
+                                    theme="snow"
+                                    value={description}
+                                    onChange={setDescription}
+                                    className="pro-editor h-auto text-foreground"
+                                    placeholder={isThai ? "เช่น กติกาการแข่งขัน เงินรางวัล และช่องทางการติดต่อผู้จัด..." : "e.g. Tournament rules, prize pool, and contact details..."}
+                                    readOnly={isPending}
+                                    modules={{
+                                        toolbar: [
+                                            [{ 'header': [1, 2, false] }],
+                                            ['bold', 'underline'],
+                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                            ['clean']
+                                        ]
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                            disabled={isPending}
+                            onClick={() => setOpen(false)}
+                        >
+                            {isThai ? "ยกเลิก" : "Cancel"}
+                        </Button>
+                        <Button
+                            size="sm"
+                            type="submit"
+                            disabled={isPending}
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    {isThai ? "กำลังสร้าง..." : "Creating..."}
+                                </>
+                            ) : (
+                                isThai ? "สร้างการแข่งขัน" : "Create Tournament"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+

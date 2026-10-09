@@ -1,0 +1,6 @@
+.git
+.github
+tmp
+*.exe
+.air.toml
+Dockerfile.dev

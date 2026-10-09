@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ActionResponse, Tournament } from "@/types/index";
 
@@ -54,8 +54,9 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
         }
     }, [state, tCommon, t, toast]);
 
-    if (!mounted) return null;
+    const [isOpen, setIsOpen] = useState<boolean>(Boolean(tournament.is_registration_open));
 
+    if (!mounted) return null;
 
     return (
         <div className="space-y-2 md:space-y-4">
@@ -66,8 +67,9 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                         <input type="hidden" name="name" value={tournament.name} />
                         <input type="hidden" name="status" value={tournament.status || "draft"} />
                         <input type="hidden" name="max_teams" value={tournament.max_teams || 8} />
+                        <input type="hidden" name="is_registration_open" value={isOpen ? "true" : "false"} />
 
-                        <div className="flex items-center justify-between p-2 md:p-4 border rounded-lg">
+                        <div className="flex items-center justify-between p-2 md:p-4 border rounded-sm">
                             <div className="space-y-1">
                                 <Label>{t("allow_registration")}</Label>
                                 <p className="text-[10px] font-bold text-muted-foreground tracking-wider">
@@ -75,10 +77,9 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                 </p>
                             </div>
                             <Switch
-                                id="is_registration_open"
-                                name="is_registration_open"
-                                value="true"
-                                defaultChecked={tournament.is_registration_open}
+                                id="is_registration_open_switch"
+                                checked={isOpen}
+                                onCheckedChange={setIsOpen}
                                 disabled={!isPro}
                                 className="data-[state=checked]:bg-primary"
                             />
@@ -145,10 +146,8 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                     disabled={!isPro || isPending}
                                     className="md:w-fit w-full"
                                 >
-                                    <span className="relative z-10 flex items-center justify-center gap-2">
-                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                        {tCommon("save")}
-                                    </span>
+                                    {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {tCommon("save")}
                                 </Button>
                             </div>
                         </div>
@@ -158,4 +157,5 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
         </div>
     );
 }
+
 

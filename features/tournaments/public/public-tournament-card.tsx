@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "@/i18n/routing";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { CardTitle } from "@/components/ui/card";
 import { 
     Calendar, 
     ChevronDown, 
     ChevronLeft, 
     ChevronRight, 
     Loader2, 
-    Trophy, 
     Calendar as CalendarIcon, 
     ArrowUpRight 
 } from "lucide-react";
@@ -21,11 +20,13 @@ import { Button } from "@/components/ui/button";
 import { getPublicTournamentMatches } from "@/actions/public";
 import { motion, AnimatePresence } from "motion/react";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn, getTeamInitials } from "@/lib/utils";
+import { getLandingSportIcon } from "@/components/shared/sport-icons";
+
 
 interface PublicTournamentCardProps {
     tournament: Tournament & { 
@@ -70,7 +71,15 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
 
     const currentTeams = tournament.tournament_teams?.[0]?.count || 0;
     const isFull = tournament.max_teams ? currentTeams >= tournament.max_teams : false;
-    const isPastDeadline = tournament.document_deadline ? new Date(tournament.document_deadline) < new Date() : false;
+    const isPastDeadline = useMemo(() => {
+        if (!tournament.document_deadline) return false;
+        const d = new Date(tournament.document_deadline);
+        if (isNaN(d.getTime())) return false;
+        if (tournament.document_deadline.length <= 10) {
+            d.setHours(23, 59, 59, 999);
+        }
+        return new Date() > d;
+    }, [tournament.document_deadline]);
     const isNotOpenYet = tournament.is_registration_open === false;
     const isClosed = isFull || isPastDeadline || isNotOpenYet;
     const isOngoing = tournament.status === "ongoing" || (tournament.status as string) === "active";
@@ -82,29 +91,29 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
         ? (THAI_SPORT_NAMES[rawSportName.toLowerCase()] || rawSportName)
         : rawSportName;
 
-    // Fetch matches ONCE when ongoing card is expanded
-    useEffect(() => {
-        if (isOngoing && isExpanded && !hasFetchedMatches && !isLoadingMatches) {
-            setIsLoadingMatches(true);
-            getPublicTournamentMatches(tournament.id)
-                .then((data) => {
-                    setMatches((data || []) as unknown as Match[]);
-                })
-                .catch((err) => {
-                    console.error("Failed to load matches for tournament:", err);
-                })
-                .finally(() => {
-                    setIsLoadingMatches(false);
-                    setHasFetchedMatches(true);
-                });
+    const fetchMatches = useCallback(async () => {
+        if (hasFetchedMatches || isLoadingMatches) return;
+        setIsLoadingMatches(true);
+        try {
+            const data = await getPublicTournamentMatches(tournament.id);
+            setMatches((data || []) as unknown as Match[]);
+            setHasFetchedMatches(true);
+        } catch (err) {
+            console.error("Failed to load matches for tournament:", err);
+        } finally {
+            setIsLoadingMatches(false);
         }
-    }, [isOngoing, isExpanded, tournament.id, hasFetchedMatches, isLoadingMatches]);
+    }, [hasFetchedMatches, isLoadingMatches, tournament.id]);
 
     const handleToggleExpand = (e: React.MouseEvent) => {
         if (isOngoing) {
             e.preventDefault();
             e.stopPropagation();
-            setIsExpanded(prev => !prev);
+            const next = !isExpanded;
+            setIsExpanded(next);
+            if (next && !hasFetchedMatches) {
+                fetchMatches();
+            }
         }
     };
 
@@ -188,19 +197,16 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
     }, [matches, selectedCategoryFilter]);
 
     const cardContent = (
-        <Card className={`flex flex-col bg-card border rounded-sm transition-all overflow-hidden relative ${
-            isOngoing 
-                ? `cursor-pointer ${isExpanded ? "border-primary/60 shadow-md ring-1 ring-primary/20" : "hover:border-primary/40"}` 
-                : "hover:border-primary/50 cursor-pointer"
-        }`}>
-            <CardContent className="flex justify-between items-center p-4 relative z-10 gap-2">
+        <div className="flex flex-col bg-card group-hover:bg-muted/30 transition-colors relative cursor-pointer">
+            <div className="flex justify-between items-center p-3 md:p-4 relative z-10 gap-2">
                 <div className="flex items-center gap-2 md:gap-3 overflow-hidden min-w-0">
                     <Avatar className="h-12 w-12 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                        <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
+                        <AvatarImage src={(tournament.logo_url || tournament.logo_img) ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
                         <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">
-                            {tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}
+                            {getTeamInitials(tournament.name)}
                         </AvatarFallback>
                     </Avatar>
+
                     <div className="flex flex-col gap-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                             <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
@@ -209,15 +215,14 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                             {isOngoing ? (
                                 <Badge
                                     variant="outline"
-                                    className="w-fit text-[9px] text-emerald-600 dark:text-emerald-400 border-emerald-500/40 bg-emerald-500/10 font-bold gap-1 shrink-0"
+                                    className="w-fit text-emerald-600 dark:text-emerald-400 border-emerald-500/40 bg-emerald-500/10 shrink-0"
                                 >
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     กำลังแข่งขัน
                                 </Badge>
                             ) : isClosed ? (
                                 <Badge
                                     variant="outline"
-                                    className={`w-fit text-[9px] shrink-0 ${isNotOpenYet
+                                    className={`w-fit shrink-0 ${isNotOpenYet
                                         ? "text-warning border-warning/50 bg-warning/10"
                                         : "text-destructive border-destructive/50 bg-destructive/10"
                                         }`}
@@ -240,6 +245,11 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
                     {isOngoing ? (
                         <div className="flex items-center gap-2 md:gap-3">
+                            {rawSportName && (
+                                <div className="h-9 w-9 rounded-full bg-muted/50 text-foreground border border-border/60 flex items-center justify-center shrink-0 shadow-xs backdrop-blur-xs">
+                                    {getLandingSportIcon(rawSportName, "h-4 w-4")}
+                                </div>
+                            )}
                             <div className="hidden sm:flex flex-col text-right">
                                 <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">
                                     {tDashboard("schedule")}
@@ -261,34 +271,41 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                                 className="p-1 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center cursor-pointer"
                                 onClick={handleToggleExpand}
                             >
-                                <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                             </button>
                         </div>
                     ) : (
-                        <div className="flex gap-2">
-                            <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
-                                <Calendar className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">
-                                    {tDashboard("schedule")}
-                                </p>
-                                <p className="text-xs font-bold truncate">
-                                    {tournament.start_date && tournament.end_date ? (
-                                        tournament.start_date === tournament.end_date
-                                            ? new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
-                                            : `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
-                                    ) : tournament.start_date ? (
-                                        new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
-                                    ) : (
-                                        tDashboard("not_specified")
-                                    )}
-                                </p>
+                        <div className="flex items-center gap-2 md:gap-3">
+                            {rawSportName && (
+                                <div className="h-9 w-9 rounded-full bg-muted/50 text-foreground border border-border/60 flex items-center justify-center shrink-0 shadow-xs backdrop-blur-xs">
+                                    {getLandingSportIcon(rawSportName, "h-4 w-4")}
+                                </div>
+                            )}
+                            <div className="flex gap-2 items-center">
+                                <div className="h-9 w-9 bg-muted/50 border border-border/60 flex items-center justify-center rounded-full text-primary shrink-0 shadow-xs backdrop-blur-xs">
+                                    <Calendar className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">
+                                        {tDashboard("schedule")}
+                                    </p>
+                                    <p className="text-xs font-bold truncate">
+                                        {tournament.start_date && tournament.end_date ? (
+                                            tournament.start_date === tournament.end_date
+                                                ? new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+                                                : `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
+                                        ) : tournament.start_date ? (
+                                            new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+                                        ) : (
+                                            tDashboard("not_specified")
+                                        )}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
-            </CardContent>
+            </div>
 
             {/* Expandable Match Schedule Dropdown for Ongoing Tournaments */}
             {isOngoing && (
@@ -326,18 +343,18 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                                                     onClick={goToPrevDay} 
                                                     className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted"
                                                 >
-                                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                                    <ChevronLeft className="h-4 w-4" />
                                                 </button>
                                                 <Popover open={isMatchCalendarOpen} onOpenChange={setIsMatchCalendarOpen}>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" size="sm" className="h-6 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center text-xs">
-                                                            <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                            <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
                                                             <span className="text-xs font-semibold tracking-tight truncate max-w-[120px]">
                                                                 {matchSelectedDate ? formatDate(matchSelectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                                             </span>
                                                         </Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="bottom" sideOffset={5}>
+                                                    <PopoverContent className="w-80 p-0 bg-card rounded-sm shadow-2xl" align="start" side="bottom" sideOffset={5}>
                                                         <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                                             <button 
                                                                 type="button"
@@ -419,7 +436,7 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                                                     onClick={goToNextDay} 
                                                     className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted"
                                                 >
-                                                    <ChevronRight className="h-3.5 w-3.5" />
+                                                    <ChevronRight className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
@@ -492,7 +509,7 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                                     <Button asChild size="sm" variant="ghost" className="text-xs font-bold text-primary hover:text-primary/80 gap-1 h-7 px-2">
                                         <Link href={`/tournaments/${tournament.id}?tab=matches`}>
                                             <span>ไปยังหน้ารายการแข่งขันเต็มรูปแบบ</span>
-                                            <ArrowUpRight className="h-3.5 w-3.5" />
+                                            <ArrowUpRight className="h-4 w-4" />
                                         </Link>
                                     </Button>
                                 </div>
@@ -501,7 +518,7 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                     )}
                 </AnimatePresence>
             )}
-        </Card>
+        </div>
     );
 
     if (isOngoing) {
@@ -518,4 +535,5 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
         </Link>
     );
 }
+
 

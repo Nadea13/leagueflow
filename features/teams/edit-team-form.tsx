@@ -23,10 +23,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Lock, RotateCcw, X } from "lucide-react";
+import { Loader2, Lock, RotateCcw } from "lucide-react";
 import { LogoUploader } from "@/components/shared/logo-uploader";
-import { getSportIcon } from "@/components/shared/sport-icons";
-import { cn } from "@/lib/utils";
+import { RadioBtn } from "@/components/ui/radio-btn";
+import { resolveStorageUrl } from "@/lib/storage-utils";
 
 interface EditTeamFormProps {
     team: (Team | TournamentTeam) & {
@@ -57,8 +57,9 @@ export function EditTeamForm({
     const [teamDescription, setTeamDescription] = useState(team.description || "");
     const [contactName, setContactName] = useState(team.contact_name || "");
     const [contactPhone, setContactPhone] = useState(team.contact_phone || "");
+    const [contactEmail, setContactEmail] = useState(team.contact_email || "");
     const [teamSport, setTeamSport] = useState<string>((team as { sport_id?: string }).sport_id || team.sport || "");
-    const [previewUrl, setPreviewUrl] = useState<string | null>(team.logo_url || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(resolveStorageUrl((team as { logo_img?: string }).logo_img || team.logo_url) || null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
     const [isDeletingTeam, setIsDeletingTeam] = useState(false);
@@ -66,6 +67,16 @@ export function EditTeamForm({
     const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
     const [resetRosterDialogOpen, setResetRosterDialogOpen] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const deleteScrollRef = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (deleteTeamDialogOpen) {
+            setDeleteConfirmText("");
+            if (deleteScrollRef.current) {
+                deleteScrollRef.current.scrollTop = 0;
+            }
+        }
+    }, [deleteTeamDialogOpen]);
 
     const [hasResetRoster, setHasResetRoster] = useState(false);
     const [isRestoringRoster, setIsRestoringRoster] = useState(false);
@@ -79,17 +90,17 @@ export function EditTeamForm({
                 const currentSport = (team as { sport_id?: string }).sport_id || team.sport;
                 if (currentSport) {
                     const match = res.data.find(s =>
-                        s.id === currentSport ||
-                        s.sport_name.toLowerCase() === currentSport.toLowerCase()
+                        String(s.id) === String(currentSport) ||
+                        s.sport_name.toLowerCase() === String(currentSport).toLowerCase()
                     );
                     if (match) {
-                        setTeamSport(match.id);
+                        setTeamSport(String(match.id));
                     }
                 }
             }
         }
         loadSports();
-    }, [team]);
+    }, [team.id, team.sport, (team as { sport_id?: string })?.sport_id]);
 
     useEffect(() => {
         const checkRestore = async () => {
@@ -134,6 +145,7 @@ export function EditTeamForm({
         formData.append("description", teamDescription);
         formData.append("contact_name", contactName);
         formData.append("contact_phone", contactPhone);
+        formData.append("contact_email", contactEmail);
         formData.append("sport", teamSport);
         formData.append("tournament_id", "");
         formData.append("existing_logo_url", previewUrl || "");
@@ -234,34 +246,12 @@ export function EditTeamForm({
 
                     <div className="space-y-1">
                         <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 border bg-card rounded-sm divide-x divide-y overflow-hidden">
-                            {sportsList.map((sport) => {
-                                const isSelected = teamSport === sport.id;
-                                return (
-                                    <button
-                                        key={sport.id}
-                                        type="button"
-                                        disabled={isLocked}
-                                        onClick={() => setTeamSport(sport.id)}
-                                        className={cn(
-                                            "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
-                                            isSelected
-                                                ? "bg-primary/10 text-primary font-bold"
-                                                : "hover:bg-muted/30 text-muted-foreground hover:text-primary",
-                                            isLocked && "opacity-50 cursor-not-allowed"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "p-1.5 rounded-full transition-colors",
-                                            isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                        )}>
-                                            {getSportIcon(sport.sport_name, "h-4 w-4")}
-                                        </div>
-                                        <span className="text-xs font-bold truncate w-full transition-colors">{sport.sport_name}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <RadioBtn
+                            value={teamSport}
+                            onChange={setTeamSport}
+                            sports={sportsList}
+                            disabled={isLocked}
+                        />
                     </div>
 
                     <div className="space-y-1">
@@ -306,6 +296,21 @@ export function EditTeamForm({
                                 readOnly={isLocked}
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <Label>
+                            {tTeam("contact_email") || "Email Address"}
+                        </Label>
+                        <Input
+                            type="email"
+                            value={contactEmail}
+                            onChange={e => setContactEmail(e.target.value)}
+                            placeholder={tTeam("contact_email_placeholder") || "e.g. contact@example.com"}
+                            size="sm"
+                            className="bg-transparent text-foreground focus-visible:ring-0"
+                            readOnly={isLocked}
+                        />
                     </div>
 
                     <div className="space-y-1 md:space-y-2">
@@ -384,7 +389,7 @@ export function EditTeamForm({
                                 </AlertDialogContent>
                             </AlertDialog>
 
-                            <Dialog open={deleteTeamDialogOpen} onOpenChange={(open) => { setDeleteTeamDialogOpen(open); if (!open) setDeleteConfirmText(""); }}>
+                            <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button
                                         type="button"
@@ -396,46 +401,55 @@ export function EditTeamForm({
                                         {tTeam("delete_team")}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent showCloseButton={false} className="w-[92vw] sm:w-full sm:max-w-[640px] bg-card border shadow-2xl p-0 h-auto max-h-[90vh] flex flex-col inset-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                                <DialogContent className="max-h-[90vh] flex flex-col p-0 gap-0">
+                                    <DialogHeader className="p-4 border-b shrink-0">
                                         <DialogTitle>{tTeam("delete_team")}</DialogTitle>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            className="absolute right-2 top-2"
-                                            onClick={() => setDeleteTeamDialogOpen(false)}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
                                     </DialogHeader>
-                                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-                                        <DialogDescription>{tTeam("delete_desc")}</DialogDescription>
-                                        <div className="space-y-1">
-                                            <DialogDescription className="font-bold">{tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}</DialogDescription>
-                                            <div className="py-1">
+                                    <form
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            if (!isDeletingTeam && deleteConfirmText === team.name) {
+                                                handleDeleteTeam();
+                                            }
+                                        }}
+                                        className="flex flex-col flex-1 min-h-0"
+                                    >
+                                        <div ref={deleteScrollRef} className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
+                                            <div className="space-y-2">
+                                                <DialogDescription className="text-sm">{tTeam("delete_desc")}</DialogDescription>
+                                                <DialogDescription className="text-sm font-semibold text-foreground">
+                                                    {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
+                                                </DialogDescription>
+                                            </div>
+                                            <div className="space-y-1.5">
                                                 <Input
                                                     id="confirm-team-delete"
                                                     value={deleteConfirmText}
                                                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                                                     placeholder={team.name}
-                                                    size="sm"
                                                     autoComplete="off"
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                    <DialogFooter className="p-2 md:p-4 border-t">
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            disabled={isDeletingTeam || deleteConfirmText !== team.name}
-                                            onClick={handleDeleteTeam}
-                                            className="bg-destructive w-full"
-                                        >
-                                            {tCommon("delete")}
-                                        </Button>
-                                    </DialogFooter>
+                                        <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => setDeleteTeamDialogOpen(false)}
+                                                disabled={isDeletingTeam}
+                                            >
+                                                {tCommon("cancel")}
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                variant="destructive"
+                                                disabled={isDeletingTeam || deleteConfirmText !== team.name}
+                                            >
+                                                {isDeletingTeam && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                {tCommon("delete")}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
                                 </DialogContent>
                             </Dialog>
                         </div>
@@ -445,3 +459,4 @@ export function EditTeamForm({
         </div>
     );
 }
+

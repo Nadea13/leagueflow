@@ -33,8 +33,14 @@ export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean
         fetchTournaments();
     }, [search]);
 
-    const activeTournaments = tournaments.filter(t => t.status === "ongoing" || t.status === "upcoming");
-    const completedTournaments = tournaments.filter(t => t.status === "finished");
+    const activeTournaments = tournaments.filter(t => {
+        const s = (t.status || "").toLowerCase();
+        return s === "ongoing" || s === "active" || s === "upcoming" || s === "registration_open" || s === "published" || s === "draft";
+    });
+    const completedTournaments = tournaments.filter(t => {
+        const s = (t.status || "").toLowerCase();
+        return s === "finished" || s === "completed";
+    });
 
     return (
         <div className="space-y-4 md:space-y-6">

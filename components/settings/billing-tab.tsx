@@ -9,7 +9,7 @@ import { getUserSubscriptionDetails } from "@/actions/common/user";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createStripeCheckoutSession, createStripeCustomerPortalSession, verifyStripeCheckoutSession } from "@/actions/common/stripe";
-import { Loader2, Check, ExternalLink } from "lucide-react";
+import { Loader2, Check, ExternalLink, CreditCard } from "lucide-react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
@@ -169,37 +169,59 @@ export function BillingTab() {
     };
 
     return (
-        <div className="space-y-2 md:space-y-4">
-            {/* Current Plan overview */}
-            <div className="bg-card border rounded-sm p-2 md:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
+        <div className="space-y-4">
+            {/* 1. Current Plan & Billing Portal */}
+            <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
+                <div className="p-4 space-y-4">
+                    <div>
                         <Header level={4}>{t("title")}</Header>
                         <p className="text-xs text-muted-foreground font-medium">{t("description")}</p>
-                        {expiryDate && (
-                            <p className="text-[10px] text-muted-foreground mt-1 font-bold">
-                                {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString(isEn ? 'en-US' : 'th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </p>
-                        )}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                            {t("active_prefix")}{getPlanName(activePlan)}
-                        </Badge>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleOpenCustomerPortal}
-                            disabled={isPending}
-                            className="text-xs font-bold gap-1.5 h-8 border-primary/30 hover:bg-primary/10"
-                        >
-                            {isPending ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                                <ExternalLink className="w-3.5 h-3.5 text-primary" />
-                            )}
-                            <span>{locale === 'th' ? "จัดการการชำระเงินและใบเสร็จ" : "Manage Billing & Invoices"}</span>
-                        </Button>
+
+                    <div className="space-y-4 divide-y divide-border">
+                        {/* Current Plan Overview Row */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                            <div className="flex items-start gap-4 sm:w-2/3">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <CreditCard className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <Header level={6}>
+                                            {locale === 'th' ? "แพ็กเกจปัจจุบันของคุณ" : "Your Current Plan"}
+                                        </Header>
+                                        <Badge variant="outline" className="text-[10px] text-primary border-primary/40 bg-primary/5">
+                                            {t("active_prefix")}{getPlanName(activePlan)}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {expiryDate ? (
+                                            <>
+                                                {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString(isEn ? 'en-US' : 'th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                            </>
+                                        ) : (
+                                            locale === 'th' ? "ใช้งานฟรี ไม่มีวันหมดอายุ" : "Free tier, no expiration"
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-2/3 flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleOpenCustomerPortal}
+                                    disabled={isPending}
+                                    className="text-xs gap-1.5 hover:text-primary hover:border-primary/50"
+                                >
+                                    {isPending ? (
+                                        <Loader2 className="size-3.5 animate-spin" />
+                                    ) : (
+                                        <ExternalLink className="size-3.5 text-primary" />
+                                    )}
+                                    <span>{locale === 'th' ? "จัดการการชำระเงินและใบเสร็จ" : "Manage Billing & Invoices"}</span>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,7 +240,7 @@ export function BillingTab() {
                         onChange={(val) => setBillingCycle(val)}
                         showIcons={false}
                         fullWidth={true}
-                        className="w-full sm:w-auto bg-card"
+                        className="w-full sm:w-auto"
                     />
                 </div>
 
@@ -272,7 +294,7 @@ export function BillingTab() {
                                                 )}
                                             </div>
                                             {isCurrent && (
-                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-bold border-primary text-primary">
+                                                <Badge variant="outline" className="border-primary text-primary">
                                                     {t("active_badge")}
                                                 </Badge>
                                             )}
@@ -305,7 +327,7 @@ export function BillingTab() {
                                                             {isEn ? "$4.50" : "฿145"}
                                                         </span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
-                                                        <Badge variant="default" className="text-[9px] px-1.5 py-0 font-bold">
+                                                        <Badge variant="default">
                                                             -50%
                                                         </Badge>
                                                     </div>
@@ -353,7 +375,7 @@ export function BillingTab() {
                                         <div className="space-y-1.5 pt-3 border-t">
                                             {getPlanFeatures(plan.id).map((feature, idx) => (
                                                 <div key={idx} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                                                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                                                    <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                                                     <span className="leading-tight text-[11px]">{feature}</span>
                                                 </div>
                                             ))}

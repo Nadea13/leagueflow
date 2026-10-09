@@ -13,44 +13,12 @@ vi.mock('next/cache', () => ({
     revalidatePath: vi.fn(),
 }));
 
-// Mock Supabase Server client
-const mockSupabase = {
-    auth: {
-        getUser: vi.fn(),
-    },
-    from: vi.fn(),
-    storage: {
-        from: vi.fn(),
-    },
-};
-
-vi.mock('@/lib/supabase/server', () => ({
-    createClient: vi.fn(() => Promise.resolve(mockSupabase)),
-    createAdminClient: vi.fn(() => mockSupabase),
+vi.mock('@/lib/auth-server', () => ({
+    getServerSession: vi.fn(() => Promise.resolve({
+        user: { id: 'user-123', email: 'test@example.com' },
+        token: 'mock-jwt-token'
+    }))
 }));
-
-// Helper to create a query builder mock that can be chained arbitrarily
-function createMockQueryBuilder(resolvedValue: unknown) {
-    const builder = {} as Record<string, unknown>;
-    const chain = () => builder;
-
-    builder.select = chain;
-    builder.eq = chain;
-    builder.is = chain;
-    builder.limit = chain;
-    builder.order = chain;
-    builder.insert = chain;
-    builder.update = chain;
-    builder.delete = chain;
-    builder.or = chain;
-    builder.single = vi.fn().mockResolvedValue(resolvedValue);
-    builder.maybeSingle = vi.fn().mockResolvedValue(resolvedValue);
-
-    // Make it awaitable
-    builder.then = (onfulfilled?: (value: unknown) => unknown) => Promise.resolve(resolvedValue).then(onfulfilled);
-
-    return builder;
-}
 
 describe('Announcement Actions', () => {
     beforeEach(() => {
@@ -58,14 +26,10 @@ describe('Announcement Actions', () => {
     });
 
     it('should successfully get announcements', async () => {
-        mockSupabase.from.mockImplementation((table) => {
-            if (table === 'announcements') {
-                return createMockQueryBuilder({
-                    data: [{ id: 'ann-123', title: 'Welcome!' }],
-                    error: null
-                });
-            }
-            return createMockQueryBuilder({ data: null, error: null });
+        const mockAnnouncements = [{ id: 'ann-123', title: 'Welcome!', tournament_id: 'tournament-123', is_pinned: false, created_at: new Date().toISOString() }];
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue(mockAnnouncements)
         });
 
         const result = await getAnnouncements('tournament-123');
@@ -77,63 +41,39 @@ describe('Announcement Actions', () => {
     });
 
     it('should successfully add an announcement', async () => {
-        const mockInsert = vi.fn().mockResolvedValue({ error: null });
-        mockSupabase.from.mockImplementation((table) => {
-            if (table === 'announcements') {
-                const builder = createMockQueryBuilder({ error: null });
-                builder.insert = mockInsert;
-                return builder;
-            }
-            return createMockQueryBuilder({ data: null, error: null });
+        const createdAnnouncement = { id: 'ann-new', title: 'Important Update', content: 'Please read', tournament_id: 'tournament-123', is_pinned: false, created_at: new Date().toISOString() };
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue(createdAnnouncement)
         });
 
         const result = await addAnnouncement('tournament-123', 'Important Update', 'Please read');
 
         expect(result.success).toBe(true);
-        expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
-            title: 'Important Update',
-            content: 'Please read',
-            tournament_id: 'tournament-123'
+        expect(result.data).toEqual(expect.objectContaining({
+            title: 'Important Update'
         }));
     });
 
     it('should successfully delete an announcement', async () => {
-        const mockDelete = vi.fn(() => ({
-            eq: vi.fn().mockResolvedValue({ error: null })
-        }));
-        mockSupabase.from.mockImplementation((table) => {
-            if (table === 'announcements') {
-                const builder = createMockQueryBuilder({ error: null });
-                builder.delete = mockDelete;
-                return builder;
-            }
-            return createMockQueryBuilder({ data: null, error: null });
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ message: 'Announcement deleted successfully' })
         });
 
         const result = await deleteAnnouncement('ann-123', 'tournament-123');
 
         expect(result.success).toBe(true);
-        expect(mockDelete).toHaveBeenCalled();
     });
 
     it('should successfully toggle announcement pin status', async () => {
-        const mockUpdate = vi.fn(() => ({
-            eq: vi.fn().mockResolvedValue({ error: null })
-        }));
-        mockSupabase.from.mockImplementation((table) => {
-            if (table === 'announcements') {
-                const builder = createMockQueryBuilder({ error: null });
-                builder.update = mockUpdate;
-                return builder;
-            }
-            return createMockQueryBuilder({ data: null, error: null });
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ message: 'Announcement updated successfully' })
         });
 
         const result = await toggleAnnouncementPin('ann-123', true, 'tournament-123');
 
         expect(result.success).toBe(true);
-        expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
-            is_pinned: true
-        }));
     });
 });

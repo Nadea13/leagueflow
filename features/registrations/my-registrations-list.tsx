@@ -70,7 +70,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                         <CardHeader className="relative z-10 pb-2">
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
-                                    <Badge variant={getStatusVariant(reg.payment_status)} className="font-black text-[9px] tracking-widest px-2 py-0.5 border-0 ring-1 ring-inset ring-foreground/10">
+                                    <Badge variant={getStatusVariant(reg.payment_status)} className="border-0 ring-1 ring-inset ring-foreground/10">
                                         {getDisplayStatus(reg.payment_status)}
                                     </Badge>
                                 </div>
@@ -111,7 +111,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                         <div className="flex flex-col">
                                             <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{tCommon("date")}</span>
                                             <div className="flex items-center gap-2">
-                                                <Clock className="h-3.5 w-3.5 text-primary/40 shrink-0" />
+                                                <Clock className="h-4 w-4 text-primary/40 shrink-0" />
                                                 <span className="text-[11px] font-black tabular-nums tracking-tight">
                                                     {formatDate(reg.created_at)}
                                                 </span>
@@ -120,7 +120,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                         <div className="flex flex-col">
                                             <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{tCommon("format")}</span>
                                             <div className="flex items-center gap-2">
-                                                <Trophy className="h-3.5 w-3.5 text-primary/40 shrink-0" />
+                                                <Trophy className="h-4 w-4 text-primary/40 shrink-0" />
                                                 <span className="text-[11px] font-black tracking-tight">
                                                     {reg.tournament?.format || "N/A"}
                                                 </span>

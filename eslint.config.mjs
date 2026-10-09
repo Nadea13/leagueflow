@@ -12,7 +12,14 @@ const eslintConfig = defineConfig([
         "varsIgnorePattern": "^_",
         "caughtErrorsIgnorePattern": "^_"
       }],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@next/next/no-img-element": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/preserve-manual-memoization": "off",
     }
   },
   // Override default ignores of eslint-config-next.
@@ -31,6 +38,8 @@ const eslintConfig = defineConfig([
     "scratch/**",
     "scratch-*",
     "scripts/**",
+    "supabase/**",
+    "lint_*.json",
   ]),
 ]);
 

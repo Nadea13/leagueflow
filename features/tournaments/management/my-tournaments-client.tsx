@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -6,7 +6,7 @@ import { Search, HelpCircle, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
-import { TournamentCreate } from "@/features/tournaments/management/create-tournament-form";
+import { TournamentCreate } from "@/features/dialogs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tournament } from "@/types/index";
 import { driver } from "driver.js";
@@ -162,7 +162,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                     className="bg-card rounded-sm border"
                 />
             ) : (
-                <div id="tour-tournaments-grid" className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div id="tour-tournaments-grid" className="grid gap-2 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredTournaments.map((tournament) => (
                         <DashboardCard
                             key={tournament.id}
@@ -176,3 +176,4 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
         </div>
     );
 }
+

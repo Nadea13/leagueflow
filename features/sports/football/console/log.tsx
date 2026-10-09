@@ -15,25 +15,64 @@ interface EventLogProps {
     readOnly?: boolean;
     onDelete?: (eventId: string) => void;
     players?: Player[];
+    visibleLogs?: string[];
 }
 
-export function EventLog({ events, match, readOnly = false, onDelete, players = [] }: EventLogProps) {
+const PERIOD_LIFECYCLE_TYPES = [
+    'kick_off',
+    'first_half',
+    'half_time',
+    'second_half',
+    'full_time',
+    'extra_time',
+    'extra_time_half_time',
+    'extra_time_second_half',
+    'penalties'
+];
+
+const isEventVisible = (event: MatchEvent, visibleLogs?: string[]) => {
+    if (!visibleLogs) return true;
+    const type = event.event_type;
+    if (visibleLogs.includes(type)) return true;
+    if (type === 'penalty' && visibleLogs.includes('penalty_shot')) return true;
+    if (type === 'penalty_shot' && visibleLogs.includes('penalty')) return true;
+    if (type === 'miss_cross' && visibleLogs.includes('cross')) return true;
+    if (type === 'match_resumed' && visibleLogs.includes('match_paused')) return true;
+    if (PERIOD_LIFECYCLE_TYPES.includes(type) && visibleLogs.includes('period_lifecycle')) return true;
+    return false;
+};
+
+export function EventLog({ events, match, readOnly = false, onDelete, players = [], visibleLogs }: EventLogProps) {
     const t = useTranslations("Console");
+    const filteredEvents = visibleLogs ? events.filter(e => isEventVisible(e, visibleLogs)) : events;
 
     return (
         <div className="bg-card border rounded-sm relative overflow-hidden group">
             <div className="relative z-10">
                 <div className="overflow-y-auto no-scrollbar scroll-smooth">
-                    {events.length === 0 ? (
+                    {filteredEvents.length === 0 ? (
                         <EmptyState
                             icon={Clock}
                             title={t("no_events") || "No events yet"}
-                            description={t("live_updates_desc") || "Live match updates will appear here"}
+                            description={events.length > 0 ? (t("no_filtered_events") || "No events matching your log display settings") : (t("live_updates_desc") || "Live match updates will appear here")}
                         />
                     ) : (
-                        events.map((event: MatchEvent) => {
+                        filteredEvents.map((event: MatchEvent) => {
                             const evtConfig = EVENT_TYPES.find(e => e.type === event.event_type);
-                            const globalEventTypes = ['kick_off', 'half_time', 'full_time', 'match_paused', 'match_resumed', 'add_time'];
+                            const globalEventTypes = [
+                                'kick_off',
+                                'first_half',
+                                'half_time',
+                                'second_half',
+                                'full_time',
+                                'extra_time',
+                                'extra_time_half_time',
+                                'extra_time_second_half',
+                                'penalties',
+                                'match_paused',
+                                'match_resumed',
+                                'add_time'
+                            ];
                             const isNeutral = !event.team_id || globalEventTypes.includes(event.event_type);
                             const isHome = !isNeutral && event.team_id === match.home_team_id;
                             const isUnknownPlayer = 
@@ -210,7 +249,7 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                                     className="h-8 w-8 text-foreground/20 hover:text-destructive hover:bg-destructive/10 opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
                                                     onClick={() => onDelete(event.id)}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             )}
                                         </div>

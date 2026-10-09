@@ -18,7 +18,9 @@ export function TournamentSettings({
     tournament,
     activeTab = 'general',
     userPlan,
-    activeCategoryId
+    activeCategoryId,
+    onCategoryUpdated,
+    userRole
 }: {
     tournament: Tournament;
     hasFixtures: boolean;
@@ -26,6 +28,8 @@ export function TournamentSettings({
     teams: TournamentTeam[];
     activeTab?: string;
     activeCategoryId?: string | null;
+    onCategoryUpdated?: () => void;
+    userRole?: string | null;
 }) {
     const tournamentId = tournament.id;
 
@@ -61,7 +65,7 @@ export function TournamentSettings({
             }
 
             {activeTab === 'categories' &&
-                <CategorySettings tournamentId={tournamentId} sport={tournament.sport} />
+                <CategorySettings tournamentId={tournamentId} sport={tournament.sport} onCategoryUpdated={onCategoryUpdated} />
             }
 
             {activeTab === 'location' &&
@@ -70,7 +74,7 @@ export function TournamentSettings({
             {activeTab === 'staff' && (
                 <StaffSettings tournamentId={tournamentId} userPlan={userPlan} togglePayment={togglePayment} />
             )}
-            {activeTab === 'danger' && (
+            {activeTab === 'danger' && userRole !== 'co_organizer' && userRole !== 'co-organizer' && userRole !== 'staff' && userRole !== 'referee' && (
                 <DangerZone
                     tournamentId={tournamentId}
                     tournamentName={tournament.name}

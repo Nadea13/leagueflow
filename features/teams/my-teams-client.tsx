@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -6,7 +6,8 @@ import { Users, Search, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
-import { CreateTeamForm } from "@/features/teams/create-team-form";
+import { CreateTeamForm } from "@/features/dialogs";
+import { VerifyTeamForm } from "@/features/dialogs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Team } from "@/types/index";
 import { Header } from "@/components/ui/header";
@@ -111,16 +112,16 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             placeholder={isThai ? "พิมพ์ชื่อทีม..." : "Search teams..."}
                         />
                     </div>
-                    {/* <div id="tour-verify-team-btn" className="inline-block">
+                    <div id="tour-verify-team-btn" className="inline-block">
                         <VerifyTeamForm iconOnlyMobile />
-                    </div> */}
+                    </div>
                     <div id="tour-create-team-btn" className="inline-block">
                         <CreateTeamForm iconOnlyMobile />
                     </div>
                 </div>
             </div>
 
-            <div id="tour-teams-grid" className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div id="tour-teams-grid" className="grid gap-2 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredTeams.length === 0 ? (
                     <div className="col-span-full">
                         <EmptyState
@@ -145,3 +146,4 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
         </div>
     );
 }
+

@@ -33,8 +33,15 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
                 return;
             }
 
-            // 1. Try to find the latest marker event (kick_off or match_resumed)
-            const markers = events.filter(e => e.event_type === 'kick_off' || e.event_type === 'match_resumed');
+            // 1. Try to find the latest marker event (first_half, second_half, extra_time, kick_off or match_resumed)
+            const markers = events.filter(e =>
+                e.event_type === 'first_half' ||
+                e.event_type === 'second_half' ||
+                e.event_type === 'extra_time' ||
+                e.event_type === 'extra_time_second_half' ||
+                e.event_type === 'kick_off' ||
+                e.event_type === 'match_resumed'
+            );
             const latestMarker = markers.length > 0 
                 ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
                 : null;

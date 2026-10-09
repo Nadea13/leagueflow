@@ -97,8 +97,9 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
             lastTimestamp = evtTime;
         });
 
-        // Accumulate live duration up to now if match timer is playing and match is live
-        if (currentPossessor && lastTimestamp !== null && match.status === 'live' && match.timer_status === 'playing') {
+        // Accumulate live duration up to now if match timer is playing and match is live/in progress
+        const isMatchLive = match.status === 'live' || match.status === 'first_half' || match.status === 'second_half';
+        if (currentPossessor && lastTimestamp !== null && isMatchLive && match.timer_status === 'playing') {
             const currentMs = now;
             if (currentMs > lastTimestamp) {
                 const liveDuration = currentMs - lastTimestamp;

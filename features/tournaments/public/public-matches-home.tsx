@@ -159,13 +159,13 @@ export function PublicMatchesHome() {
                                 onClick={goToPrevDay}
                                 className="p-3 hover:text-primary text-muted-foreground/40 transition-colors shrink-0"
                             >
-                                <ChevronLeft className="h-5 w-5" />
+                                <ChevronLeft className="h-4 w-4" />
                             </button>
 
                             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                 <PopoverTrigger asChild>
                                     <button className="px-4 py-2 flex items-center justify-center gap-4 hover:bg-muted/10 transition-all border-x border-border/10 flex-1 min-h-[56px]">
-                                        <CalendarIcon className="h-5 w-5 text-primary animate-pulse shrink-0" />
+                                        <CalendarIcon className="h-4 w-4 text-primary animate-pulse shrink-0" />
                                         <div className="flex flex-col items-center">
                                             <span className="text-[10px] font-black tracking-tighter text-primary leading-none mb-1">
                                                 {selectedDate ? formatDate(selectedDate, "EEE", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
@@ -245,7 +245,7 @@ export function PublicMatchesHome() {
                                 onClick={goToNextDay}
                                 className="p-2 hover:text-primary text-muted-foreground/40 transition-colors"
                             >
-                                <ChevronRight className="h-5 w-5" />
+                                <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
                     </div>
@@ -340,7 +340,7 @@ export function PublicMatchesHome() {
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="truncate pr-4">{tournament.name}</span>
-                                            <Trophy className="h-3 w-3 transition-all duration-300 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-40" />
+                                            <Trophy className="h-4 w-4 transition-all duration-300 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-40" />
                                         </div>
                                     </Link>
                                 ))}

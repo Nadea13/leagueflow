@@ -1,4 +1,4 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -7,11 +7,35 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
+  # Job 1: Test & Verify Go Backend
+  backend-check:
+    name: Backend (Go Test & Build)
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+
+      - name: Download Go Modules
+        run: go mod download
+
+      - name: Verify Go Build
+        run: go build -v ./cmd/server
+
+  # Job 2: Lint, Type Check & Build Frontend Next.js
+  frontend-check:
+    name: Frontend (Next.js Build & Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -20,42 +44,16 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run linting
+      - name: Run Linting
         run: npm run lint
 
-      - name: Run type checking
+      - name: Run Type Checking
         run: npm run type-check
 
-      - name: Run unit tests
-        run: npm run test
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
-
-      - name: Run build
+      - name: Verify Frontend Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+          NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1

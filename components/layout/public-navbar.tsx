@@ -5,10 +5,15 @@ import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
-import type { User } from "@supabase/supabase-js";
+
+export interface NavbarUser {
+    id?: string;
+    email?: string;
+    full_name?: string;
+}
 
 interface PublicNavbarProps {
-    user?: User | null;
+    user?: NavbarUser | null;
 }
 
 export function PublicNavbar({ user = null }: PublicNavbarProps) {

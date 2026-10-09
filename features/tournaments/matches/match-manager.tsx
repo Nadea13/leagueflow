@@ -34,9 +34,9 @@ export function MatchManager({
     isPublic = false,
     canvasData = null
 }: FixturesManagerProps) {
-    const tMatch = useTranslations("Match");
+    const _tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
-    const tBracket = useTranslations("Bracket");
+    const _tBracket = useTranslations("Bracket");
     const locale = useLocale();
 
     const [filterStage, setFilterStage] = useState<string>(externalFilterStage);
@@ -101,16 +101,19 @@ export function MatchManager({
     const groupedMatches = filteredMatches.reduce((acc: Record<string, Record<string, Match[]>>, match) => {
         const date = match.match_date || "TBD";
 
-        // Determine stage label
+        // Determine stage label: น็อคเอาท์ หรือ รอบแบ่งกลุ่ม หรือ ลีก
         let stageLabel = "";
-        if (match.stage === 'round_of_16') stageLabel = tBracket("round_of_16");
-        else if (match.stage === 'quarter_final') stageLabel = tBracket("quarter_final");
-        else if (match.stage === 'semi_final') stageLabel = tBracket("semi_final");
-        else if (match.stage === 'final') stageLabel = tBracket("final");
-        else if (match.stage === 'group') stageLabel = tMatch("group");
-        else if (match.stage === 'knockout') stageLabel = locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT";
-        else if (match.stage === 'league') stageLabel = locale === 'th' ? "ลีก" : "LEAGUE";
-        else stageLabel = match.stage?.replace('_', ' ').toUpperCase() || "UNKNOWN";
+        const isGroup = match.stage === 'group';
+        const isLeague = match.stage === 'league';
+
+        if (isGroup) {
+            stageLabel = locale === 'th' ? "รอบแบ่งกลุ่ม" : "GROUP STAGE";
+        } else if (isLeague) {
+            stageLabel = locale === 'th' ? "ลีก" : "LEAGUE";
+        } else {
+            // All knockout stages (round_of_64, round_of_32, round_of_16, quarter_final, semi_final, final, knockout)
+            stageLabel = locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT";
+        }
 
         if (!acc[date]) acc[date] = {};
         if (!acc[date][stageLabel]) acc[date][stageLabel] = [];

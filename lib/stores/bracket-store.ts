@@ -10,7 +10,6 @@ import {
     EdgeChange,
 } from "@xyflow/react";
 import { BracketCanvasData, Match, TournamentTeam, SportType } from "@/types";
-import { createClient } from "@/lib/supabase/client";
 
 export interface MatchNodeData {
     label: string;
@@ -74,14 +73,30 @@ interface BracketState {
     pasteNodes: () => void;
 }
 
-let teamFetchRequestId = 0;
-
 export const useBracketStore = create<BracketState>((set, get) => ({
     nodes: [],
     edges: [],
     nodeCounter: 0,
     isDirty: false,
     teams: [],
+    setTeams: (teams) => set({ teams }),
+    fetchTeams: async (categoryId: string) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const res = await fetch(`${apiUrl}/tournaments/0/teams?category_id=${categoryId}`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                const mapped = (data || []).map((t: any) => ({
+                    ...t,
+                    name: t.team?.name || t.name || "Unknown Team",
+                    logo_url: t.team?.logo_img || t.team?.logo_url || t.logo_img || t.logo_url || null,
+                }));
+                set({ teams: mapped });
+            }
+        } catch (e) {
+            console.error("fetchTeams error:", e);
+        }
+    },
     activeNodeId: null,
     setActiveNodeId: (id) => set({ activeNodeId: id }),
     activeCategoryId: null,
@@ -211,55 +226,6 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         });
     },
 
-    setTeams: (teams) => {
-        const currentTeams = get().teams;
-        if (JSON.stringify(currentTeams) === JSON.stringify(teams)) return;
-        set({ teams });
-    },
-    fetchTeams: async (categoryId) => {
-        if (!categoryId) return;
-        const requestId = ++teamFetchRequestId;
-        const supabase = createClient();
-        const { data, error } = await supabase
-            .from("tournament_teams")
-            .select("*, team:teams(id, name, logo_img)")
-            .eq("tournament_category_id", categoryId)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: true });
-
-        if (error) {
-            console.error("Failed to fetch tournament category teams:", error);
-            return;
-        }
-
-        const activeCategoryId = get().activeCategoryId;
-        if (requestId !== teamFetchRequestId || (activeCategoryId && activeCategoryId !== categoryId)) {
-            return;
-        }
-
-        if (data) {
-            const mappedTeams = (data as {
-                id: string;
-                team: {
-                    id: string;
-                    name: string;
-                    logo_img: string | null;
-                } | null;
-                name?: string | null;
-                [key: string]: unknown;
-            }[]).map((t) => ({
-                ...t,
-                name: t.team?.name || t.name || "Unknown Team",
-                logo_url: t.team?.logo_img || null,
-            })) as unknown as TournamentTeam[];
-            
-            const currentTeams = get().teams;
-            if (JSON.stringify(currentTeams) !== JSON.stringify(mappedTeams)) {
-                set({ teams: mappedTeams });
-            }
-        }
-    },
-
     onNodesChange: (changes) => {
         const hasRemove = changes.some(c => c.type === 'remove');
         if (hasRemove) {
@@ -269,14 +235,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             const nextNodes = applyNodeChanges(changes, state.nodes);
 
             const hasRealChange = changes.some(c =>
-                (c.type === 'position' && c.dragging === true) ||
+                c.type === 'position' ||
                 c.type === 'remove' ||
-                c.type === 'add'
+                c.type === 'add' ||
+                c.type === 'dimensions' ||
+                c.type === 'replace'
             );
-
-            if (hasRealChange) {
-                console.log("Real Node Change Detected:", changes.map(c => c.type));
-            }
 
             return {
                 nodes: nextNodes,
@@ -292,11 +256,11 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         }
         set((state) => {
             const nextEdges = applyEdgeChanges(changes, state.edges);
-            const hasRealChange = changes.some(c => c.type === 'remove' || c.type === 'add');
-
-            if (hasRealChange) {
-                console.log("Real Edge Change Detected:", changes.map(c => c.type));
-            }
+            const hasRealChange = changes.some(c =>
+                c.type === 'remove' ||
+                c.type === 'add' ||
+                c.type === 'replace'
+            );
 
             return {
                 edges: nextEdges,

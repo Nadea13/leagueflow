@@ -547,13 +547,16 @@ export function generateGroupStageWithKnockout(
 
     const standingNodeIds: string[] = [];
     const effectiveGroupCount = Math.max(2, groupCount);
-    const groupSpacingY = effectiveGroupCount >= 16 ? 120 : effectiveGroupCount >= 8 ? 160 : 320;
+    // Each group contains: GroupNode, StandingNode, and below StandingNode is MatchNode (fixtures).
+    // Base height for StandingNode (~250px) + Fixture MatchNode (~260px) + padding (~100px) = 620px
+    const groupSpacingY = effectiveGroupCount >= 16 ? 480 : effectiveGroupCount >= 8 ? 540 : 620;
 
-    // 1. Create Groups and Standings
+    // 1. Create Groups, Standings, and Fixture Matches
     for (let g = 0; g < effectiveGroupCount; g++) {
         const groupLabel = getGroupLabel(g);
         const gNodeId = uid(`group-${groupLabel.toLowerCase()}`);
         const sNodeId = uid(`standing-${groupLabel.toLowerCase()}`);
+        const mNodeId = uid(`match-group-${groupLabel.toLowerCase()}`);
         standingNodeIds.push(sNodeId);
 
         const groupTeams = Array.from({ length: teamsPerGroup }, (_, i) => `Team ${groupLabel}${i + 1}`);
@@ -575,7 +578,7 @@ export function generateGroupStageWithKnockout(
         nodes.push({
             id: sNodeId,
             type: "standingNode",
-            position: { x: offsetX + 320, y: offsetY + g * groupSpacingY },
+            position: { x: offsetX + 340, y: offsetY + g * groupSpacingY },
             data: {
                 label: `Standings Group ${groupLabel}`,
                 teamCount: teamsPerGroup,
@@ -591,7 +594,43 @@ export function generateGroupStageWithKnockout(
             },
         });
 
+        // Connect Group -> Standing
         edges.push(createEdge(gNodeId, sNodeId, "standing", "in"));
+
+        // Generate Group Stage Match fixtures (Round-robin)
+        const count = teamsPerGroup;
+        const n = count % 2 === 0 ? count : count + 1;
+        const indices = Array.from({ length: n }, (_, i) => i);
+        const pairings: { id: string; placeholderA: string; placeholderB: string }[] = [];
+
+        for (let r = 0; r < n - 1; r++) {
+            for (let i = 0; i < n / 2; i++) {
+                const a = indices[i];
+                const b = indices[n - 1 - i];
+                if (count % 2 !== 0 && (a === n - 1 || b === n - 1)) continue;
+                const isHome = (i + r) % 2 === 0;
+                pairings.push({
+                    id: `m-${Date.now()}-${g}-${r}-${i}`,
+                    placeholderA: groupTeams[isHome ? a : b] || `Team ${groupLabel}${(isHome ? a : b) + 1}`,
+                    placeholderB: groupTeams[isHome ? b : a] || `Team ${groupLabel}${(isHome ? b : a) + 1}`,
+                });
+            }
+            indices.splice(1, 0, indices.pop()!);
+        }
+
+        // Match Node placed below Standing Node
+        nodes.push({
+            id: mNodeId,
+            type: "matchNode",
+            position: { x: offsetX + 340, y: offsetY + g * groupSpacingY + 280 },
+            data: {
+                label: `Group ${groupLabel} (${pairings.length} Matches)`,
+                matches: pairings,
+            },
+        });
+
+        // Connect Standing bottom -> Match top (dashed)
+        edges.push(createEdge(sNodeId, mNodeId, "group-matches", "group-in", true));
     }
 
     // 2. Build Knockout Bracket

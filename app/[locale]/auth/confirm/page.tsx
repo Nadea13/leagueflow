@@ -41,7 +41,7 @@ export default function AuthConfirmPage() {
             // Supabase client will process the URL hash automatically
             // console.log("AuthConfirmPage: No session, waiting for auth state change...");
 
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
                 // console.log("AuthConfirmPage: Auth state changed:", event);
                 if (event === 'SIGNED_IN' && session) {
                     window.location.href = `/${locale}/dashboard`;

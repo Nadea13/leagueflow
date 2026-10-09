@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
@@ -7,8 +7,8 @@ import { UserDropdown } from "@/features/dashboard/user-dropdown"
 import { useState } from "react"
 import { getNavItems } from "@/config/nav"
 
-import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
-import { BecomeTeamManagerDialog } from "@/features/dashboard/become-team-manager-dialog"
+import { BecomeOrganizerDialog } from "@/features/dialogs"
+import { BecomeTeamManagerDialog } from "@/features/dialogs"
 import { Logo } from "@/components/shared/logo"
 
 interface DashboardNavbarProps {
@@ -42,7 +42,7 @@ export function DashboardNavbar({
     return (
         <>
             {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border flex justify-around py-1.5 items-center px-2 shadow-lg">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex justify-around py-1.5 items-center px-2 shadow-lg">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                     return (
@@ -62,11 +62,11 @@ export function DashboardNavbar({
                                 }
                             }}
                             className={cn(
-                                "flex flex-col items-center gap-1 py-1 px-3 rounded-md transition-all active:scale-95",
+                                "flex flex-col items-center gap-1 py-1 px-3 rounded-sm transition-all active:scale-95",
                                 isActive ? "text-primary" : "text-muted-foreground/60 hover:text-primary"
                             )}
                         >
-                            <item.icon className="h-5 w-5" />
+                            <item.icon className="h-4 w-4" />
                             <span className="text-[10px] font-bold tracking-tight">{t(item.titleKey)}</span>
                         </Link>
                     );
@@ -74,7 +74,7 @@ export function DashboardNavbar({
             </div>
 
             {/* Mobile Top Header / Desktop Navbar Header */}
-            <header className={cn("sticky top-0 z-40 flex h-14 md:h-20 items-center justify-between border-b bg-background/80 backdrop-blur-xl px-2 w-full", className)}>
+            <header className={cn("sticky top-0 z-40 flex h-14 md:h-20 items-center justify-between border-b bg-card backdrop-blur-xl px-2 w-full", className)}>
                 <div className="flex items-center gap-1 md:gap-2">
                     <Link href="/dashboard" className="flex items-center gap-2 transition-transform group">
                         <div className="relative shrink-0">
@@ -99,3 +99,4 @@ export function DashboardNavbar({
         </>
     )
 }
+

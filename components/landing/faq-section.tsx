@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { HelpCircle, Sparkles, CheckCircle2, ChevronDown } from "lucide-react";
+import { HelpCircle, CheckCircle2, ChevronDown } from "lucide-react";
 
 interface FaqSectionProps {
   locale: string;
@@ -149,7 +149,7 @@ export function FaqSection({ locale }: FaqSectionProps) {
                         isOpen ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
                       }`}
                     >
-                      <HelpCircle className="w-5 h-5" />
+                      <HelpCircle className="h-4 w-4" />
                     </div>
                     <span className="font-bold text-base sm:text-lg text-foreground leading-snug">
                       {faq.q}
@@ -160,7 +160,7 @@ export function FaqSection({ locale }: FaqSectionProps) {
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     className="shrink-0 text-muted-foreground"
                   >
-                    <ChevronDown className="w-5 h-5" />
+                    <ChevronDown className="h-4 w-4" />
                   </motion.div>
                 </button>
 

@@ -1,35 +1,33 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Match, MatchEvent, Player, EventType } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { VolleyballScoreboard } from "./console/scoreboard";
 import { VolleyballEventLog } from "./console/log";
-import { VolleyballEventDialog } from "./console/event-dialog";
+import { VolleyballEventDialog } from "@/features/dialogs";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import {
     ArrowLeft, Zap, Flame, ShieldCheck, HelpCircle, Cloud, CloudOff, RefreshCw,
-    Undo, Tv, CalendarRange, Ban, XCircle, Users, Play, Square, BarChart2, Timer, Info,
-    Settings, Check, RotateCcw, X, Trophy
+    Undo, Tv, Users, Play, Square, BarChart2, Timer, Info,
+    Settings
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Header } from "@/components/ui/header";
-import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { useMatchWebSocket } from "@/hooks/use-match-websocket";
 import { updateMatch, updateCategoryRulesConfig } from "@/actions/tournaments/general";
+import { ApiClient } from "@/lib/api-client";
 import { getPlayers } from "@/actions/tournaments/player";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { BroadcastDialog } from "@/features/broadcast";
-import { WalkoverDialog } from "../football/console/walkover-dialog";
-import { RosterSelectionDialog } from "../football/console/roster-selection-dialog";
+import { WalkoverDialog } from "@/features/dialogs";
+import { RosterSelectionDialog } from "@/features/dialogs";
 import { VolleyballMatchStatisticsBox } from "./console/statistics-box";
-import { VolleyballTeamInfoDialog } from "./console/team-info-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { VolleyballTeamInfoDialog, VolleyballSettingsDialog, VolleyballStatisticsDialog } from "@/features/dialogs";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -70,18 +68,18 @@ export function VolleyballConsolePage({
     rulesConfig
 }: VolleyballConsolePageProps) {
     const locale = useLocale();
-    const tPublic = useTranslations("PublicView");
+    const _tPublic = useTranslations("PublicView");
     const tConsole = useTranslations("Console");
-    const tCommon = useTranslations("Common");
     const { toast } = useToast();
 
     // Customizable Actions & Stats
     const ALL_VOLLEYBALL_ACTIONS = ['ace', 'spike', 'block'];
-    const ALL_VOLLEYBALL_STATS_KEYS = [
-        'sets_won', 'current_set_points', 'total_points',
-        'ace', 'spike', 'block', 'other_points'
-    ];
     const DEFAULT_VOLLEYBALL_STATS_KEYS = ['sets_won', 'current_set_points', 'total_points'];
+    const ALL_VOLLEYBALL_LOG_EVENT_TYPES = [
+        'point', 'ace', 'spike', 'block', 'substitution',
+        'timeout', 'foul', 'yellow_card', 'red_card', 'set_win',
+        'full_time', 'match_paused', 'walkover'
+    ];
     const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
         if (Array.isArray(rulesConfig?.volleyball_custom_actions)) {
             return rulesConfig.volleyball_custom_actions as string[];
@@ -119,6 +117,25 @@ export function VolleyballConsolePage({
         }
         return DEFAULT_VOLLEYBALL_STATS_KEYS;
     });
+
+    const [visibleLogs, setVisibleLogs] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.volleyball_visible_logs)) {
+            return rulesConfig.volleyball_visible_logs as string[];
+        }
+        if (Array.isArray(rulesConfig?.visible_logs)) {
+            return rulesConfig.visible_logs as string[];
+        }
+        if (typeof window !== "undefined") {
+            try {
+                const savedLogs = localStorage.getItem("leagueflow-volleyball-visible-logs");
+                if (savedLogs) {
+                    const parsed = JSON.parse(savedLogs);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return ALL_VOLLEYBALL_LOG_EVENT_TYPES;
+    });
     const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
 
     // Sync from rulesConfig
@@ -134,6 +151,21 @@ export function VolleyballConsolePage({
                     if (Array.isArray(parsed)) setVisibleStats(parsed);
                 } else {
                     setVisibleStats(DEFAULT_VOLLEYBALL_STATS_KEYS);
+                }
+            } catch (_) {}
+        }
+
+        const logs = rulesConfig?.volleyball_visible_logs || rulesConfig?.visible_logs;
+        if (Array.isArray(logs)) {
+            setVisibleLogs(logs as string[]);
+        } else if (typeof window !== "undefined") {
+            try {
+                const savedLogs = localStorage.getItem("leagueflow-volleyball-visible-logs");
+                if (savedLogs) {
+                    const parsed = JSON.parse(savedLogs);
+                    if (Array.isArray(parsed)) setVisibleLogs(parsed);
+                } else {
+                    setVisibleLogs(ALL_VOLLEYBALL_LOG_EVENT_TYPES);
                 }
             } catch (_) {}
         }
@@ -165,16 +197,6 @@ export function VolleyballConsolePage({
         });
     };
 
-    const resetCustomActions = (types: string[]) => {
-        setCustomActionTypes(types);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(types));
-        }
-        if (!readOnly && match.tournament_category_id) {
-            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_custom_actions: types }).catch(console.error);
-        }
-    };
-
     const toggleVisibleStat = (key: string) => {
         setVisibleStats(prev => {
             const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
@@ -188,19 +210,81 @@ export function VolleyballConsolePage({
         });
     };
 
-    const resetVisibleStats = (keys: string[]) => {
-        setVisibleStats(keys);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(keys));
-        }
-        if (!readOnly && match.tournament_category_id) {
-            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_stats: keys }).catch(console.error);
-        }
+    const toggleVisibleLog = (logType: string) => {
+        setVisibleLogs(prev => {
+            const next = prev.includes(logType) ? prev.filter(t => t !== logType) : [...prev, logType];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-volleyball-visible-logs", JSON.stringify(next));
+            }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_logs: next }).catch(console.error);
+            }
+            return next;
+        });
     };
 
-    // State for Volleyball Match
-    const [match, setMatch] = useState<Match>(initialMatch);
-    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
+    // State for Volleyball Match with Snapshot Support
+    const [match, setMatch] = useState<Match>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem(`leagueflow-match-snapshot-${initialMatch.id}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.id === initialMatch.id) {
+                        return { ...initialMatch, ...parsed };
+                    }
+                }
+            } catch (_) {}
+        }
+        return initialMatch;
+    });
+
+    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent, handleIncomingEvent, handleIncomingDelete } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
+
+    // Persist snapshot to LocalStorage
+    useEffect(() => {
+        if (typeof window !== "undefined" && match.id) {
+            localStorage.setItem(`leagueflow-match-snapshot-${match.id}`, JSON.stringify(match));
+        }
+    }, [match]);
+
+    // 100% Realtime WebSocket Connection
+    useMatchWebSocket(match.id, {
+        onScoreUpdate: (payload) => {
+            setMatch((prev) => ({
+                ...prev,
+                home_score: payload.home_score,
+                away_score: payload.away_score,
+                status: (payload.status as Match["status"]) || prev.status
+            }));
+        },
+        onMatchEvent: (payload) => {
+            if (payload?.event) {
+                handleIncomingEvent(payload.event);
+            }
+        },
+        onMatchEventDelete: (payload) => {
+            if (payload?.event_id) {
+                handleIncomingDelete(payload.event_id);
+            }
+        },
+        onMatchUpdate: (payload) => {
+            if (payload?.match) {
+                setMatch((prev) => ({
+                    ...prev,
+                    ...payload.match
+                }));
+            }
+        },
+        onStatusChange: (payload) => {
+            if (payload?.status) {
+                setMatch((prev) => ({
+                    ...prev,
+                    status: payload.status as Match["status"]
+                }));
+            }
+        }
+    });
 
     const isHomeEvent = useCallback((e: MatchEvent) => {
         const extra = e.extra_info as Record<string, unknown> | null;
@@ -261,37 +345,29 @@ export function VolleyballConsolePage({
         cancelLabel?: string;
         onConfirm?: () => void;
     }>({ open: false, title: "" });
-
-    const supabase = useMemo(() => createClient(), []);
-
+ 
     // Fetch Players
     useEffect(() => {
+        let isMounted = true;
         const loadPlayers = async () => {
-            const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
-                let query = supabase
-                    .from("tournament_teams")
-                    .select("id")
-                    .eq("team_id", teamId)
-                    .is("deleted_at", null);
-
-                if (match.tournament_category_id) {
-                    query = query.eq("tournament_category_id", match.tournament_category_id);
+            try {
+                const homeId = match.home_team_id || match.home_team?.id;
+                const awayId = match.away_team_id || match.away_team?.id;
+                const [homeRes, awayRes] = await Promise.all([
+                    homeId ? getPlayers(homeId) : Promise.resolve({ success: true, data: [] }),
+                    awayId ? getPlayers(awayId) : Promise.resolve({ success: true, data: [] })
+                ]);
+                if (isMounted) {
+                    if (homeRes.success && homeRes.data) setHomePlayers(homeRes.data);
+                    if (awayRes.success && awayRes.data) setAwayPlayers(awayRes.data);
                 }
-
-                const { data: ttData } = await query.maybeSingle();
-
-                const targetId = ttData?.id || teamId;
-                const res = await getPlayers(targetId);
-                if (res.success && res.data) setter(res.data);
-            };
-            const promises = [];
-            if (match.home_team_id) promises.push(fetchTeam(match.home_team_id, setHomePlayers));
-            if (match.away_team_id) promises.push(fetchTeam(match.away_team_id, setAwayPlayers));
-
-            await Promise.all(promises);
+            } catch (err) {
+                console.error("Error loading team players:", err);
+            }
         };
         loadPlayers();
-    }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
+        return () => { isMounted = false; };
+    }, [match.home_team_id, match.away_team_id, match.home_team?.id, match.away_team?.id]);
 
     // Derive set score state from events
     const { homeSets, awaySets, homePoints, awayPoints, setHistory, servingTeam, currentSet } = useMemo(() => {
@@ -380,13 +456,21 @@ export function VolleyballConsolePage({
         toast({ title: locale === "th" ? "บันทึกรายชื่อผู้เล่นเรียบร้อย" : "Lineup saved successfully" });
     };
 
-    // Match updates queue state (Optimistic updates for fast UI & background DB sync)
-    const [matchQueue, setMatchQueue] = useState<{
+    type MatchQueueItem = {
         id: string;
         data: Parameters<typeof updateMatch>[1];
         status: "pending" | "syncing" | "failed";
-    }[]>([]);
+    };
+
+    // Match updates queue state (Optimistic updates for fast UI & background DB sync)
+    const [matchQueue, setMatchQueue] = useState<MatchQueueItem[]>([]);
     const [isMatchSyncing, setIsMatchSyncing] = useState(false);
+    const isMatchSyncingRef = useRef(false);
+    const matchQueueRef = useRef<MatchQueueItem[]>([]);
+
+    useEffect(() => {
+        matchQueueRef.current = matchQueue;
+    }, [matchQueue]);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -394,15 +478,17 @@ export function VolleyballConsolePage({
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    setTimeout(() => {
+                    if (Array.isArray(parsed)) {
                         setMatchQueue(parsed);
-                    }, 0);
+                        matchQueueRef.current = parsed;
+                    }
                 } catch (_) { }
             }
         }
     }, [match.id]);
 
-    const saveMatchQueue = useCallback((newQueue: typeof matchQueue) => {
+    const persistMatchQueue = useCallback((newQueue: MatchQueueItem[]) => {
+        matchQueueRef.current = newQueue;
         setMatchQueue(newQueue);
         if (typeof window !== "undefined") {
             localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
@@ -410,35 +496,65 @@ export function VolleyballConsolePage({
     }, [match.id]);
 
     const syncMatchQueue = useCallback(async () => {
-        if (isMatchSyncing || readOnly) return;
-        const currentQueue = [...matchQueue];
-        if (currentQueue.length === 0) return;
+        if (isMatchSyncingRef.current || readOnly) return;
 
+        const currentQueue = matchQueueRef.current;
+        const pendingItems = currentQueue.filter((item: MatchQueueItem) => item.status === 'pending');
+
+        if (pendingItems.length === 0) return;
+
+        isMatchSyncingRef.current = true;
         setIsMatchSyncing(true);
-        const updated = [...currentQueue];
 
-        for (let i = 0; i < updated.length; i++) {
-            const item = updated[i];
-            if (item.status === 'syncing') continue;
+        let workingQueue = [...currentQueue];
 
-            item.status = 'syncing';
-            saveMatchQueue([...updated]);
+        for (const item of pendingItems) {
+            workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'syncing' as const } : m);
+            matchQueueRef.current = workingQueue;
+            persistMatchQueue(workingQueue);
 
             try {
-                const res = await updateMatch(match.id, item.data, tournamentId);
-                if (res.success) {
-                    updated.splice(i, 1);
-                    i--;
+                let success = false;
+                try {
+                    const res = await updateMatch(match.id, item.data, tournamentId);
+                    if (res.success) {
+                        success = true;
+                    }
+                } catch (_serverActionErr) {
+                    console.warn("Server action updateMatch failed, attempting direct API fallback...", _serverActionErr);
+                }
+
+                if (!success) {
+                    // Direct API fallback using local JWT
+                    try {
+                        await ApiClient.fetch(`/matches/${match.id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(item.data),
+                        });
+                        success = true;
+                    } catch (apiErr) {
+                        console.error("Direct API Fallback error:", apiErr);
+                    }
+                }
+
+                if (success) {
+                    workingQueue = workingQueue.filter(m => m.id !== item.id);
+                    matchQueueRef.current = workingQueue;
+                    persistMatchQueue(workingQueue);
                 } else {
-                    item.status = 'failed';
+                    workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
+                    matchQueueRef.current = workingQueue;
+                    persistMatchQueue(workingQueue);
                 }
             } catch (_) {
-                item.status = 'failed';
+                workingQueue = workingQueue.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
+                matchQueueRef.current = workingQueue;
+                persistMatchQueue(workingQueue);
             }
-            saveMatchQueue([...updated]);
         }
+        isMatchSyncingRef.current = false;
         setIsMatchSyncing(false);
-    }, [match.id, tournamentId, matchQueue, isMatchSyncing, readOnly, saveMatchQueue]);
+    }, [match.id, tournamentId, readOnly, persistMatchQueue]);
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -450,19 +566,16 @@ export function VolleyballConsolePage({
         }
     }, [syncMatchQueue]);
 
-    useEffect(() => {
-        if (matchQueue.some(item => item.status === 'pending')) {
-            queueMicrotask(() => {
-                syncMatchQueue();
-            });
-        }
-    }, [matchQueue, syncMatchQueue]);
-
     const queueMatchUpdate = useCallback(async (data: Parameters<typeof updateMatch>[1]) => {
         const newItem = { id: `match-${Date.now()}`, data, status: 'pending' as const };
-        saveMatchQueue([...matchQueue, newItem]);
+        const nextQueue = [...matchQueueRef.current, newItem];
+        matchQueueRef.current = nextQueue;
+        persistMatchQueue(nextQueue);
         setMatch(prev => ({ ...prev, ...data }));
-    }, [matchQueue, saveMatchQueue]);
+        setTimeout(() => {
+            syncMatchQueue();
+        }, 50);
+    }, [persistMatchQueue, syncMatchQueue]);
 
     // Auto-finish match when a team reaches setsToWin (Best of 3 -> 2 wins, Best of 5 -> 3 wins)
     useEffect(() => {
@@ -622,11 +735,8 @@ export function VolleyballConsolePage({
                         <Button
                             variant="outline"
                             onClick={async () => {
-                                const res = await updateMatch(match.id, { status: 'live' }, tournamentId);
-                                if (res.success) {
-                                    setMatch(prev => ({ ...prev, status: 'live' }));
-                                    toast({ title: locale === "th" ? "เริ่มต้นการแข่งขันเรียบร้อย" : "Match started" });
-                                }
+                                await queueMatchUpdate({ status: 'live' });
+                                toast({ title: locale === "th" ? "เริ่มต้นการแข่งขันเรียบร้อย" : "Match started" });
                             }}
                             disabled={match.status === 'finished' || match.status === 'canceled'}
                             className="w-full justify-center lg:justify-start px-2 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 transition-all group"
@@ -643,20 +753,13 @@ export function VolleyballConsolePage({
                             variant="outline"
                             onClick={async () => {
                                 const winnerId = homeSets >= awaySets ? match.home_team_id : match.away_team_id;
-                                const res = await updateMatch(
-                                    match.id,
-                                    {
-                                        status: 'finished',
-                                        home_score: homeSets,
-                                        away_score: awaySets,
-                                        winner_id: winnerId
-                                    },
-                                    tournamentId
-                                );
-                                if (res.success) {
-                                    setMatch(prev => ({ ...prev, status: 'finished' }));
-                                    toast({ title: locale === "th" ? "จบการแข่งขันเรียบร้อย" : "Match finished" });
-                                }
+                                await queueMatchUpdate({
+                                    status: 'finished',
+                                    home_score: homeSets,
+                                    away_score: awaySets,
+                                    winner_id: winnerId
+                                });
+                                toast({ title: locale === "th" ? "จบการแข่งขันเรียบร้อย" : "Match finished" });
                             }}
                             disabled={match.status === 'finished'}
                             className="w-full justify-center lg:justify-start px-2 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 transition-all group"
@@ -766,8 +869,8 @@ export function VolleyballConsolePage({
                 <div className="flex items-center gap-1 lg:gap-2 w-full">
                     <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                        size="icon-sm"
+                        className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                         asChild
                     >
                         <Link href={backUrl}>
@@ -807,7 +910,7 @@ export function VolleyballConsolePage({
                         {/* Undo Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={handleUndo}
                             title={tConsole("undo") || "ย้อนกลับ (Undo)"}
                         >
@@ -817,7 +920,7 @@ export function VolleyballConsolePage({
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={startConsoleTutorial}
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
@@ -827,7 +930,7 @@ export function VolleyballConsolePage({
                         {/* Settings Button */}
                         <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             onClick={() => setCustomizeDialogOpen(true)}
                             title={tConsole("settings") || "ตั้งค่า"}
                         >
@@ -1038,6 +1141,7 @@ export function VolleyballConsolePage({
                                 awayTeamId={match.away_team_id || undefined}
                                 readOnly={readOnly}
                                 onDeleteEvent={(id) => deleteEvent(id)}
+                                visibleLogs={visibleLogs}
                             />
                     </section>
                 </div>
@@ -1070,20 +1174,17 @@ export function VolleyballConsolePage({
             />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} sport="volleyball" />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
-            <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
-                <DialogContent showCloseButton={false} className="sm:max-w-[500px] bg-card p-0 rounded-sm shadow-2xl border-none">
-                    <VolleyballMatchStatisticsBox
-                        match={match}
-                        events={events}
-                        homeSetsWon={homeSets}
-                        awaySetsWon={awaySets}
-                        homePoints={homePoints}
-                        awayPoints={awayPoints}
-                        visibleStats={visibleStats}
-                        onClose={() => setStatsDialogOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
+            <VolleyballStatisticsDialog
+                open={statsDialogOpen}
+                onOpenChange={setStatsDialogOpen}
+                match={match}
+                events={events}
+                homeSetsWon={homeSets}
+                awaySetsWon={awaySets}
+                homePoints={homePoints}
+                awayPoints={awayPoints}
+                visibleStats={visibleStats}
+            />
             <VolleyballTeamInfoDialog
                 open={teamInfoTarget !== null}
                 onOpenChange={(open) => {
@@ -1122,296 +1223,22 @@ export function VolleyballConsolePage({
             </AlertDialog>
 
             {/* Settings Dialog */}
-            <Dialog open={customizeDialogOpen} onOpenChange={setCustomizeDialogOpen}>
-                <DialogContent showCloseButton={false} className="sm:max-w-xl max-h-[85vh] flex flex-col bg-card rounded-sm p-0 overflow-hidden border shadow-2xl">
-                    <DialogHeader className="p-4 border-b shrink-0 bg-card relative pr-12">
-                        <div>
-                            <DialogTitle className="text-base font-bold">
-                                {tConsole("settings") || "ตั้งค่า"}
-                            </DialogTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {locale === "th" ? "จัดการการแสดงผลปุ่ม สถิติ และสถานะการแข่งขัน" : "Manage buttons, statistics, and match options"}
-                            </p>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
-                            onClick={() => setCustomizeDialogOpen(false)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </DialogHeader>
-
-                    {/* Scrollable Content Body */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {/* SECTION 1: Action Buttons */}
-                        <section id="settings-section-actions" className="space-y-2.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div className="space-y-0.5">
-                                    <h3 className="text-sm font-bold text-foreground">
-                                        {tConsole("tab_buttons") || "ปุ่มเหตุการณ์"}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {tConsole("select_action_to_toggle") || "คลิกเพื่อเปิด/ปิดปุ่มที่ต้องการใช้งาน"}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-1 self-end sm:self-auto">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetCustomActions(ALL_VOLLEYBALL_ACTIONS)}
-                                    >
-                                        <RotateCcw className="h-3 w-3 mr-1" />
-                                        {tConsole("show_all") || "แสดงทั้งหมด"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                                        onClick={() => resetCustomActions([])}
-                                    >
-                                        {tConsole("hide_all") || "ซ่อนทั้งหมด"}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Action Items List */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {[
-                                    { key: 'ace', label: 'Serve (เสิร์ฟเอซ)', icon: Zap, iconColor: 'text-yellow-500' },
-                                    { key: 'spike', label: 'Attack (ตบทำแต้ม)', icon: Flame, iconColor: 'text-red-500' },
-                                    { key: 'block', label: 'Block (บล็อกทำแต้ม)', icon: ShieldCheck, iconColor: 'text-blue-500' },
-                                ].map((item) => {
-                                    const isSelected = customActionTypes.includes(item.key);
-                                    return (
-                                        <button
-                                            key={item.key}
-                                            type="button"
-                                            onClick={() => toggleCustomAction(item.key)}
-                                            className={cn(
-                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
-                                                isSelected
-                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
-                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
-                                                <span className="text-xs font-semibold truncate">{item.label}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="text-xs text-muted-foreground pt-1">
-                                <span>{customActionTypes.length} / {ALL_VOLLEYBALL_ACTIONS.length} {locale === "th" ? "ปุ่มที่เลือกแสดง" : "actions visible"}</span>
-                            </div>
-                        </section>
-
-                        {/* SECTION 2: Match Statistics */}
-                        <section id="settings-section-stats" className="space-y-2.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                                <div className="space-y-0.5">
-                                    <h3 className="text-sm font-bold text-foreground">
-                                        {tConsole("tab_stats") || "สถิติการแข่งขัน"}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {tConsole("customize_stats_desc") || "เลือกรายการสถิติที่ต้องการให้แสดงในหน้าต่างสถิติการแข่งขัน"}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-1 self-end sm:self-auto">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(DEFAULT_VOLLEYBALL_STATS_KEYS)}
-                                    >
-                                        <RotateCcw className="h-3 w-3 mr-1" />
-                                        {locale === "th" ? "ค่าเริ่มต้น" : "Default"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(ALL_VOLLEYBALL_STATS_KEYS)}
-                                    >
-                                        {tConsole("show_all") || "แสดงทั้งหมด"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                                        onClick={() => resetVisibleStats([])}
-                                    >
-                                        {tConsole("hide_all") || "ซ่อนทั้งหมด"}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Stats Items List */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {[
-                                    { key: 'sets_won', label: tConsole("sets_won") || "เซตที่ชนะ (Sets Won)", icon: Trophy, iconColor: 'text-amber-500' },
-                                    { key: 'current_set_points', label: tConsole("current_set_points") || "คะแนนเซตปัจจุบัน", icon: BarChart2, iconColor: 'text-primary' },
-                                    { key: 'total_points', label: tConsole("total_points") || "คะแนนรวมทั้งหมด", icon: BarChart2, iconColor: 'text-blue-500' },
-                                    { key: 'ace', label: "Ace (เสิร์ฟเอซ)", icon: Zap, iconColor: 'text-yellow-500' },
-                                    { key: 'spike', label: "Spike (ตบทำแต้ม)", icon: Flame, iconColor: 'text-red-500' },
-                                    { key: 'block', label: "Block (บล็อกทำแต้ม)", icon: ShieldCheck, iconColor: 'text-blue-500' },
-                                    { key: 'other_points', label: tConsole("other_points") || "แต้มอื่นๆ", icon: BarChart2, iconColor: 'text-muted-foreground' },
-                                ].map((item) => {
-                                    const isSelected = visibleStats.includes(item.key);
-                                    return (
-                                        <button
-                                            key={item.key}
-                                            type="button"
-                                            onClick={() => toggleVisibleStat(item.key)}
-                                            className={cn(
-                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
-                                                isSelected
-                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
-                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
-                                                <span className="text-xs font-semibold truncate">{item.label}</span>
-                                            </div>
-                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="text-xs text-muted-foreground pt-1">
-                                <span>{visibleStats.length} / {ALL_VOLLEYBALL_STATS_KEYS.length} {locale === "th" ? "สถิติที่เลือกแสดง" : "statistics visible"}</span>
-                            </div>
-                        </section>
-
-                        {/* SECTION 3: Danger Zone */}
-                        <section id="settings-section-danger" className="space-y-2.5">
-                            <div>
-                                <h3 className="text-sm font-bold text-destructive">
-                                    {tConsole("danger_zone") || "โซนอันตราย (การจัดการสถานะแมตช์)"}
-                                </h3>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {tConsole("danger_zone_desc") || "การดำเนินการเหล่านี้จะส่งผลกระทบต่อผลการแข่งขันหรือตารางเวลาโดยตรง โปรดใช้ความระมัดระวัง"}
-                                </p>
-                            </div>
-
-                            <div className="space-y-2 pt-1">
-                                {/* เลื่อนการแข่งขัน (Postpone Match) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-border bg-card hover:bg-muted/10 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <CalendarRange className="h-4 w-4 text-amber-500" />
-                                            <span className="text-xs font-bold text-foreground">
-                                                {tConsole("postponed") || "เลื่อนการแข่งขัน"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "เปลี่ยนสถานะแมตช์กลับเป็นรอแข่งขัน และล้างวัน/เวลาของแมตช์" : "Reschedule match and reset match date/time"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            handlePostponeMatch();
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer"
-                                    >
-                                        <CalendarRange className="h-3.5 w-3.5 mr-1.5" />
-                                        {tConsole("postponed") || "เลื่อนการแข่งขัน"}
-                                    </Button>
-                                </div>
-
-                                {/* จบการแข่งขันก่อนเวลา (Walkover / Early Finish) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <Ban className="h-4 w-4 text-destructive" />
-                                            <span className="text-xs font-bold text-destructive">
-                                                {tConsole("walkover") || "จบการแข่งขันก่อนเวลา"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "บันทึกผลชนะบาย (3-0 หรือ 0-3) และยุติการแข่งขันทันที" : "Award walkover victory (3-0 or 0-3) and end match"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                            setWoDialogOpen(true);
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
-                                    >
-                                        <Ban className="h-3.5 w-3.5 mr-1.5" />
-                                        {tConsole("walkover") || "จบการแข่งขันก่อนเวลา"}
-                                    </Button>
-                                </div>
-
-                                {/* ยกเลิกการแข่งขัน (Abandon Match) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all">
-                                    <div className="space-y-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <XCircle className="h-4 w-4 text-destructive" />
-                                            <span className="text-xs font-bold text-destructive">
-                                                {tConsole("abandoned") || "ยกเลิกการแข่งขัน"}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            {locale === "th" ? "ยกเลิกแมตช์นี้ (Canceled) โดยไม่มีผลคะแนนแพ้ชนะ" : "Cancel and abandon this match without recorded winner"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => {
-                                            handleAbandonMatch();
-                                        }}
-                                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
-                                    >
-                                        <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                                        {tConsole("abandoned") || "ยกเลิกการแข่งขัน"}
-                                    </Button>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* Dialog Footer */}
-                    <DialogFooter className="p-3 border-t bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-2">
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                            {locale === "th" ? "การตั้งค่าจะถูกบันทึกอัตโนมัติ" : "Settings saved automatically"}
-                        </span>
-                        <Button
-                            size="sm"
-                            className="h-8 text-xs font-semibold px-5 cursor-pointer ml-auto"
-                            onClick={() => setCustomizeDialogOpen(false)}
-                        >
-                            <Check className="h-3.5 w-3.5 mr-1" />
-                            {tCommon("done") || "เสร็จสิ้น"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <VolleyballSettingsDialog
+                open={customizeDialogOpen}
+                onOpenChange={setCustomizeDialogOpen}
+                match={match}
+                readOnly={readOnly}
+                customActionTypes={customActionTypes}
+                onToggleCustomAction={toggleCustomAction}
+                visibleLogs={visibleLogs}
+                onToggleVisibleLog={toggleVisibleLog}
+                visibleStats={visibleStats}
+                onToggleVisibleStat={toggleVisibleStat}
+                onPostponeMatch={handlePostponeMatch}
+                onWalkover={() => setWoDialogOpen(true)}
+                onAbandonMatch={handleAbandonMatch}
+            />
         </div>
     );
 }
+

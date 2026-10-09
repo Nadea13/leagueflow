@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { Registration, TournamentTeam } from "@/types/index";
+import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ import { approveRegistration, rejectRegistration, withdrawTournamentTeam } from 
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
-import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TeamRosterDetailsDialog } from "@/features/dialogs";
 import { Input } from "@/components/ui/input";
 import {
     AlertDialog,
@@ -28,33 +28,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface TeamQueryResult {
-    id: string;
-    name: string;
-    contact_name: string | null;
-    contact_phone: string | null;
-    logo_img: string | null;
-    description: string | null;
-}
-
-interface CategoryQueryResult {
-    tournament_id: string;
-}
-
-interface RegistrationQueryResult {
-    id: string;
-    payment_status: string | null;
-    registration_status: string | null;
-    slip_img: string | null;
-    remark: string | null;
-    created_at: string;
-    teams: TeamQueryResult | null;
-    tournament_categories: CategoryQueryResult | null;
-}
-
 export function Registrations({ tournamentId, categoryId }: { tournamentId: string; categoryId?: string }) {
     const t = useTranslations("Registrations");
     const locale = useLocale();
+    const storeTeams = useBracketStore((state) => state.teams);
+    const storeCategoryId = useBracketStore((state) => state.activeCategoryId);
+    const resolvedCategoryId = categoryId || storeCategoryId || undefined;
+
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isActing, setIsActing] = useState<string | null>(null);
@@ -62,106 +42,183 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
     const [withdrawingReg, setWithdrawingReg] = useState<{ id: string; name: string } | null>(null);
     const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
     const [isWithdrawing, setIsWithdrawing] = useState(false);
-    const supabase = createClient();
 
-    const fetchRegistrations = useCallback(async () => {
-        setIsLoading(true);
-        let query = supabase
-            .from("tournament_teams")
-            .select(`
-                id,
-                payment_status,
-                registration_status,
-                slip_img,
-                remark,
-                created_at,
-                teams!inner (
-                    id,
-                    name,
-                    contact_name,
-                    contact_phone,
-                    logo_img,
-                    description
-                ),
-                tournament_categories!inner (
-                    id,
-                    tournament_id
-                )
-            `)
-            .eq("tournament_categories.tournament_id", tournamentId)
-            .is("deleted_at", null);
+    // Team Details & Roster Dialog state
+    const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<Registration | null>(null);
+    const _supabase = createClient();
 
-        if (categoryId) {
-            query = query.eq("tournament_category_id", categoryId);
+    const fetchRegistrations = useCallback(async (showLoading = false) => {
+        if (showLoading) setIsLoading(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const url = resolvedCategoryId
+                ? `${apiUrl}/tournaments/${tournamentId}/teams?category_id=${resolvedCategoryId}`
+                : `${apiUrl}/tournaments/${tournamentId}/teams`;
+
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                const mapped: Registration[] = (data || []).map((item: any) => {
+                    const ps = String(item.payment_status || '').toLowerCase();
+                    const rs = String(item.registration_status || '').toLowerCase();
+                    const s = String(item.status || '').toLowerCase();
+
+                    // If registration_status is pending or status is pending, it is ALWAYS pending approval
+                    let mappedStatus: 'PENDING' | 'PAID' | 'REJECTED' = 'PENDING';
+                    if (rs === 'rejected' || ps === 'rejected' || s === 'rejected') {
+                        mappedStatus = 'REJECTED';
+                    } else if (rs === 'approved' || rs === 'confirmed' || s === 'approved' || (s === 'registered' && rs !== 'pending' && ps !== 'pending')) {
+                        mappedStatus = 'PAID';
+                    } else {
+                        mappedStatus = 'PENDING';
+                    }
+
+                    return {
+                        id: item.id,
+                        tournament_id: item.tournament_id || tournamentId,
+                        team_name: item.team?.name || item.name || '',
+                        contact_name: item.contact_name || item.team?.contact_name || '',
+                        contact_phone: item.contact_phone || item.team?.contact_phone || '',
+                        logo_url: item.team?.logo_img || item.team?.logo_url || item.logo_img || item.logo_url || null,
+                        existing_team_id: item.team_id || item.team?.id || null,
+                        slip_url: item.slip_img || null,
+                        payment_status: mappedStatus,
+                        trans_ref: item.remark || null,
+                        description: item.team?.description || item.description || null,
+                        tournament_team_id: item.id,
+                        created_at: item.created_at || new Date().toISOString(),
+                    };
+                });
+                setRegistrations(mapped);
+            }
+        } catch (e) {
+            console.error("Error fetching registrations:", e);
+        } finally {
+            setIsLoading(false);
         }
-
-        const { data, error } = await query.order("created_at", { ascending: false });
-
-        if (!error && data) {
-            const mapped: Registration[] = (data as unknown as RegistrationQueryResult[]).map((item) => ({
-                id: item.id,
-                tournament_id: item.tournament_categories?.tournament_id || tournamentId,
-                team_name: item.teams?.name || '',
-                contact_name: item.teams?.contact_name || '',
-                contact_phone: item.teams?.contact_phone || '',
-                logo_url: item.teams?.logo_img || null,
-                existing_team_id: item.teams?.id || null,
-                slip_url: item.slip_img || null,
-                payment_status: item.payment_status === 'paid' ? 'PAID' : item.payment_status === 'rejected' ? 'REJECTED' : 'PENDING',
-                trans_ref: item.remark || null,
-                description: item.teams?.description || null,
-                tournament_team_id: item.id,
-                created_at: item.created_at,
-            }));
-            setRegistrations(mapped);
-        } else if (error) {
-            console.error("Error fetching registrations:", error);
-        }
-        setIsLoading(false);
-    }, [tournamentId, categoryId, supabase]);
+    }, [tournamentId, resolvedCategoryId]);
 
     useEffect(() => {
-        const timer = setTimeout(() => fetchRegistrations(), 0);
-        return () => clearTimeout(timer);
+        fetchRegistrations(true);
+
+        const interval = setInterval(() => {
+            fetchRegistrations(false);
+        }, 3000);
+
+        const handleFocus = () => {
+            fetchRegistrations(false);
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [fetchRegistrations]);
+
+    // Re-fetch whenever store teams update (e.g. after adding or modifying a team)
+    useEffect(() => {
+        if (storeTeams.length > 0 || registrations.length > 0) {
+            fetchRegistrations(false);
+        }
+    }, [storeTeams, fetchRegistrations]);
 
     const handleApprove = async (id: string) => {
         setIsActing(id);
-        const res = await approveRegistration(id, tournamentId);
-        if (res.success) {
-            toast.success(res.message);
-            fetchRegistrations();
-            // Re-fetch bracket store teams so sidebar + canvas update in real-time
+        // Optimistically update status to PAID/APPROVED
+        setRegistrations((prev) =>
+            prev.map((r) => (r.id === id ? { ...r, payment_status: 'PAID' } : r))
+        );
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const clientRes = await fetch(`${apiUrl}/tournaments/${tournamentId || '0'}/registrations/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'approved',
+                    payment_status: 'paid',
+                    registration_status: 'approved',
+                }),
+            });
+
+            if (clientRes.ok) {
+                toast.success(locale === 'th' ? "ยืนยันทีมเรียบร้อยแล้ว" : "Registration approved!");
+            } else {
+                const res = await approveRegistration(id, tournamentId);
+                if (res.success) {
+                    toast.success(res.message);
+                } else {
+                    toast.error(res.error || (locale === 'th' ? "ไม่สามารถยืนยันทีมได้" : "Failed to approve"));
+                }
+            }
+        } catch (e: any) {
+            console.error("Error approving registration:", e);
+            const res = await approveRegistration(id, tournamentId);
+            if (res.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.error || (locale === 'th' ? "ไม่สามารถยืนยันทีมได้" : "Failed to approve"));
+            }
+        } finally {
+            await fetchRegistrations();
             const activeCategoryId = useBracketStore.getState().activeCategoryId;
             if (activeCategoryId) {
-                useBracketStore.getState().fetchTeams(activeCategoryId);
+                await useBracketStore.getState().fetchTeams(activeCategoryId);
             }
-        } else {
-            toast.error(res.error);
+            setIsActing(null);
         }
-        setIsActing(null);
     };
 
     const confirmReject = async () => {
         if (!registrationToReject) return;
 
-        setIsActing(registrationToReject);
         const id = registrationToReject;
         setRegistrationToReject(null);
+        setIsActing(id);
 
-        const res = await rejectRegistration(id, tournamentId);
-        if (res.success) {
-            toast.success(res.message);
-            fetchRegistrations();
-            // Re-fetch bracket store teams so sidebar + canvas update in real-time
+        // Optimistically update status to REJECTED
+        setRegistrations((prev) =>
+            prev.map((r) => (r.id === id ? { ...r, payment_status: 'REJECTED' } : r))
+        );
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const clientRes = await fetch(`${apiUrl}/tournaments/${tournamentId || '0'}/registrations/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'rejected',
+                    payment_status: 'rejected',
+                    registration_status: 'rejected',
+                }),
+            });
+
+            if (clientRes.ok) {
+                toast.success(locale === 'th' ? "ปฏิเสธทีมเรียบร้อยแล้ว" : "Registration rejected");
+            } else {
+                const res = await rejectRegistration(id, tournamentId);
+                if (res.success) {
+                    toast.success(res.message);
+                } else {
+                    toast.error(res.error || (locale === 'th' ? "ไม่สามารถปฏิเสธทีมได้" : "Failed to reject"));
+                }
+            }
+        } catch (e: any) {
+            console.error("Error rejecting registration:", e);
+            const res = await rejectRegistration(id, tournamentId);
+            if (res.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.error || (locale === 'th' ? "ไม่สามารถปฏิเสธทีมได้" : "Failed to reject"));
+            }
+        } finally {
+            await fetchRegistrations();
             const activeCategoryId = useBracketStore.getState().activeCategoryId;
             if (activeCategoryId) {
-                useBracketStore.getState().fetchTeams(activeCategoryId);
+                await useBracketStore.getState().fetchTeams(activeCategoryId);
             }
-        } else {
-            toast.error(res.error);
+            setIsActing(null);
         }
-        setIsActing(null);
     };
 
     const handleWithdraw = async () => {
@@ -175,19 +232,21 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
         const res = await withdrawTournamentTeam(withdrawingReg.id);
         if (res.success) {
             toast.success(res.message);
-            fetchRegistrations();
             setWithdrawingReg(null);
             setWithdrawConfirmText("");
+            await fetchRegistrations();
             // Re-fetch bracket store teams so sidebar + canvas update in real-time
             const activeCategoryId = useBracketStore.getState().activeCategoryId;
             if (activeCategoryId) {
-                useBracketStore.getState().fetchTeams(activeCategoryId);
+                await useBracketStore.getState().fetchTeams(activeCategoryId);
             }
         } else {
             toast.error(res.error);
         }
         setIsWithdrawing(false);
     };
+
+
 
     if (isLoading) {
         return (
@@ -226,46 +285,38 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                             {registrations.map((reg) => (
                                 <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group">
                                     <TableCell className="px-2 md:px-3">
-                                        <RosterDialog
-                                            team={{
-                                                id: reg.tournament_team_id || "",
-                                                name: reg.team_name,
-                                                logo_url: reg.logo_url,
-                                                description: reg.description,
-                                                contact_name: reg.contact_name,
-                                                contact_phone: reg.contact_phone,
-                                                sport: 'football'
-                                            } as unknown as TournamentTeam}
-                                            tournamentId={tournamentId}
-                                            readOnly={false}
-                                            trigger={
-                                                <div className="flex items-center gap-1 md:gap-2 cursor-pointer">
-                                                    {reg.logo_url ? (
-                                                        <Image
-                                                            src={reg.logo_url}
-                                                            alt={reg.team_name || "Team logo"}
-                                                            width={24}
-                                                            height={24}
-                                                            className="h-6 w-6 rounded-full object-cover border"
-                                                        />
-                                                    ) : (
-                                                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
-                                                            <Users className="h-3 w-3 text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                    <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors truncate max-w-[150px]">{reg.team_name}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedTeamForDetails(reg)}
+                                            className="flex items-center gap-1 md:gap-2 cursor-pointer group/team text-left hover:opacity-80 transition-opacity"
+                                            title={locale === 'th' ? "คลิกเพื่อดูข้อมูลทีมและรายชื่อนักกีฬา" : "Click to view team & roster"}
+                                        >
+                                            {reg.logo_url ? (
+                                                <Image
+                                                    src={reg.logo_url}
+                                                    alt={reg.team_name || "Team logo"}
+                                                    width={24}
+                                                    height={24}
+                                                    className="h-6 w-6 rounded-full object-cover border"
+                                                />
+                                            ) : (
+                                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
+                                                    <Users className="h-4 w-4 text-muted-foreground" />
                                                 </div>
-                                            }
-                                        />
+                                            )}
+                                            <span className="font-black tracking-tight text-xs text-foreground group-hover/team:text-primary group-hover/team:underline transition-colors truncate max-w-[150px]">
+                                                {reg.team_name}
+                                            </span>
+                                        </button>
                                     </TableCell>
                                     <TableCell className="px-1 md:px-2">
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
-                                                <User className="h-3 w-3 text-primary" />
+                                                <User className="h-4 w-4 text-primary" />
                                                 {reg.contact_name}
                                             </div>
                                             <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground tabular-nums tracking-widest">
-                                                <Phone className="h-3 w-3" />
+                                                <Phone className="h-4 w-4" />
                                                 {reg.contact_phone}
                                             </div>
                                         </div>
@@ -274,13 +325,17 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                         <Badge
                                             variant="outline"
                                             className={cn(
-                                                "text-[9px] font-black tracking-tighter h-5 px-3",
-                                                reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground border-primary" :
-                                                    reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" :
-                                                        "bg-muted text-muted-foreground border-muted-foreground/20"
+                                                "transition-colors",
+                                                reg.payment_status === 'PAID' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" :
+                                                    reg.payment_status === 'REJECTED' ? "bg-destructive/10 text-destructive border-destructive/30" :
+                                                        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
                                             )}
                                         >
-                                            {reg.payment_status}
+                                            {reg.payment_status === 'PAID'
+                                                ? (locale === 'th' ? "อนุมัติแล้ว" : "APPROVED")
+                                                : reg.payment_status === 'REJECTED'
+                                                    ? (locale === 'th' ? "ปฏิเสธ" : "REJECTED")
+                                                    : (locale === 'th' ? "รอตรวจสอบ" : "PENDING")}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-center">
@@ -290,7 +345,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                                 size="sm"
                                                 onClick={() => window.open(reg.slip_url!, "_blank")}
                                             >
-                                                <ExternalLink className="h-3 w-3" />
+                                                <ExternalLink className="h-4 w-4" />
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
@@ -308,36 +363,49 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {reg.payment_status === 'PENDING' ? (
-                                            <div className="flex items-center justify-end gap-2 transition-opacity">
+                                            <div className="flex items-center justify-end gap-1.5 transition-opacity">
                                                 <Button
+                                                    type="button"
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-9 w-9 p-0 border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+                                                    className="h-8 px-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-primary/20 transition-all shadow-sm flex items-center gap-1 text-xs font-semibold cursor-pointer"
                                                     disabled={isActing !== null}
-                                                    onClick={() => handleApprove(reg.id)}
-                                                    title="Approve"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleApprove(reg.id);
+                                                    }}
+                                                    title={locale === 'th' ? "ยืนยันทีม" : "Approve Team"}
                                                 >
-                                                    {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-5 w-5" />}
+                                                    {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                                    <span>{locale === 'th' ? "ยืนยันทีม" : "Approve"}</span>
                                                 </Button>
                                                 <Button
-                                                    size="sm"
+                                                    type="button"
+                                                    size="icon-sm"
                                                     variant="outline"
-                                                    className="h-9 w-9 p-0 border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
+                                                    className="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all shadow-sm shrink-0 cursor-pointer"
                                                     disabled={isActing !== null}
-                                                    onClick={() => setRegistrationToReject(reg.id)}
-                                                    title="Reject"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setRegistrationToReject(reg.id);
+                                                    }}
+                                                    title={locale === 'th' ? "ปฏิเสธ" : "Reject"}
                                                 >
-                                                    <X className="h-5 w-5" />
+                                                    <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ) : reg.payment_status === 'PAID' ? (
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center justify-end gap-1.5">
                                                 <Button
+                                                    type="button"
                                                     size="sm"
                                                     variant="outline"
-                                                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs h-8 cursor-pointer"
                                                     disabled={isActing !== null}
-                                                    onClick={() => setWithdrawingReg({ id: reg.id, name: reg.team_name })}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setWithdrawingReg({ id: reg.id, name: reg.team_name });
+                                                    }}
                                                 >
                                                     {locale === 'th' ? "ถอนทีม" : "Withdraw"}
                                                 </Button>
@@ -352,29 +420,28 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
             </div>
 
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>
-                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md z-[9999]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <X className="h-5 w-5 text-destructive" />
-                            Reject Registration
+                            <X className="h-4 w-4 text-destructive" />
+                            {locale === 'th' ? "ปฏิเสธการสมัคร" : "Reject Registration"}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
-                            Are you sure you want to reject this registration? This action cannot be undone.
+                            {locale === 'th' ? "คุณแน่ใจหรือไม่ที่จะปฏิเสธการสมัครของทีมนี้?" : "Are you sure you want to reject this registration? This action cannot be undone."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-8 text-xs font-semibold">
-                            Cancel
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all">
+                            {locale === 'th' ? "ยกเลิก" : "Cancel"}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmReject();
                             }}
-                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-8 text-xs font-semibold"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all cursor-pointer"
                         >
-                            <X className="h-3.5 w-3.5 mr-1.5" />
-                            Reject
+                            {locale === 'th' ? "ยืนยันการปฏิเสธ" : "Reject"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -386,7 +453,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                     setWithdrawConfirmText("");
                 }
             }}>
-                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0 z-[9999]">
                     <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
                         <DialogTitle className="text-base font-bold">
                             {locale === 'th' ? "ถอนทีมออกจากการแข่งขัน" : "Withdraw Team from Tournament"}
@@ -444,12 +511,19 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                             disabled={isWithdrawing || withdrawConfirmText !== withdrawingReg?.name}
                             onClick={handleWithdraw}
                         >
-                            {isWithdrawing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            {isWithdrawing && <Loader2 className="h-4 w-4 animate-spin" />}
                             {locale === 'th' ? "ยืนยันการถอนทีม" : "Confirm Withdraw"}
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Team Details & Roster Dialog */}
+            <TeamRosterDetailsDialog
+                team={selectedTeamForDetails}
+                open={!!selectedTeamForDetails}
+                onOpenChange={(open) => !open && setSelectedTeamForDetails(null)}
+            />
         </div>
     );
 }

@@ -24,7 +24,7 @@ import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ import { Player } from "@/types/index";
 import { formatDate } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { getPositionOptions } from "@/lib/positions";
+import { resolveStorageUrl } from "@/lib/storage-utils";
 
 export interface UserRegisteredTeam {
     id: string;
@@ -88,6 +89,10 @@ interface MasterPlayerSearchResult {
 
 interface MasterPlayerRow {
     id: string;
+    first_name_local?: string | null;
+    last_name_local?: string | null;
+    first_name_intl?: string | null;
+    last_name_intl?: string | null;
     first_name_th?: string | null;
     last_name_th?: string | null;
     first_name_en?: string | null;
@@ -214,16 +219,22 @@ export function DocumentSubmissionClient({
         try {
             const res = await searchMasterPlayers(val);
             if (res.success && res.data) {
-                const mapped = (res.data as MasterPlayerRow[]).map((mp) => ({
-                    id: mp.id,
-                    name: (
-                        mp.first_name_th
-                            ? `${mp.first_name_th} ${mp.last_name_th || ""}`
-                            : `${mp.first_name_en || ""} ${mp.last_name_en || ""}`
-                    ).trim(),
-                    date_of_birth: mp.birthday,
-                    tel: mp.tel
-                }));
+                const mapped = (res.data as MasterPlayerRow[]).map((mp) => {
+                    const localFirst = mp.first_name_local || mp.first_name_th;
+                    const localLast = mp.last_name_local || mp.last_name_th;
+                    const intlFirst = mp.first_name_intl || mp.first_name_en;
+                    const intlLast = mp.last_name_intl || mp.last_name_en;
+
+                    const localName = [localFirst, localLast && localLast !== '-' ? localLast : null].filter(Boolean).join(" ").trim();
+                    const intlName = [intlFirst, intlLast && intlLast !== '-' ? intlLast : null].filter(Boolean).join(" ").trim();
+
+                    return {
+                        id: mp.id,
+                        name: localName || intlName || "Unnamed Player",
+                        date_of_birth: mp.birthday,
+                        tel: mp.tel
+                    };
+                });
                 const unique = mapped.filter(
                     (item, idx, self) => idx === self.findIndex((t) => t.name === item.name)
                 );
@@ -545,7 +556,7 @@ export function DocumentSubmissionClient({
                         onClick={handleDownloadTemplate}
                         className="gap-1.5 h-9 text-xs font-bold"
                     >
-                        <Download className="h-3.5 w-3.5 text-primary" />
+                        <Download className="h-4 w-4 text-primary" />
                         ดาวน์โหลด Template (.xlsx)
                     </Button>
                 </div>
@@ -627,12 +638,12 @@ export function DocumentSubmissionClient({
                                         {registeredPhoneClean && isPhoneEntered && (
                                             isPhoneMatched ? (
                                                 <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                                                    <ShieldCheck className="h-3 w-3" />
+                                                    <ShieldCheck className="h-4 w-4" />
                                                     เบอร์ถูกต้อง
                                                 </span>
                                             ) : (
                                                 <span className="text-[11px] text-destructive font-bold flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
+                                                    <AlertCircle className="h-4 w-4" />
                                                     เบอร์ไม่ตรงกับที่สมัคร
                                                 </span>
                                             )
@@ -684,9 +695,9 @@ export function DocumentSubmissionClient({
                                         className="gap-1.5 h-8 text-xs font-bold border-primary/40 text-primary hover:bg-primary/10"
                                     >
                                         {isParsingFile ? (
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
-                                            <Upload className="h-3.5 w-3.5" />
+                                            <Upload className="h-4 w-4" />
                                         )}
                                         อัปโหลดไฟล์รายชื่อ (.xlsx, .csv)
                                     </Button>
@@ -725,7 +736,7 @@ export function DocumentSubmissionClient({
                                 <div className="space-y-2 pb-3 border-b border-border">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                             รายชื่อนักกีฬาที่ลงทะเบียนและอนุมัติแล้ว ({existingPlayers.length} คน)
                                         </span>
                                     </div>
@@ -736,22 +747,22 @@ export function DocumentSubmissionClient({
                                                 className="border rounded-sm p-2 flex items-center gap-3 bg-muted/20"
                                             >
                                                 <div className="h-10 w-10 rounded-full border flex items-center justify-center overflow-hidden bg-muted shrink-0">
-                                                    {player.photo_url ? (
+                                                    {resolveStorageUrl(player.photo_url) ? (
                                                         <Image
-                                                            src={player.photo_url}
+                                                            src={resolveStorageUrl(player.photo_url) || ""}
                                                             alt={player.name}
                                                             width={40}
                                                             height={40}
                                                             className="h-full w-full object-cover"
                                                         />
                                                     ) : (
-                                                        <User className="h-5 w-5 text-muted-foreground/50" />
+                                                        <User className="h-4 w-4 text-muted-foreground/50" />
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-1.5">
                                                         {player.number && (
-                                                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                                            <Badge variant="outline">
                                                                 #{player.number}
                                                             </Badge>
                                                         )}
@@ -800,7 +811,7 @@ export function DocumentSubmissionClient({
                                                     className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors p-1"
                                                     title="ลบแถวนี้"
                                                 >
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             )}
 
@@ -828,10 +839,10 @@ export function DocumentSubmissionClient({
                                                             className="h-full w-full object-cover"
                                                         />
                                                     ) : (
-                                                        <Camera className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                        <Camera className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                                     )}
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <Camera className="h-5 w-5 text-white" />
+                                                        <Camera className="h-4 w-4 text-white" />
                                                     </div>
                                                 </label>
                                                 {player.photoPreview && (
@@ -840,7 +851,7 @@ export function DocumentSubmissionClient({
                                                         onClick={() => handlePhotoChange(idx, null)}
                                                         className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow transition-transform hover:scale-110 z-10"
                                                     >
-                                                        <X className="h-3 w-3" />
+                                                        <X className="h-4 w-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -872,7 +883,7 @@ export function DocumentSubmissionClient({
                                                             <div className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-sm border border-border bg-card shadow-2xl max-h-[140px] overflow-y-auto">
                                                                 {isSearching ? (
                                                                     <div className="flex items-center justify-center py-3 gap-1 text-[10px] text-muted-foreground">
-                                                                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                                                                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                                                         <span>กำลังค้นหา...</span>
                                                                     </div>
                                                                 ) : (
@@ -889,7 +900,7 @@ export function DocumentSubmissionClient({
                                                                                 <span className="font-bold">
                                                                                     {gp.name}
                                                                                 </span>
-                                                                                <ArrowRight className="h-3 w-3 text-primary" />
+                                                                                <ArrowRight className="h-4 w-4 text-primary" />
                                                                             </button>
                                                                         ))}
                                                                     </div>
@@ -958,7 +969,7 @@ export function DocumentSubmissionClient({
                                         onClick={() => addPlayerRow(3)}
                                         className="h-8 text-xs font-bold gap-1"
                                     >
-                                        <Plus className="h-3.5 w-3.5" />
+                                        <Plus className="h-4 w-4" />
                                         เพิ่มช่องกรอกนักกีฬา (+3)
                                     </Button>
                                 </div>
@@ -977,17 +988,8 @@ export function DocumentSubmissionClient({
                             disabled={isPending || !selectedRegId || !senderName.trim() || !senderPhone.trim() || (Boolean(registeredPhoneClean) && !isPhoneMatched)}
                             className="w-full sm:w-auto font-bold text-sm px-8"
                         >
-                            {isPending ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    กำลังบันทึกและส่งเอกสาร...
-                                </>
-                            ) : (
-                                <>
-                                    <FileText className="w-4 h-4" />
-                                    ยืนยันส่งเอกสาร
-                                </>
-                            )}
+                            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isPending ? "กำลังบันทึกและส่งเอกสาร..." : "ยืนยันส่งเอกสาร"}
                         </Button>
                     </div>
                 </form>
@@ -995,3 +997,4 @@ export function DocumentSubmissionClient({
         </div>
     );
 }
+

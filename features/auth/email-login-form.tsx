@@ -8,17 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { Turnstile } from "@/components/ui/turnstile";
-import { signIn } from "@/actions/common/auth";
+import { useToast } from "@/hooks/use-toast";
+import { ApiClient } from "@/lib/api-client";
 
 export function EmailLoginForm() {
     const t = useTranslations('Login');
+    const _tCommon = useTranslations('Common');
     const locale = useLocale();
     const router = useRouter();
+    const { toast } = useToast();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -29,34 +30,37 @@ export function EmailLoginForm() {
         setError(null);
 
         try {
-            // Use Server Action for better security and cookie handling
-            const formData = new FormData();
-            formData.append('email', email);
-            formData.append('password', password);
-            if (turnstileToken) {
-                formData.append('turnstile_token', turnstileToken);
+            const resp = await ApiClient.fetch<{
+                access_token: string;
+                refresh_token: string;
+                user: any;
+            }>('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
+
+            if (resp.access_token) {
+                ApiClient.setToken(resp.access_token);
+                toast({
+                    title: t('login_success') || "เข้าสู่ระบบสำเร็จ",
+                    description: `ยินดีต้อนรับ ${resp.user?.full_name || ''}`,
+                });
+
+                router.push(`/${locale}/dashboard`);
+                router.refresh();
             }
-
-            const result = await signIn(formData, locale);
-
-            if (!result.success) {
-                setError(result.error || t('invalid_credentials'));
-                setIsLoading(false);
-                return;
-            }
-
-            // Redirect to dashboard
-            router.push(`/${locale}/dashboard`);
-            router.refresh();
-        } catch (_err) {
-            setError(t('invalid_credentials'));
+        } catch (err: any) {
+            setError(err.message || t('invalid_credentials') || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-1 md:space-y-2 w-full">
+        <form onSubmit={handleSubmit} className="space-y-3 w-full">
             {error && (
                 <div className="text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
                     {error}
@@ -98,25 +102,29 @@ export function EmailLoginForm() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        disabled={isLoading}
+                        tabIndex={-1}
                     >
                         {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeOff className="w-4 h-4" />
                         ) : (
-                            <Eye className="h-4 w-4" />
+                            <Eye className="w-4 h-4" />
                         )}
                     </button>
                 </div>
             </div>
-            <Turnstile onVerify={(token) => setTurnstileToken(token)} onExpire={() => setTurnstileToken("")} />
-            <Button type="submit" className="w-full" disabled={isLoading}>
+
+            <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                disabled={isLoading}
+            >
                 {isLoading ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {t('signing_in')}
+                        {t('signing_in') || "กำลังเข้าสู่ระบบ..."}
                     </>
                 ) : (
-                    t('sign_in_email')
+                    t('sign_in') || "เข้าสู่ระบบ"
                 )}
             </Button>
         </form>

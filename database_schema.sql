@@ -211,35 +211,35 @@ CREATE TABLE IF NOT EXISTS "public"."match_events" (
     "match_id" "uuid" NOT NULL,
     "team_id" "uuid",
     "player_id" "uuid",
-    "event_type" character varying(100) NOT NULL,
-    "period" integer DEFAULT 1 NOT NULL,
-    "minute" integer,
-    "extra_info" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "type" character varying(50) NOT NULL,
+    "minute" integer DEFAULT 0 NOT NULL,
+    "detail" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone
 );
 
 CREATE TABLE IF NOT EXISTS "public"."matches" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "tournament_category_id" "uuid" NOT NULL,
+    "category_id" "uuid" NOT NULL,
+    "stage" character varying(50) DEFAULT 'group'::character varying NOT NULL,
+    "round" integer DEFAULT 1 NOT NULL,
+    "idx_match" integer DEFAULT 0 NOT NULL,
+    "node_id" character varying(255) DEFAULT NULL::character varying,
+    "next_node_id" character varying(255) DEFAULT NULL::character varying,
     "home_team_id" "uuid",
     "away_team_id" "uuid",
-    "home_score" "jsonb" DEFAULT '{"total": 0}'::"jsonb" NOT NULL,
-    "away_score" "jsonb" DEFAULT '{"total": 0}'::"jsonb" NOT NULL,
-    "round" integer DEFAULT 1 NOT NULL,
-    "stage" "public"."match_stage_enum" DEFAULT 'group'::"public"."match_stage_enum" NOT NULL,
+    "ph_home" character varying(255) DEFAULT NULL::character varying,
+    "ph_away" character varying(255) DEFAULT NULL::character varying,
+    "home_score" integer DEFAULT 0 NOT NULL,
+    "away_score" integer DEFAULT 0 NOT NULL,
+    "score_detail" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "status" "public"."match_status_enum" DEFAULT 'scheduled'::"public"."match_status_enum" NOT NULL,
-    "is_manual" boolean DEFAULT true NOT NULL,
+    "timer_status" character varying(50) DEFAULT 'stopped'::character varying NOT NULL,
+    "elapsed_seconds" integer DEFAULT 0 NOT NULL,
+    "minute" integer,
     "scheduled_at" timestamp with time zone,
-    "match_index" integer DEFAULT 0 NOT NULL,
-    "timer_status" "public"."match_timer_status_enum" DEFAULT 'stopped'::"public"."match_timer_status_enum" NOT NULL,
-    "elapsed_before_pause" integer DEFAULT 0 NOT NULL,
-    "current_minute" integer,
-    "node_id" character varying(255) DEFAULT NULL::character varying,
-    "winner_to_node_id" character varying(255) DEFAULT NULL::character varying,
-    "placeholder_home" character varying(255) DEFAULT NULL::character varying,
-    "placeholder_away" character varying(255) DEFAULT NULL::character varying,
+    "field_name" character varying(100),
+    "is_manual" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone
@@ -352,6 +352,7 @@ CREATE TABLE IF NOT EXISTS "public"."tournament_sponsors" (
     "tournament_id" "uuid" NOT NULL,
     "sponsor_name" character varying(255) NOT NULL,
     "logo_img" "text" NOT NULL,
+    "cover_url" "text",
     "link_url" "text",
     "order_index" integer DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -361,20 +362,25 @@ CREATE TABLE IF NOT EXISTS "public"."tournament_sponsors" (
 
 CREATE TABLE IF NOT EXISTS "public"."tournament_teams" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "tournament_category_id" "uuid" NOT NULL,
+    "tournament_id" "uuid" NOT NULL,
+    "category_id" "uuid" NOT NULL,
+    "tournament_category_id" "uuid",
     "team_id" "uuid" NOT NULL,
+    "seed_number" integer,
+    "group_name" character varying(50),
     "payment_status" "public"."payment_status_enum" DEFAULT 'pending'::"public"."payment_status_enum" NOT NULL,
     "slip_img" "text",
     "registration_status" "public"."registration_status_enum" DEFAULT 'pending'::"public"."registration_status_enum" NOT NULL,
-    "remark" "text",
-    "is_roster_locked" boolean DEFAULT false NOT NULL,
     "roster_status" "public"."registration_status_enum" DEFAULT 'pending'::"public"."registration_status_enum" NOT NULL,
+    "is_roster_locked" boolean DEFAULT false NOT NULL,
+    "unlock_requested" boolean DEFAULT false NOT NULL,
+    "contact_name" character varying(255),
+    "contact_phone" character varying(50),
+    "contact_email" "text",
+    "remark" "text",
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "deleted_at" timestamp with time zone,
-    "contact_name" "text",
-    "contact_phone" "text",
-    "contact_email" "text"
+    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" timestamp with time zone
 );
 
 CREATE TABLE IF NOT EXISTS "public"."tournament_roster_submissions" (
@@ -590,7 +596,7 @@ ALTER TABLE ONLY "public"."players"
     ADD CONSTRAINT "players_master_id_fkey" FOREIGN KEY ("master_id") REFERENCES "public"."master_players"("id") ON DELETE RESTRICT;
 
 ALTER TABLE ONLY "public"."team_management_requests"
-    ADD CONSTRAINT "team_management_requests_requester_id_fkey" FOREIGN KEY ("requester_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "team_management_requests_requester_id_fkey" FOREIGN KEY ("requester_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 
 ALTER TABLE ONLY "public"."team_management_requests"
     ADD CONSTRAINT "team_management_requests_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE CASCADE;

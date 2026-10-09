@@ -1,5 +1,4 @@
 import { ActionResponse, Match } from "@/types/index";
-import { SupabaseClient } from "@supabase/supabase-js";
 
 const getScoreTotal = (scoreObj: number | { total?: number } | null | undefined): number => {
     if (!scoreObj) return 0;
@@ -10,7 +9,7 @@ const getScoreTotal = (scoreObj: number | { total?: number } | null | undefined)
     return isNaN(val) ? 0 : val;
 };
 
-export async function initTournamentStructure(tournamentId: string, supabase: SupabaseClient): Promise<ActionResponse> {
+export async function initTournamentStructure(tournamentId: string, supabase?: any): Promise<ActionResponse> {
     // 1. Fetch tournament dates and pitches
     const { data: tournament } = await supabase
         .from('tournaments')

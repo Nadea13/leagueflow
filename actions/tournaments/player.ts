@@ -1,534 +1,264 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
+import { getServerSession } from "@/lib/auth-server";
+import { validateUploadedFile } from "@/lib/file-validation";
+import { uploadToR2 } from "@/lib/r2";
+import { resolveStorageUrl } from "@/lib/storage-utils";
+import { classifyPlayerNames } from "@/lib/name-helper";
 
-async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
-    const supabase = await createClient();
-    
-    // Check if user is the owner of the tournament
-    const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("organizer_id")
-        .eq("id", tournamentId)
-        .single();
-    
-    if (tournament && tournament.organizer_id === userId) return true;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
-    // Check if user is a member with admin/editor role
-    const { data: membership } = await supabase
-        .from("tournament_members")
-        .select("role")
-        .eq("tournament_id", tournamentId)
-        .eq("user_id", userId)
-        .eq("status", "accepted")
-        .in("role", ["admin", "editor"])
-        .single();
-    
-    if (membership) return true;
+/**
+ * Fetch players directly from tournament_players table for a tournament team.
+ */
+export async function getTournamentPlayersDirect(tournamentTeamId: string): Promise<{ success: boolean; data?: Player[]; error?: string }> {
+    try {
+        const session = await getServerSession();
+        const res = await fetch(`${API_BASE_URL}/tournament-teams/${tournamentTeamId}/players`, {
+            headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+            cache: 'no-store',
+        });
 
-    return false;
+        if (!res.ok) {
+            return { success: true, data: [] };
+        }
+
+        const data = await res.json();
+        const mappedPlayers: Player[] = (data || []).map((tp: any) => {
+            const mp = tp.master_player || {};
+            const rawName = mp.name || (mp.first_name_local ? `${mp.first_name_local} ${mp.last_name_local || ''}` : `${mp.first_name_intl || ''} ${mp.last_name_intl || ''}`).trim();
+            const cleanName = rawName.replace(/\s*-\s*$/, '').trim();
+
+            return {
+                id: tp.id,
+                name: cleanName || 'Unnamed Player',
+                number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
+                position: tp.position || null,
+                birth_date: mp.birthday || null,
+                birthday: mp.birthday || null,
+                photo_url: resolveStorageUrl(tp.photo_url || mp.photo_url || null),
+                team_id: tournamentTeamId,
+                global_team_id: null,
+                global_player_id: tp.master_player_id || null,
+                master_player_id: tp.master_player_id || null,
+                tel: mp.tel || null,
+                status: 'approved',
+                created_at: tp.created_at || new Date().toISOString(),
+                deleted_at: tp.deleted_at || null,
+            };
+        });
+
+        const getRolePriority = (position?: string | null): number => {
+            if (!position) return 4;
+            const pos = position.toLowerCase().trim();
+            if (pos.includes("ผู้จัดการ") || pos.includes("manager")) return 1;
+            if (pos.includes("ผู้ช่วย") || pos.includes("assistant") || pos.includes("asst")) return 3;
+            if (pos.includes("ผู้ฝึกสอน") || pos.includes("โค้ช") || pos.includes("coach")) return 2;
+            return 4;
+        };
+
+        mappedPlayers.sort((a, b) => {
+            const rankA = getRolePriority(a.position);
+            const rankB = getRolePriority(b.position);
+            if (rankA !== rankB) return rankA - rankB;
+            const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            if (timeA !== timeB) return timeA - timeB;
+            return 0;
+        });
+
+        return { success: true, data: mappedPlayers };
+    } catch (e: any) {
+        console.error("Error fetching tournament players from Go API:", e);
+        return { success: true, data: [] };
+    }
+}
+
+export async function getPlayers(teamId: string) {
+    return getTournamentPlayersDirect(teamId);
+}
+
+/**
+ * Add player directly into tournament_players table.
+ */
+export async function addTournamentPlayer(
+    tournamentTeamId: string,
+    formData: FormData
+): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
+
+        const name = formData.get("name") as string;
+        const firstNameTh = formData.get("firstNameTh") as string || formData.get("first_name_th") as string || formData.get("first_name_local") as string || "";
+        const lastNameTh = formData.get("lastNameTh") as string || formData.get("last_name_th") as string || formData.get("last_name_local") as string || "";
+        const firstNameEn = formData.get("firstNameEn") as string || formData.get("first_name_en") as string || formData.get("first_name_intl") as string || "";
+        const lastNameEn = formData.get("lastNameEn") as string || formData.get("last_name_en") as string || formData.get("last_name_intl") as string || "";
+        const number = formData.get("number") as string;
+        const position = formData.get("position") as string;
+        const photoFile = formData.get("photo") as File | null;
+        const dateOfBirth = formData.get("date_of_birth") as string;
+        const tel = formData.get("tel") as string;
+        const masterPlayerId = formData.get("master_player_id") as string | null;
+
+        const classified = classifyPlayerNames({
+            name,
+            first_name_local: firstNameTh || null,
+            last_name_local: lastNameTh || null,
+            first_name_intl: firstNameEn || null,
+            last_name_intl: lastNameEn || null,
+        });
+
+        let firstName = classified.first_name_intl || classified.first_name_local;
+        let lastName = classified.last_name_intl || classified.last_name_local || "-";
+
+        if (!firstName) {
+            if (!name || !name.trim()) return { success: false, error: "Name is required" };
+            const nameParts = name.trim().split(" ");
+            firstName = nameParts[0];
+            lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+        }
+
+        let photoUrl: string | null = null;
+        if (photoFile && photoFile.size > 0) {
+            const fileCheck = validateUploadedFile(photoFile);
+            if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
+            const fileExt = photoFile.name.split('.').pop() || 'jpg';
+            const fileName = `players/${tournamentTeamId}/photo_${Date.now()}.${fileExt}`;
+            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
+            if (uploadRes.success && uploadRes.url) {
+                photoUrl = uploadRes.url;
+            }
+        }
+
+        const res = await fetch(`${API_BASE_URL}/tournament-teams/${tournamentTeamId}/players`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                shirt_number: number ? number.trim() : null,
+                position: position || null,
+                photo_url: photoUrl,
+                date_of_birth: dateOfBirth || null,
+                tel: tel || null,
+                master_player_id: masterPlayerId || null,
+            }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to add player to tournament" };
+        }
+
+        revalidatePath(`/dashboard/tournaments`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in addTournamentPlayer:", err);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 export async function addPlayer(
     teamId: string,
-    prevState: ActionResponse,
     formData: FormData
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    // Fetch tournament_id to check authorization and team info
-    const { data: participation } = await adminSupabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            tournament_id,
-            team_id,
-            teams ( sport_id )
-        `)
-        .eq("id", teamId)
-        .single();
-    
-    if (!participation) return { success: false, error: "Team not found" };
-
-    const authorized = await isAuthorizedOrganizer(participation.tournament_id, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
-
-    const name = formData.get("name") as string;
-    const number = formData.get("number") as string;
-    const position = formData.get("position") as string;
-    const birthDate = formData.get("birthDate") as string;
-
-    if (!name) {
-        return { success: false, error: "Player name is required" };
-    }
-
-    const globalTeamId = participation.team_id;
-    const teamsObj = participation.teams as unknown as { sport_id: string } | { sport_id: string }[] | null;
-    const teamsList = Array.isArray(teamsObj) ? teamsObj : (teamsObj ? [teamsObj] : []);
-    const sportId = teamsList[0]?.sport_id;
-    const tournamentId = participation.tournament_id;
-
-    // 1. Ensure master player
-    const nameParts = name.trim().split(" ");
-    const firstName = nameParts[0];
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
-
-    const { data: newMaster, error: masterErr } = await adminSupabase
-        .from("master_players")
-        .insert({
-            first_name_en: firstName,
-            last_name_en: lastName,
-            gender: 'unspecified',
-            birthday: birthDate || '1970-01-01',
-            status: 'active',
-            verified: false
-        })
-        .select("id")
-        .single();
-
-    if (masterErr || !newMaster) {
-        console.error("[addPlayer] Create master player failed:", masterErr);
-        return { success: false, error: "Failed to create master player profile" };
-    }
-
-    // 2. Insert local player profile into players
-    const { data: newPlayer, error: playerError } = await adminSupabase
-        .from("players")
-        .insert({
-            master_id: newMaster.id,
-            display_name: name,
-        })
-        .select("id")
-        .single();
-
-    if (playerError || !newPlayer) {
-        console.error("[addPlayer] Create player failed:", playerError);
-        return { success: false, error: "Failed to insert player profile: " + playerError?.message };
-    }
-
-    // 3. Link via player_sports
-    if (sportId) {
-        const { error: psError } = await adminSupabase
-            .from("player_sports")
-            .insert({
-                player_id: newPlayer.id,
-                sport_id: sportId,
-                team_id: globalTeamId,
-                position: position || null,
-                shirt_number: number || null
-            });
-
-        if (psError) {
-            console.error("[addPlayer] Create player_sports record failed:", psError);
-        }
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
+    return addTournamentPlayer(teamId, formData);
 }
 
-export async function getPlayers(teamId: string): Promise<{ success: boolean; data?: Player[]; error?: string }> {
-    const supabase = await createClient();
+/**
+ * Delete player from tournament_players table.
+ */
+export async function deleteTournamentPlayer(
+    playerId: string,
+    tournamentTeamId?: string
+): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    // First, check if teamId matches a tournament_teams (participation)
-    const { data: participation } = await supabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            team_id,
-            tournament_id,
-            roster_status
-        `)
-        .eq("id", teamId)
-        .single();
-
-    if (participation && participation.roster_status !== 'approved') {
-        const { data: staged, error: stagedErr } = await supabase
-            .from("tournament_roster_submissions")
-            .select("*")
-            .eq("tournament_team_id", teamId)
-            .eq("status", "approved");
-
-        if (stagedErr) {
-            console.error("Error fetching staged players:", stagedErr);
-            return { success: false, error: "Failed to fetch staged players" };
-        }
-
-        const mappedPlayers: Player[] = (staged || []).map((s) => ({
-            id: s.id,
-            name: s.name,
-            number: s.shirt_number ? parseInt(s.shirt_number) : null,
-            position: s.position || null,
-            birth_date: null,
-            photo_url: s.photo_url || null,
-            team_id: teamId,
-            global_team_id: null,
-            global_player_id: null,
-            tel: s.tel || null,
-            status: s.status,
-            created_at: s.created_at,
-            deleted_at: null
-        }));
-
-        return { success: true, data: mappedPlayers };
-    }
-
-    if (participation) {
-        const { data, error } = await supabase
-            .from("tournament_players")
-            .select(`
-                id,
-                position,
-                shirt_number,
-                tournament_team_id,
-                player:master_player_id!inner (
-                    id,
-                    first_name_en,
-                    last_name_en,
-                    first_name_th,
-                    last_name_th,
-                    birthday,
-                    tel,
-                    profile_img,
-                    created_at,
-                    deleted_at
-                )
-            `)
-            .eq("tournament_team_id", teamId)
-            .is("player.deleted_at", null);
-
-        if (error) {
-            console.error("Error fetching tournament players:", error);
-            return { success: false, error: "Failed to fetch tournament players" };
-        }
-
-        const mappedPlayers: Player[] = (data || []).map((tp) => {
-            const tpObj = tp as unknown as {
-                id: string;
-                position: string | null;
-                shirt_number: string | null;
-                tournament_team_id: string;
-                player: {
-                    id: string;
-                    first_name_en: string | null;
-                    last_name_en: string | null;
-                    first_name_th: string | null;
-                    last_name_th: string | null;
-                    birthday: string | null;
-                    tel: string | null;
-                    profile_img: string | null;
-                    created_at: string;
-                    deleted_at: string | null;
-                } | null;
-            };
-            const mp = tpObj.player;
-            return {
-                id: tpObj.id,
-                name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-                number: tpObj.shirt_number ? parseInt(tpObj.shirt_number) : null,
-                position: tpObj.position || null,
-                birth_date: mp?.birthday || null,
-                photo_url: mp?.profile_img || null,
-                team_id: teamId,
-                global_team_id: null,
-                global_player_id: mp?.id || null,
-                tel: mp?.tel || null,
-                created_at: mp?.created_at || new Date().toISOString(),
-                deleted_at: mp?.deleted_at || null
-            };
+        const targetTeamId = tournamentTeamId || 'default';
+        const res = await fetch(`${API_BASE_URL}/tournament-teams/${targetTeamId}/players/${playerId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
         });
 
-        return { success: true, data: mappedPlayers };
-    }
-
-    let query = supabase.from("player_sports").select(`
-        id,
-        position,
-        shirt_number,
-        team_id,
-        sport_id,
-        deleted_at,
-        player:player_id!inner (
-            id,
-            display_name,
-            tel,
-            created_at,
-            deleted_at,
-            master_player:master_id (
-                id,
-                first_name_en,
-                last_name_en,
-                first_name_th,
-                last_name_th,
-                birthday,
-                tel,
-                profile_img
-            )
-        )
-    `)
-    .is("deleted_at", null)
-    .is("player.deleted_at", null);
-
-    query = query.eq("team_id", teamId);
-
-    const { data, error } = await query;
-
-    if (error) {
-        console.error("Error fetching players:", error);
-        return { success: false, error: "Failed to fetch players" };
-    }
-
-    // Map and filter in memory to ensure accuracy
-    const mappedPlayers: Player[] = (data || []).map((ps) => {
-        const psObj = ps as unknown as {
-            id: string;
-            shirt_number: string | null;
-            position: string | null;
-            deleted_at?: string | null;
-            player?: {
-                id: string;
-                display_name: string;
-                tel?: string | null;
-                created_at: string;
-                deleted_at?: string | null;
-                master_player?: {
-                    id: string;
-                    first_name_en?: string | null;
-                    last_name_en?: string | null;
-                    first_name_th?: string | null;
-                    last_name_th?: string | null;
-                    birthday?: string | null;
-                    profile_img?: string | null;
-                    tel?: string | null;
-                } | null;
-            } | null;
-        };
-        const p = psObj.player;
-        const mp = p?.master_player;
-        return {
-            id: p?.id || psObj.id,
-            name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-            number: psObj.shirt_number ? parseInt(psObj.shirt_number) : null,
-            position: psObj.position || null,
-            birth_date: mp?.birthday || null,
-            photo_url: mp?.profile_img || null,
-            team_id: null,
-            global_team_id: teamId,
-            global_player_id: mp?.id || null,
-            tel: p?.tel || mp?.tel || null,
-            created_at: p?.created_at || new Date().toISOString(),
-            deleted_at: psObj.deleted_at || p?.deleted_at || null
-        };
-    });
-
-    mappedPlayers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    return { success: true, data: mappedPlayers };
-}
-
-export async function getTournamentPlayersDirect(teamId: string): Promise<{ success: boolean; data?: Player[]; error?: string }> {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-        .from("tournament_players")
-        .select(`
-            id,
-            position,
-            shirt_number,
-            tournament_team_id,
-            player:master_player_id!inner (
-                id,
-                first_name_en,
-                last_name_en,
-                first_name_th,
-                last_name_th,
-                birthday,
-                tel,
-                profile_img,
-                created_at,
-                deleted_at
-            )
-        `)
-        .eq("tournament_team_id", teamId)
-        .is("player.deleted_at", null);
-
-    if (error) {
-        console.error("Error fetching tournament players direct:", error);
-        return { success: false, error: "Failed to fetch tournament players" };
-    }
-
-    const mappedPlayers: Player[] = (data || []).map((tp) => {
-        const tpObj = tp as unknown as {
-            id: string;
-            position: string | null;
-            shirt_number: string | null;
-            tournament_team_id: string;
-            player: {
-                id: string;
-                first_name_en: string | null;
-                last_name_en: string | null;
-                first_name_th: string | null;
-                last_name_th: string | null;
-                birthday: string | null;
-                tel: string | null;
-                profile_img: string | null;
-                created_at: string;
-                deleted_at: string | null;
-            } | null;
-        };
-        const mp = tpObj.player;
-        return {
-            id: tpObj.id,
-            name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-            number: tpObj.shirt_number ? parseInt(tpObj.shirt_number) : null,
-            position: tpObj.position || null,
-            birth_date: mp?.birthday || null,
-            photo_url: mp?.profile_img || null,
-            team_id: teamId,
-            global_team_id: null,
-            global_player_id: mp?.id || null,
-            tel: mp?.tel || null,
-            created_at: mp?.created_at || new Date().toISOString(),
-            deleted_at: mp?.deleted_at || null
-        };
-    });
-
-    return { success: true, data: mappedPlayers };
-}
-
-export async function deletePlayer(playerId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    // Get the player_sports record to identify team context
-    const { data: psRecords } = await supabase
-        .from("player_sports")
-        .select("team_id")
-        .eq("player_id", playerId);
-        
-    if (!psRecords || psRecords.length === 0) return { success: false, error: "Player team context not found" };
-    const globalTeamId = psRecords[0].team_id;
-
-    // Find the tournament team registered in a tournament that this user has admin/editor access to
-    const { data: tournamentTeams } = await supabase
-        .from("tournament_teams")
-        .select("tournament_id")
-        .eq("team_id", globalTeamId);
-        
-    let authorized = false;
-    let tournamentId = null;
-    if (tournamentTeams && tournamentTeams.length > 0) {
-        for (const tt of tournamentTeams) {
-            const isAuth = await isAuthorizedOrganizer(tt.tournament_id, user.id);
-            if (isAuth) {
-                authorized = true;
-                tournamentId = tt.tournament_id;
-                break;
-            }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to delete player" };
         }
+
+        revalidatePath(`/dashboard/tournaments`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in deleteTournamentPlayer:", err);
+        return { success: false, error: "An unexpected error occurred" };
     }
+}
 
-    if (!authorized || !tournamentId) return { success: false, error: "Unauthorized to manage this roster" };
+export async function deletePlayer(playerId: string, teamId?: string): Promise<ActionResponse> {
+    return deleteTournamentPlayer(playerId, teamId);
+}
 
-    const { error } = await adminSupabase
-        .from("players")
-        .delete()
-        .eq("id", playerId);
+/**
+ * Update player in tournament_players table.
+ */
+export async function updateTournamentPlayer(
+    playerId: string,
+    tournamentTeamId: string,
+    data: { name?: string; number?: number | null; position?: string | null; birth_date?: string | null; photo_url?: string | null; tel?: string | null }
+): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    if (error) {
-        return { success: false, error: error.message };
+        const nameParts = data.name ? data.name.trim().split(" ") : [];
+        const firstName = nameParts.length > 0 ? nameParts[0] : undefined;
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : (nameParts.length === 1 ? "-" : undefined);
+
+        const res = await fetch(`${API_BASE_URL}/tournament-teams/${tournamentTeamId}/players/${playerId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                shirt_number: data.number !== undefined && data.number !== null ? String(data.number) : null,
+                position: data.position || null,
+                first_name: firstName,
+                last_name: lastName,
+                name: data.name,
+                photo_url: data.photo_url,
+                tel: data.tel,
+            }),
+        });
+
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            return { success: false, error: errBody.error || "Failed to update tournament player" };
+        }
+
+        revalidatePath(`/dashboard/tournaments`);
+        revalidatePath(`/dashboard/tournament-teams/${tournamentTeamId}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in updateTournamentPlayer:", err);
+        return { success: false, error: err instanceof Error ? err.message : "An unexpected error occurred" };
     }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
 }
 
 export async function updatePlayer(
     playerId: string,
-    data: { name?: string; number?: number | null; position?: string | null; birth_date?: string | null; photo_url?: string | null }
+    teamId: string,
+    data: { name?: string; number?: number | null; position?: string | null; birth_date?: string | null; photo_url?: string | null; tel?: string | null }
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    // Get the player_sports record to identify team context
-    const { data: psRecords } = await supabase
-        .from("player_sports")
-        .select("team_id")
-        .eq("player_id", playerId);
-        
-    if (!psRecords || psRecords.length === 0) return { success: false, error: "Player team context not found" };
-    const globalTeamId = psRecords[0].team_id;
-
-    // Find the tournament team registered in a tournament that this user has admin/editor access to
-    const { data: tournamentTeams } = await supabase
-        .from("tournament_teams")
-        .select("tournament_id")
-        .eq("team_id", globalTeamId);
-        
-    let authorized = false;
-    let tournamentId = null;
-    if (tournamentTeams && tournamentTeams.length > 0) {
-        for (const tt of tournamentTeams) {
-            const isAuth = await isAuthorizedOrganizer(tt.tournament_id, user.id);
-            if (isAuth) {
-                authorized = true;
-                tournamentId = tt.tournament_id;
-                break;
-            }
-        }
-    }
-
-    if (!authorized || !tournamentId) return { success: false, error: "Unauthorized to manage this roster" };
-
-    // 1. Update players table
-    const playerUpdate: Record<string, string> = {};
-    if (data.name !== undefined) {
-        playerUpdate.display_name = data.name;
-    }
-
-    if (Object.keys(playerUpdate).length > 0) {
-        const { error: playerErr } = await adminSupabase
-            .from("players")
-            .update(playerUpdate)
-            .eq("id", playerId);
-
-        if (playerErr) {
-            return { success: false, error: playerErr.message };
-        }
-    }
-
-    // 2. Update player_sports table
-    const psUpdate: Record<string, string | null> = {};
-    if (data.position !== undefined) {
-        psUpdate.position = data.position;
-    }
-    if (data.number !== undefined) {
-        psUpdate.shirt_number = data.number !== null ? String(data.number) : null;
-    }
-
-    if (Object.keys(psUpdate).length > 0) {
-        const { error: psErr } = await adminSupabase
-            .from("player_sports")
-            .update(psUpdate)
-            .eq("player_id", playerId);
-
-        if (psErr) {
-            return { success: false, error: psErr.message };
-        }
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
+    return updateTournamentPlayer(playerId, teamId, data);
 }

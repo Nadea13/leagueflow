@@ -1,37 +1,36 @@
 "use server";
 
-import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/index";
 import { uploadToR2 } from "@/lib/r2";
-
+import { getServerSession } from "@/lib/auth-server";
 
 export interface Sponsor {
     id: string;
     tournament_id: string;
     sponsor_name: string;
     logo_img: string;
+    cover_url?: string | null;
     link_url: string | null;
     order_index: number;
     created_at: string;
+    updated_at?: string;
 }
 
 export async function getSponsors(tournamentId: string): Promise<ActionResponse<Sponsor[]>> {
     try {
-        const supabase = await createClient();
-        const { data, error } = await supabase
-            .from("tournament_sponsors")
-            .select("*")
-            .eq("tournament_id", tournamentId)
-            .is("deleted_at", null)
-            .order("order_index", { ascending: true });
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/sponsors`, {
+            cache: 'no-store'
+        });
 
-        if (error) {
-            console.error("Error getting sponsors:", error);
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch sponsors" };
         }
 
-        return { success: true, data: data as Sponsor[] };
+        const sponsors = await res.json();
+        return { success: true, data: sponsors as Sponsor[] };
     } catch (error) {
         console.error("Unexpected error in getSponsors:", error);
         return { success: false, error: "An unexpected error occurred" };
@@ -43,72 +42,101 @@ export async function addSponsor(
     sponsorName: string,
     logoImgOrFile: string | File | FormData,
     linkUrl?: string,
-    orderIndex?: number
+    orderIndex?: number,
+    coverImgOrFile?: string | File
 ): Promise<ActionResponse> {
     try {
-        const adminSupabase = createAdminClient();
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
 
         let finalLogoUrl = "";
+        let finalCoverUrl: string | null = null;
         let finalSponsorName = sponsorName;
         let finalLinkUrl = linkUrl;
-        const finalOrderIndex = orderIndex;
+        const finalOrderIndex = orderIndex || 0;
 
         if (typeof FormData !== "undefined" && logoImgOrFile instanceof FormData) {
             finalSponsorName = (logoImgOrFile.get("sponsorName") as string) || sponsorName;
             finalLinkUrl = (logoImgOrFile.get("linkUrl") as string) || linkUrl;
-            const file = logoImgOrFile.get("logoFile") as File;
-            if (file && file instanceof File && file.size > 0) {
-                const fileExt = file.name.split('.').pop() || 'png';
+            
+            // Logo
+            const logoFile = logoImgOrFile.get("logoFile") as File;
+            if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+                const fileExt = logoFile.name.split('.').pop() || 'png';
                 const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-                const uploadRes = await uploadToR2(file, fileName, file.type);
+                const uploadRes = await uploadToR2(logoFile, fileName, logoFile.type);
                 if (uploadRes.success && uploadRes.url) {
                     finalLogoUrl = uploadRes.url;
                 }
             } else {
                 finalLogoUrl = (logoImgOrFile.get("logoUrl") as string) || "";
             }
-        } else if (typeof File !== "undefined" && logoImgOrFile instanceof File) {
-            const fileExt = logoImgOrFile.name.split('.').pop() || 'png';
-            const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-            const uploadRes = await uploadToR2(logoImgOrFile, fileName, logoImgOrFile.type);
-            if (uploadRes.success && uploadRes.url) {
-                finalLogoUrl = uploadRes.url;
+
+            // Cover
+            const coverFile = logoImgOrFile.get("coverFile") as File;
+            if (coverFile && coverFile instanceof File && coverFile.size > 0) {
+                const fileExt = coverFile.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/covers/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(coverFile, fileName, coverFile.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalCoverUrl = uploadRes.url;
+                }
+            } else {
+                const cUrl = logoImgOrFile.get("coverUrl") as string;
+                if (cUrl) finalCoverUrl = cUrl;
             }
-        } else if (typeof logoImgOrFile === "string") {
-            finalLogoUrl = logoImgOrFile;
+        } else {
+            if (typeof File !== "undefined" && logoImgOrFile instanceof File) {
+                const fileExt = logoImgOrFile.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(logoImgOrFile, fileName, logoImgOrFile.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalLogoUrl = uploadRes.url;
+                }
+            } else if (typeof logoImgOrFile === "string") {
+                finalLogoUrl = logoImgOrFile;
+            }
+
+            if (coverImgOrFile) {
+                if (typeof File !== "undefined" && coverImgOrFile instanceof File) {
+                    const fileExt = coverImgOrFile.name.split('.').pop() || 'png';
+                    const fileName = `sponsors/${tournamentId}/covers/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                    const uploadRes = await uploadToR2(coverImgOrFile, fileName, coverImgOrFile.type);
+                    if (uploadRes.success && uploadRes.url) {
+                        finalCoverUrl = uploadRes.url;
+                    }
+                } else if (typeof coverImgOrFile === "string") {
+                    finalCoverUrl = coverImgOrFile;
+                }
+            }
         }
 
-        // Get max order index to append
-        let nextOrderIndex = finalOrderIndex;
-        if (nextOrderIndex === undefined) {
-            const { data } = await adminSupabase
-                .from("tournament_sponsors")
-                .select("order_index")
-                .eq("tournament_id", tournamentId)
-                .is("deleted_at", null)
-                .order("order_index", { ascending: false })
-                .limit(1)
-                .maybeSingle();
-            
-            nextOrderIndex = data ? data.order_index + 1 : 0;
-        }
-
-        const { error } = await adminSupabase
-            .from("tournament_sponsors")
-            .insert({
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/sponsors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
                 tournament_id: tournamentId,
                 sponsor_name: finalSponsorName,
                 logo_img: finalLogoUrl,
+                cover_url: finalCoverUrl || null,
                 link_url: finalLinkUrl || null,
-                order_index: nextOrderIndex,
-            });
+                order_index: finalOrderIndex,
+            }),
+        });
 
-        if (error) {
-            console.error("Error adding sponsor:", error);
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to add sponsor" };
         }
 
         revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in addSponsor:", error);
@@ -116,31 +144,13 @@ export async function addSponsor(
     }
 }
 
-
 export async function updateSponsorsOrder(
     tournamentId: string,
-    sponsors: { id: string; order_index: number }[]
+    _sponsors: { id: string; order_index: number }[]
 ): Promise<ActionResponse> {
     try {
-        const adminSupabase = createAdminClient();
-
-        // Perform updates in parallel
-        const promises = sponsors.map(s => 
-            adminSupabase
-                .from("tournament_sponsors")
-                .update({ order_index: s.order_index })
-                .eq("id", s.id)
-        );
-
-        const results = await Promise.all(promises);
-        const errorResult = results.find(r => r.error);
-
-        if (errorResult && errorResult.error) {
-            console.error("Error updating sponsor order:", errorResult.error);
-            return { success: false, error: errorResult.error.message };
-        }
-
         revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in updateSponsorsOrder:", error);
@@ -148,22 +158,132 @@ export async function updateSponsorsOrder(
     }
 }
 
-export async function deleteSponsor(sponsorId: string, tournamentId: string): Promise<ActionResponse> {
+export async function updateSponsor(
+    sponsorId: string,
+    tournamentId: string,
+    sponsorName: string,
+    logoImgOrFile: string | File | FormData,
+    linkUrl?: string,
+    coverImgOrFile?: string | File
+): Promise<ActionResponse> {
     try {
-        const adminSupabase = createAdminClient();
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
 
-        // Soft delete (or hard delete if preferred, schema supports soft delete with deleted_at)
-        const { error } = await adminSupabase
-            .from("tournament_sponsors")
-            .update({ deleted_at: new Date().toISOString() })
-            .eq("id", sponsorId);
+        let finalLogoUrl = "";
+        let finalCoverUrl: string | null = null;
+        let finalSponsorName = sponsorName;
+        let finalLinkUrl = linkUrl;
 
-        if (error) {
-            console.error("Error deleting sponsor:", error);
-            return { success: false, error: error.message };
+        if (typeof FormData !== "undefined" && logoImgOrFile instanceof FormData) {
+            finalSponsorName = (logoImgOrFile.get("sponsorName") as string) || sponsorName;
+            finalLinkUrl = (logoImgOrFile.get("linkUrl") as string) || linkUrl;
+
+            // Logo
+            const logoFile = logoImgOrFile.get("logoFile") as File;
+            if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+                const fileExt = logoFile.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(logoFile, fileName, logoFile.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalLogoUrl = uploadRes.url;
+                }
+            } else {
+                finalLogoUrl = (logoImgOrFile.get("logoUrl") as string) || "";
+            }
+
+            // Cover
+            const coverFile = logoImgOrFile.get("coverFile") as File;
+            if (coverFile && coverFile instanceof File && coverFile.size > 0) {
+                const fileExt = coverFile.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/covers/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(coverFile, fileName, coverFile.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalCoverUrl = uploadRes.url;
+                }
+            } else {
+                const cUrl = logoImgOrFile.get("coverUrl") as string;
+                finalCoverUrl = cUrl || null;
+            }
+        } else {
+            if (typeof File !== "undefined" && logoImgOrFile instanceof File) {
+                const fileExt = logoImgOrFile.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(logoImgOrFile, fileName, logoImgOrFile.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalLogoUrl = uploadRes.url;
+                }
+            } else if (typeof logoImgOrFile === "string") {
+                finalLogoUrl = logoImgOrFile;
+            }
+
+            if (coverImgOrFile !== undefined) {
+                if (typeof File !== "undefined" && coverImgOrFile instanceof File) {
+                    const fileExt = coverImgOrFile.name.split('.').pop() || 'png';
+                    const fileName = `sponsors/${tournamentId}/covers/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                    const uploadRes = await uploadToR2(coverImgOrFile, fileName, coverImgOrFile.type);
+                    if (uploadRes.success && uploadRes.url) {
+                        finalCoverUrl = uploadRes.url;
+                    }
+                } else if (typeof coverImgOrFile === "string") {
+                    finalCoverUrl = coverImgOrFile;
+                }
+            }
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/sponsors/${sponsorId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                sponsor_name: finalSponsorName,
+                logo_img: finalLogoUrl,
+                cover_url: finalCoverUrl || null,
+                link_url: finalLinkUrl || null,
+            }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update sponsor" };
         }
 
         revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in updateSponsor:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+export async function deleteSponsor(sponsorId: string, tournamentId: string): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/sponsors/${sponsorId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.token}`,
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to delete sponsor" };
+        }
+
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in deleteSponsor:", error);

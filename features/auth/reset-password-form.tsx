@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 export function ResetPasswordForm() {
@@ -14,7 +14,8 @@ export function ResetPasswordForm() {
     const tCommon = useTranslations('Common');
     const locale = useLocale();
     const router = useRouter();
-    const supabase = createClient();
+    const searchParams = useSearchParams();
+    const email = searchParams.get("email") || "";
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,19 +35,18 @@ export function ResetPasswordForm() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: password,
+            await ApiClient.fetch('/auth/reset-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    new_password: password,
+                }),
             });
 
-            if (error) {
-                setError(error.message);
-                return;
-            }
-
-            await supabase.auth.signOut();
+            ApiClient.setToken(null);
             setIsSuccess(true);
-        } catch (_err) {
-            setError(tCommon('something_went_wrong'));
+        } catch (err: any) {
+            setError(err.message || tCommon('something_went_wrong'));
         } finally {
             setIsLoading(false);
         }
@@ -108,7 +108,7 @@ export function ResetPasswordForm() {
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                     <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         {t('updating')}
                     </>
                 ) : (

@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MatchEvent, EventType } from "@/types";
 import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/actions/tournaments/event";
-import { createClient } from "@/lib/supabase/client";
 
 export interface QueuedAction {
     id: string;
@@ -20,134 +19,162 @@ export interface QueuedAction {
 }
 
 export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[], isReadOnly?: boolean) {
-    const [events, setEvents] = useState<MatchEvent[]>(initialData || []);
-    const [isLoading, setIsLoading] = useState(!initialData);
-    const [queue, setQueue] = useState<QueuedAction[]>([]);
-    const [isSyncing, setIsSyncing] = useState(false);
+    const [events, setEvents] = useState<MatchEvent[]>(() => {
+        if (initialData && initialData.length > 0) return initialData;
+        if (typeof window !== "undefined") {
+            try {
+                const cached = localStorage.getItem(`leagueflow-events-cache-${matchId}`);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return [];
+    });
 
-    // Load queue from localStorage on mount
+    const [isLoading, setIsLoading] = useState(!initialData && events.length === 0);
+    const [queue, setQueue] = useState<QueuedAction[]>([]);
+    const isSyncingRef = useRef(false);
+    const queueRef = useRef<QueuedAction[]>([]);
+    queueRef.current = queue;
+
+    // Load queue & cached events from localStorage on mount/match change
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const saved = localStorage.getItem(`leagueflow-pending-events-${matchId}`);
-            if (saved) {
+            const savedQueue = localStorage.getItem(`leagueflow-pending-events-${matchId}`);
+            if (savedQueue) {
                 try {
-                    const parsed = JSON.parse(saved);
-                    setTimeout(() => {
+                    const parsed = JSON.parse(savedQueue);
+                    if (Array.isArray(parsed)) {
                         setQueue(parsed);
-                    }, 0);
+                    }
                 } catch (e) {
                     console.error("Failed to parse local event queue", e);
                 }
             }
+
+            const cachedEvents = localStorage.getItem(`leagueflow-events-cache-${matchId}`);
+            if (cachedEvents) {
+                try {
+                    const parsed = JSON.parse(cachedEvents);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        setEvents(parsed);
+                    }
+                } catch (_) {}
+            }
         }
     }, [matchId]);
 
-    // Save queue to localStorage when changed
-    const saveQueue = useCallback((newQueueOrUpdater: QueuedAction[] | ((prev: QueuedAction[]) => QueuedAction[])) => {
-        setQueue(prev => {
-            const next = typeof newQueueOrUpdater === "function" ? newQueueOrUpdater(prev) : newQueueOrUpdater;
+    // Save queue to localStorage helper
+    const persistQueue = useCallback((newQueue: QueuedAction[]) => {
+        setQueue(newQueue);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(newQueue));
+        }
+    }, [matchId]);
+
+    // Save events to localStorage cache helper
+    const persistEventsCache = useCallback((newEvents: MatchEvent[]) => {
+        setEvents(newEvents);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-events-cache-${matchId}`, JSON.stringify(newEvents));
+        }
+    }, [matchId]);
+
+    // Handle incoming realtime event from WebSocket
+    const handleIncomingEvent = useCallback((incomingEvent: MatchEvent) => {
+        setEvents((prev) => {
+            const exists = prev.some((e) => e.id === incomingEvent.id);
+            const updated = exists
+                ? prev.map((e) => (e.id === incomingEvent.id ? incomingEvent : e))
+                : [incomingEvent, ...prev];
             if (typeof window !== "undefined") {
-                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
+                localStorage.setItem(`leagueflow-events-cache-${matchId}`, JSON.stringify(updated));
             }
-            return next;
+            return updated;
+        });
+
+        // Clean matching pending action if any
+        setQueue((prevQueue) => {
+            const nextQueue = prevQueue.filter((a) => {
+                if (a.type === "add_event" && a.eventType === incomingEvent.event_type && a.minute === incomingEvent.minute && (a.playerId ?? null) === (incomingEvent.player_id ?? null)) {
+                    return false;
+                }
+                return true;
+            });
+            if (nextQueue.length !== prevQueue.length && typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(nextQueue));
+            }
+            return nextQueue;
         });
     }, [matchId]);
 
-    // Load events on mount
+    // Handle incoming realtime event deletion from WebSocket
+    const handleIncomingDelete = useCallback((deletedEventId: string) => {
+        setEvents((prev) => {
+            const updated = prev.filter((e) => e.id !== deletedEventId);
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-events-cache-${matchId}`, JSON.stringify(updated));
+            }
+            return updated;
+        });
+
+        setQueue((prevQueue) => {
+            const nextQueue = prevQueue.filter((a) => a.eventId !== deletedEventId);
+            if (nextQueue.length !== prevQueue.length && typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(nextQueue));
+            }
+            return nextQueue;
+        });
+    }, [matchId]);
+
+    // Load initial events from API
     useEffect(() => {
-        const supabase = createClient();
         let isMounted = true;
 
-        const fetchEventsClient = async () => {
-            const { data, error } = await supabase
-                .from('match_events')
-                .select(`*, player:players(display_name)`)
-                .eq('match_id', matchId)
-                .order('created_at', { ascending: false });
-
-            if (isMounted && !error && data) {
-                const mapped = data.map((e) => ({
-                    ...e,
-                    player_name: (e.player as { display_name: string } | null)?.display_name || (e as { player_name?: string }).player_name || "Unknown",
-                    player: undefined
-                }));
-                setEvents(mapped);
-            }
-            return data;
-        };
-
         const loadEvents = async () => {
-            if (isReadOnly) {
-                await fetchEventsClient();
-            } else {
+            try {
                 const res = await getMatchEvents(matchId);
-                if (isMounted && res.success && res.data) setEvents(res.data);
+                if (isMounted && res.success && res.data) {
+                    persistEventsCache(res.data);
+                }
+            } catch (err) {
+                console.error("Failed to load match events:", err);
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
-            if (isMounted) setIsLoading(false);
         };
 
         loadEvents();
-        
-        const channelId = Math.random().toString(36).substring(7);
-        const channel = supabase.channel(`match-events-${matchId}-${channelId}`);
-        
-        channel
-            .on('postgres_changes', { 
-                event: '*', 
-                schema: 'public', 
-                table: 'match_events', 
-                filter: `match_id=eq.${matchId}` 
-            }, async (payload) => {
-                if (!isMounted) return;
-
-                if (payload.eventType === 'INSERT') {
-                    const newEvt = payload.new as MatchEvent;
-                    setEvents((prev) => {
-                        if (prev.some(e => e.id === newEvt.id)) return prev;
-                        return [newEvt, ...prev];
-                    });
-                    if (isReadOnly) {
-                        fetchEventsClient();
-                    }
-                } else if (payload.eventType === 'DELETE') {
-                    setEvents((prev: MatchEvent[]) => prev.filter((e: MatchEvent) => e.id !== payload.old.id));
-                } else if (payload.eventType === 'UPDATE') {
-                    const updatedEvt = payload.new as MatchEvent;
-                    setEvents((prev) => prev.map(e => e.id === updatedEvt.id ? { ...e, ...updatedEvt } : e));
-                }
-            })
-            .subscribe();
 
         let pollInterval: NodeJS.Timeout | null = null;
         if (isReadOnly) {
-            pollInterval = setInterval(() => {
-                if (isMounted) fetchEventsClient();
-            }, 5000);
+            pollInterval = setInterval(loadEvents, 5000);
         }
 
         return () => {
             isMounted = false;
-            supabase.removeChannel(channel);
             if (pollInterval) clearInterval(pollInterval);
         };
-    }, [matchId, isReadOnly]);
+    }, [matchId, isReadOnly, persistEventsCache]);
 
-    // Sync function
+    // Sync function with lock
     const syncQueue = useCallback(async () => {
-        if (isSyncing || isReadOnly) return;
-        
-        let pendingItems: QueuedAction[] = [];
-        setQueue(prev => {
-            pendingItems = prev.filter(a => a.status === 'pending' || a.status === 'failed');
-            return prev;
-        });
+        if (isSyncingRef.current || isReadOnly) return;
+
+        const currentQueue = queueRef.current;
+        const pendingItems = currentQueue.filter(a => a.status === 'pending');
 
         if (pendingItems.length === 0) return;
 
-        setIsSyncing(true);
+        isSyncingRef.current = true;
+
+        let workingQueue = [...currentQueue];
 
         for (const action of pendingItems) {
-            saveQueue((prev) => prev.map(q => q.id === action.id ? { ...q, status: 'syncing' as const } : q));
+            workingQueue = workingQueue.map(q => q.id === action.id ? { ...q, status: 'syncing' as const } : q);
+            persistQueue(workingQueue);
 
             try {
                 let isSuccess = false;
@@ -158,31 +185,27 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                     isSuccess = !!res.success;
                     if (!isSuccess) errorMsg = res.error || "Unknown error";
                 } else if (action.type === 'delete_event') {
-                    const res = await deleteMatchEvent(action.eventId!, tournamentId);
+                    const res = await deleteMatchEvent(action.eventId!, tournamentId, matchId);
                     isSuccess = !!res.success || (!!res.error && res.error.toLowerCase().includes("not found"));
                     if (!isSuccess) errorMsg = res.error || "Unknown error";
                 }
 
                 if (isSuccess) {
-                    saveQueue((prev) => {
-                        const next = prev.filter(q => q.id !== action.id);
-                        console.log(`[Queue Sync Success] Event ${action.id} synced & removed from queue. Remaining:`, next.length);
-                        return next;
-                    });
+                    workingQueue = workingQueue.filter(q => q.id !== action.id);
+                    persistQueue(workingQueue);
                 } else {
-                    saveQueue((prev) => {
-                        const next = prev.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q);
-                        console.error(`[Queue Sync Failed] Event ${action.id} failed:`, errorMsg);
-                        return next;
-                    });
+                    workingQueue = workingQueue.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q);
+                    persistQueue(workingQueue);
                 }
             } catch (err) {
                 const errorMsg = err instanceof Error ? err.message : String(err);
-                saveQueue((prev) => prev.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q));
+                workingQueue = workingQueue.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q);
+                persistQueue(workingQueue);
             }
         }
-        setIsSyncing(false);
-    }, [matchId, tournamentId, isSyncing, isReadOnly, saveQueue]);
+
+        isSyncingRef.current = false;
+    }, [matchId, tournamentId, isReadOnly, persistQueue]);
 
     // Auto-sync when window becomes online
     useEffect(() => {
@@ -194,16 +217,6 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             return () => window.removeEventListener("online", handleOnline);
         }
     }, [syncQueue]);
-
-    // Trigger sync automatically when queue receives new items
-    useEffect(() => {
-        if (queue.some(a => a.status === 'pending')) {
-            const timer = setTimeout(() => {
-                syncQueue();
-            }, 0);
-            return () => clearTimeout(timer);
-        }
-    }, [queue, syncQueue]);
 
     const addEvent = async (
         teamId: string | null,
@@ -228,13 +241,8 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             status: "pending"
         };
 
-        setQueue(prev => {
-            const next = [...prev, newAction];
-            if (typeof window !== "undefined") {
-                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
-            }
-            return next;
-        });
+        const nextQueue = [...queueRef.current, newAction];
+        persistQueue(nextQueue);
 
         setTimeout(() => {
             syncQueue();
@@ -245,13 +253,8 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
 
     const deleteEvent = async (eventId: string): Promise<{ success: boolean; error?: string }> => {
         if (eventId.startsWith("temp-")) {
-            setQueue(prev => {
-                const next = prev.filter(a => a.id !== eventId);
-                if (typeof window !== "undefined") {
-                    localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
-                }
-                return next;
-            });
+            const nextQueue = queueRef.current.filter(a => a.id !== eventId);
+            persistQueue(nextQueue);
             return { success: true };
         }
 
@@ -265,13 +268,8 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             status: "pending"
         };
 
-        setQueue(prev => {
-            const next = [...prev, newAction];
-            if (typeof window !== "undefined") {
-                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
-            }
-            return next;
-        });
+        const nextQueue = [...queueRef.current, newAction];
+        persistQueue(nextQueue);
 
         setTimeout(() => {
             syncQueue();
@@ -311,10 +309,12 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         events: visibleEvents,
         rawEvents: events,
         queue,
-        isSyncing,
+        isSyncing: isSyncingRef.current,
         syncQueue,
         addEvent,
         deleteEvent,
+        handleIncomingEvent,
+        handleIncomingDelete,
         isLoading
     };
 }

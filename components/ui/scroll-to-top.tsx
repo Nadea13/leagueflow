@@ -44,7 +44,7 @@ export function ScrollToTop() {
                     : "opacity-0 translate-y-4 pointer-events-none"
             )}
         >
-            <ArrowUp className="h-5 w-5 stroke-[2.5]" />
+            <ArrowUp className="h-4 w-4 stroke-[2.5]" />
         </button>
     );
 }

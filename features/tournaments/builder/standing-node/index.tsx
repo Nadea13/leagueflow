@@ -14,7 +14,7 @@ export const StandingNode = memo((props: NodeProps<Node<StandingNodeData>>) => {
     const tournamentId = params.id as string;
     const storeSport = useBracketStore((state) => state.sport);
     const activeCategoryId = useBracketStore((state) => state.activeCategoryId);
-    const supabase = createClient();
+    const supabase = React.useMemo(() => createClient(), []);
 
     const [fetchedSport, setFetchedSport] = useState<SportType | null>(null);
 

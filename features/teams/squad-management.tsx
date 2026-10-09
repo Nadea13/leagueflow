@@ -5,17 +5,18 @@ import { Player, Team, Registration, Tournament } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft, HelpCircle } from "lucide-react";
+import { Loader2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft, HelpCircle, Trophy, ExternalLink } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Header } from "@/components/ui/header";
 import { useRouter } from "next/navigation";
 import { AddPlayerForm } from "@/features/teams/add-player-form";
-import { AddPlayersDialog } from "@/features/teams/add-players-dialog";
+import { AddPlayersDialog } from "@/features/dialogs";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
+import { TeamInfoCard } from "@/features/teams/team-info-card";
 import { SquadList } from "@/features/teams/squad-list";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -40,16 +41,21 @@ interface SquadManagementProps {
         tournament?: Tournament;
         team_id?: string | null;
         roster_status?: string | null;
+        registration_status?: string | null;
+        status?: string | null;
+        payment_status?: string | null;
         unlock_requested?: boolean;
         sport_name?: string | null;
     };
     initialPlayers: Player[];
+    backHref?: string;
 }
 
-export function SquadManagement({ team, initialPlayers }: SquadManagementProps) {
+export function SquadManagement({ team, initialPlayers, backHref }: SquadManagementProps) {
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
+    const locale = useLocale();
     const { toast } = useToast();
     const router = useRouter();
     const rosterStatus = team.roster_status;
@@ -106,7 +112,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         align: "start" as const
                     }
                 },
-                {
+                ...(!team.isParticipation && document.getElementById("tour-lock-roster-btn") ? [{
                     element: "#tour-lock-roster-btn",
                     popover: {
                         title: t("tour_squad_lock_title"),
@@ -114,8 +120,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         side: "bottom" as const,
                         align: "start" as const
                     }
-                },
-                {
+                }] : []),
+                ...(!team.isParticipation && document.getElementById("tour-add-player-form") ? [{
                     element: "#tour-add-player-form",
                     popover: {
                         title: t("tour_squad_add_title"),
@@ -123,7 +129,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         side: "bottom" as const,
                         align: "start" as const
                     }
-                },
+                }] : []),
                 {
                     element: "#tour-squad-list",
                     popover: {
@@ -138,6 +144,15 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     popover: {
                         title: t("tour_squad_edit_title"),
                         description: t("tour_squad_edit_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                }] : []),
+                ...(document.getElementById("tour-team-info-card") ? [{
+                    element: "#tour-team-info-card",
+                    popover: {
+                        title: "ข้อมูลทีม",
+                        description: "แสดงรายละเอียดข้อมูลทีมในการแข่งขันนี้",
                         side: "left" as const,
                         align: "start" as const
                     }
@@ -159,6 +174,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     }, [startTour]);
 
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
+
+    useEffect(() => {
+        setPlayers(initialPlayers);
+    }, [initialPlayers]);
 
     const refreshPlayers = useCallback(async () => {
         const { getPlayers } = await import("@/actions/manager/team");
@@ -209,9 +228,12 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         }
     }, [team.id, toast, tCommon]);
 
+    const hasAttemptedImportRef = React.useRef(false);
+
     // Auto-import roster if participation is empty and has linked team
     useEffect(() => {
-        if (team.isParticipation && players.length === 0 && team.team_id && !isImporting) {
+        if (team.isParticipation && players.length === 0 && team.team_id && !isImporting && !hasAttemptedImportRef.current) {
+            hasAttemptedImportRef.current = true;
             handleImportRoster(team.team_id);
         }
     }, [team.isParticipation, team.team_id, players.length, isImporting, handleImportRoster]);
@@ -256,19 +278,24 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
     const handleWithdraw = async () => {
         setIsWithdrawing(true);
-        const { withdrawTournamentTeam } = await import("@/actions/tournaments/registration");
-        const result = await withdrawTournamentTeam(team.id);
-        setIsWithdrawing(false);
-        setShowWithdrawDialog(false);
-
-        if (result.success) {
-            toast({
-                title: tCommon("success"),
-                description: "ถอนทีมเรียบร้อยแล้ว"
-            });
-            router.push("/dashboard/teams");
-        } else {
-            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        try {
+            const { withdrawTournamentTeam } = await import("@/actions/tournaments/registration");
+            const result = await withdrawTournamentTeam(team.id);
+            if (result.success) {
+                toast({
+                    title: tCommon("success"),
+                    description: "ถอนทีมเรียบร้อยแล้ว"
+                });
+                setShowWithdrawDialog(false);
+                router.push(`/${locale}/dashboard/inboxes`);
+                router.refresh();
+            } else {
+                toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+            }
+        } catch (err: any) {
+            toast({ title: tCommon("error"), description: err?.message || "Failed to withdraw team", variant: "destructive" });
+        } finally {
+            setIsWithdrawing(false);
         }
     };
 
@@ -277,8 +304,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             {/* Top Navigation & Action Bar */}
             <div className="flex md:items-start justify-between gap-2 lg:gap-4">
                 <div className="flex items-center gap-1 lg:gap-2">
-                    <Button variant="ghost" size="icon" asChild className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
-                        <Link href="/dashboard/teams">
+                    <Button variant="ghost" size="icon-sm" asChild className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                        <Link href={backHref || (team.isParticipation || team.tournament_id ? "/dashboard/inboxes" : "/dashboard/teams")}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -292,18 +319,15 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             </Header>
                             <div className="flex items-center gap-1 md:gap-2">
                                 <Badge variant="default">
-                                    {tSports(team.sport)}
+                                    {team.sport ? (tSports.has(team.sport.toLowerCase() as any) ? tSports(team.sport.toLowerCase() as any) : (tSports.has(team.sport as any) ? tSports(team.sport as any) : team.sport)) : ""}
                                 </Badge>
                                 <span className="text-[10px] font-black tracking-wider text-primary/60">
                                     {players.length} {tCommon("players") || "Players"}
                                 </span>
-                                {isLocked && (
-                                    <div>
-                                        <Badge variant="destructive" className="text-[10px] font-black tracking-wider">
-                                            <Lock className="h-3 w-3 mr-1.5" />
-                                            {tCommon("secured")}
-                                        </Badge>
-                                    </div>
+                                {!team.isParticipation && isLocked && (
+                                    <Badge variant="destructive">
+                                        {tCommon("secured")}
+                                    </Badge>
                                 )}
                             </div>
                         </div>
@@ -311,20 +335,49 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             variant="ghost" 
                             size="icon-sm" 
                             onClick={startTour} 
+                            title="Tutorial"
                         >
                             <HelpCircle className="h-4 w-4" />
                         </Button>
+                        {/* Concise Roster Status Badge next to Tutorial */}
+                        {unlockRequested ? (
+                            <Badge variant="warning" size="default">
+                                <span>รออนุมัติปลดล็อก</span>
+                            </Badge>
+                        ) : (!isDeadlinePassed && rosterStatus === 'pending') ? (
+                            <Badge variant="warning" size="default" title="ส่งรายชื่อนักกีฬาแล้วและกำลังรอการตรวจสอบ/อนุมัติจาก Organizer">
+                                <span>รอ Organizer ตรวจสอบรายชื่อ</span>
+                            </Badge>
+                        ) : (team.registration_status === 'rejected' || rosterStatus === 'rejected') ? (
+                            <Badge variant="destructive" size="default" title="ถอนทีม">
+                                <span>ถอนทีม</span>
+                            </Badge>
+                        ) : null}
                     </div>
                 </div>
                 <div className="flex items-start gap-2" id="tour-lock-roster-btn">
-                    {team.isParticipation && team.roster_status !== 'rejected' && !isDeadlinePassed && (
+                    {team.tournament_id && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="hover:border-primary hover:text-primary transition-all gap-1.5"
+                        >
+                            <Link href={`/tournaments/${team.tournament_id}`} target="_blank" rel="noopener noreferrer">
+                                <Trophy className="h-4 w-4" />
+                                <span className="hidden md:inline">หน้ารายการแข่งขัน</span>
+                                <ExternalLink className="h-4 w-4 opacity-60 hidden md:inline" />
+                            </Link>
+                        </Button>
+                    )}
+                    {team.isParticipation && team.registration_status !== 'rejected' && (
                         <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => setShowWithdrawDialog(true)}
                             disabled={isWithdrawing}
                         >
-                            {isWithdrawing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isWithdrawing && <Loader2 className="h-4 w-4 animate-spin" />}
                             ถอนทีม
                         </Button>
                     )}
@@ -332,9 +385,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         teamId={team.id} 
                         onSuccess={refreshPlayers} 
                         effectivelyLocked={unlockRequested ? false : effectivelyLocked} 
-                        sport={team.sport || team.sport_name}
+                        sport={team.sport || team.sport_name || undefined}
+                        existingPlayers={players}
                     />
-                    {(!effectivelyLocked || unlockRequested || !isDeadlinePassed) && (
+                    {!team.isParticipation && (!effectivelyLocked || unlockRequested || !isDeadlinePassed) && (
                         <Button
                             variant={(effectivelyLocked && !unlockRequested) ? "outline" : "warning"}
                             size="sm"
@@ -358,8 +412,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             </div>
 
             {isDeadlinePassed && (
-                <Badge variant="outline" className="bg-destructive/10 border-destructive/50 flex items-center gap-1 lg:gap-2 text-destructive animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="h-4 w-4" />
+                <Badge variant="outline" className="bg-destructive/10 border-destructive/50 flex items-center text-destructive animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-1">
                         <Header level={5} className="text-destructive">{t("deadline_passed")}</Header>
                         <p className="text-xs opacity-90">
@@ -369,24 +422,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 </Badge>
             )}
 
-            {unlockRequested ? (
-                <Badge variant="outline" className="bg-warning/10 border border-warning/50 flex items-center gap-1 lg:gap-2 text-warning animate-in fade-in">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <div className="flex-1">
-                        <p className="text-xs opacity-90">ส่งคำขอปลดล็อกข้อมูลและรายชื่อแล้ว กำลังรอการอนุมัติจาก Organizer</p>
-                    </div>
-                </Badge>
-            ) : (!isDeadlinePassed && rosterStatus === 'pending') && (
-                <Badge variant="outline" className="bg-warning/10 border border-warning/50 flex items-center gap-1 lg:gap-2 text-warning animate-in fade-in">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <div className="flex-1">
-                        <p className="text-xs opacity-90">ส่งรายชื่อนักกีฬาแล้วและกำลังรอการตรวจสอบ/อนุมัติจาก Organizer</p>
-                    </div>
-                </Badge>
-            )}
-
             {rosterStatus === 'approved' && (
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 flex items-center justify-between gap-3 text-emerald-600 rounded-lg animate-in fade-in">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 flex items-center justify-between gap-3 text-emerald-600 rounded-sm animate-in fade-in">
                     <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <p className="text-xs font-bold">รายชื่อนักกีฬาได้รับการอนุมัติเรียบร้อยแล้ว</p>
@@ -411,19 +448,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             disabled={isRequestingUnlock || isLocking || (isDeadlinePassed && unlockRequested)}
                             className="h-8 text-xs border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
                         >
-                            {isRequestingUnlock || isLocking ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                            {isRequestingUnlock || isLocking ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                             {isDeadlinePassed ? (unlockRequested ? "รออนุมัติปลดล็อก" : "ขอส่งรายชื่อเพิ่ม") : "แก้ไขรายชื่อ"}
                         </Button>
                     )}
-                </div>
-            )}
-
-            {rosterStatus === 'rejected' && (
-                <div className="bg-destructive/10 border border-destructive/30 p-4 flex items-center gap-3 text-destructive rounded-lg animate-in fade-in">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <div className="flex-1">
-                        <p className="text-xs font-bold">รายชื่อนักกีฬาถูกปฏิเสธกรุณาตรวจสอบและแก้ไขส่งใหม่</p>
-                    </div>
                 </div>
             )}
 
@@ -432,7 +460,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 <Tab
                     value={mobileTab}
                     onChange={(val) => setMobileTab(val as 'roster' | 'team')}
-                    className="w-full bg-card"
+                    className="w-full"
                     fullWidth={true}
                     options={[
                         { label: tCommon("players"), value: 'roster', icon: Users },
@@ -441,22 +469,24 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-4 items-start">
                 <div className={cn(
                     "lg:col-span-2 w-full min-w-0",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
                     {/* Combined Add Player Form & Player List Card */}
                     <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
-                        <div id="tour-add-player-form">
-                            <AddPlayerForm
-                                teamId={team.id}
-                                onSuccess={refreshPlayers}
-                                effectivelyLocked={unlockRequested ? false : effectivelyLocked}
-                                sport={team.sport || team.sport_name}
-                                className="border-0 rounded-none bg-transparent"
-                            />
-                        </div>
+                        {!team.isParticipation && (
+                            <div id="tour-add-player-form">
+                                <AddPlayerForm
+                                    teamId={team.id}
+                                    onSuccess={refreshPlayers}
+                                    effectivelyLocked={unlockRequested ? false : effectivelyLocked}
+                                    sport={team.sport || team.sport_name || undefined}
+                                    className="border-0 rounded-none bg-transparent"
+                                />
+                            </div>
+                        )}
                         <div id="tour-squad-list">
                             <SquadList
                                 players={players}
@@ -466,6 +496,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 onDeletePlayer={setPlayerToDelete}
                                 t={t}
                                 tCommon={tCommon}
+                                readOnlyEdit={Boolean(team.isParticipation)}
                                 className="border-0 rounded-none bg-transparent"
                             />
                         </div>
@@ -473,16 +504,22 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 </div>
 
                 <div className={cn(
-                    "lg:col-span-1 w-full min-w-0 space-y-6 lg:sticky lg:top-6",
+                    "lg:col-span-1 w-full min-w-0 space-y-4 lg:sticky lg:top-0",
                     mobileTab !== 'team' && "hidden lg:block"
                 )}>
-                    <div id="tour-edit-team-form">
-                        <EditTeamForm
-                            team={team}
-                            onNameChange={setTeamName}
-                            isLocked={effectivelyLocked}
-                        />
-                    </div>
+                    {team.isParticipation ? (
+                        <div id="tour-team-info-card">
+                            <TeamInfoCard team={team} />
+                        </div>
+                    ) : (
+                        <div id="tour-edit-team-form">
+                            <EditTeamForm
+                                team={team}
+                                onNameChange={setTeamName}
+                                isLocked={effectivelyLocked}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -532,8 +569,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 e.preventDefault();
                                 handleWithdraw();
                             }}
-                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
+                            disabled={isWithdrawing}
+                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-1.5"
                         >
+                            {isWithdrawing && <Loader2 className="h-4 w-4 animate-spin" />}
                             ยืนยันการถอนทีม
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -542,3 +581,4 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         </div>
     );
 }
+

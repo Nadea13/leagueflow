@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import {
   GitFork,
   Radio,
   FileCheck2,
-  TableProperties,
   Trophy,
   CheckCircle2,
-  Eye,
   QrCode,
   Sparkles,
   Users,
@@ -72,7 +70,7 @@ const showcaseList: ShowcaseItem[] = [
 
 export function ProductShowcaseSection() {
   const [activeTab, setActiveTab] = useState<string>(showcaseList[0].id);
-  const activeItem = showcaseList.find((item) => item.id === activeTab) || showcaseList[0];
+  const _activeItem = showcaseList.find((item) => item.id === activeTab) || showcaseList[0];
 
   return (
     <section className="py-16 lg:py-24 border-b relative overflow-hidden bg-background">
@@ -186,9 +184,9 @@ export function ProductShowcaseSection() {
                 {/* Mock Browser Header Bar */}
                 <div className="h-9 sm:h-11 border-b border-border bg-muted/60 px-3 sm:px-4 flex items-center justify-between select-none">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 border border-rose-600/30 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 border border-amber-600/30 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 border border-emerald-600/30 inline-block" />
+                    <span className="h-4 w-4 rounded-full bg-rose-500/80 border border-rose-600/30 inline-block" />
+                    <span className="h-4 w-4 rounded-full bg-amber-500/80 border border-amber-600/30 inline-block" />
+                    <span className="h-4 w-4 rounded-full bg-emerald-500/80 border border-emerald-600/30 inline-block" />
                   </div>
 
                   <div className="flex items-center gap-2 px-3 py-0.5 rounded-sm bg-background border border-border/60 text-[11px] font-mono text-muted-foreground max-w-[240px] sm:max-w-md truncate">
@@ -201,7 +199,7 @@ export function ProductShowcaseSection() {
                 {/* Screen Content View Area (Aspect ratio 1536:748, full width) */}
                 <div className="p-0 w-full aspect-[1536/748] flex items-center justify-center bg-background/80 relative overflow-hidden">
                   {/* Real screenshot image (Aspect ratio 1536:748 match) */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img
                     src={item.image}
                     alt={item.title}
@@ -397,7 +395,7 @@ function LiveScorePreview() {
 /* =========================================================================
    3. OBS Streaming Live Overlay Preview
    ========================================================================= */
-function OverlayPreview() {
+function _OverlayPreview() {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -415,7 +413,7 @@ function OverlayPreview() {
         <div className="relative z-10 flex items-center self-start border border-white/10 rounded-sm bg-black/85 backdrop-blur-md text-white shadow-2xl overflow-hidden font-sans">
           {/* League Logo / Tag */}
           <div className="px-2.5 py-1.5 bg-primary text-black font-black text-xs tracking-tighter flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
+            <Sparkles className="h-4 w-4" />
             <span>LEAGUE FLOW</span>
           </div>
 
@@ -458,7 +456,7 @@ function OverlayPreview() {
 /* =========================================================================
    4. Standings & League Table Preview
    ========================================================================= */
-function StandingsPreview() {
+function _StandingsPreview() {
   const standings = [
     { rank: 1, team: "Thunder FC", p: 7, w: 6, d: 1, l: 0, gd: "+14", pts: 19, form: ["W", "W", "W", "D", "W"] },
     { rank: 2, team: "Apex United", p: 7, w: 5, d: 1, l: 1, gd: "+9", pts: 16, form: ["W", "L", "W", "W", "W"] },
@@ -499,7 +497,7 @@ function StandingsPreview() {
               <tr key={row.rank} className="hover:bg-muted/30 transition-colors">
                 <td className="py-3 px-3 text-center font-bold">
                   <span className={cn(
-                    "w-5 h-5 inline-flex items-center justify-center rounded-xs text-[11px]",
+                    "h-4 w-4 inline-flex items-center justify-center rounded-xs text-[11px]",
                     row.rank === 1 ? "bg-primary text-primary-foreground font-black" : "text-muted-foreground"
                   )}>
                     {row.rank}

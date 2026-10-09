@@ -15,7 +15,16 @@ interface EventLogProps {
     awayTeamId?: string;
     readOnly?: boolean;
     onDeleteEvent?: (id: string) => void;
+    visibleLogs?: string[];
 }
+
+const isVolleyballEventVisible = (event: MatchEvent, visibleLogs?: string[]) => {
+    if (!visibleLogs) return true;
+    const type = event.event_type;
+    if (visibleLogs.includes(type)) return true;
+    if (type === 'match_resumed' && visibleLogs.includes('match_paused')) return true;
+    return false;
+};
 
 export function VolleyballEventLog({
     events,
@@ -23,12 +32,15 @@ export function VolleyballEventLog({
     homeTeamId,
     awayTeamId,
     readOnly = false,
-    onDeleteEvent
+    onDeleteEvent,
+    visibleLogs
 }: EventLogProps) {
     const t = useTranslations("Console");
 
     const resolvedHomeId = match?.home_team_id || match?.home_team?.id || homeTeamId;
     const resolvedAwayId = match?.away_team_id || match?.away_team?.id || awayTeamId;
+
+    const filteredEvents = visibleLogs ? events.filter(e => isVolleyballEventVisible(e, visibleLogs)) : events;
 
     const isHomeEvent = (e: MatchEvent) => {
         const extra = e.extra_info as Record<string, unknown> | null;
@@ -73,14 +85,14 @@ export function VolleyballEventLog({
         <div className="bg-card border rounded-sm relative overflow-hidden group w-full">
             <div className="relative z-10">
                 <div className="overflow-y-auto no-scrollbar scroll-smooth">
-                    {!events || events.length === 0 ? (
+                    {!filteredEvents || filteredEvents.length === 0 ? (
                         <EmptyState
                             icon={Clock}
                             title={t("no_events") || "No events yet"}
-                            description={t("live_updates_desc") || "Live match updates will appear here"}
+                            description={events && events.length > 0 ? (t("no_filtered_events") || "No events matching your log display settings") : (t("live_updates_desc") || "Live match updates will appear here")}
                         />
                     ) : (
-                        events.map((event: MatchEvent) => {
+                        filteredEvents.map((event: MatchEvent) => {
                             const evtConfig = VOLLEYBALL_EVENT_TYPES.find(e => e.type === event.event_type);
 
                             const isHome = isHomeEvent(event);
@@ -172,7 +184,7 @@ export function VolleyballEventLog({
                                                     className="h-8 w-8 text-foreground/20 hover:text-destructive hover:bg-destructive/10 opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
                                                     onClick={() => onDeleteEvent(event.id)}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             )}
                                         </div>

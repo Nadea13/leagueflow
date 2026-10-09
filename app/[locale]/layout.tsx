@@ -114,6 +114,13 @@ export async function generateMetadata({
     verification: {
       google: 'uZqMBYSLdlDxnlF8IB0FUtrsQ7krGX8EsN3jSuNU9kQ',
     },
+    icons: {
+      icon: [
+        { url: '/logo.svg', type: 'image/svg+xml' },
+      ],
+      shortcut: '/logo.svg',
+      apple: '/logo.svg',
+    },
   };
 }
 

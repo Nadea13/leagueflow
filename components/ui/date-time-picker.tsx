@@ -179,7 +179,7 @@ export function DateTimePicker({
             <PopoverTrigger asChild>
                 <div
                     className={cn(
-                        "flex items-center justify-between rounded-md border border-input bg-card px-2.5 py-1.5 text-xs ring-offset-background transition-colors hover:bg-muted/50 cursor-pointer select-none",
+                        "flex items-center justify-between rounded-sm border border-input bg-card px-2.5 py-1.5 text-xs ring-offset-background transition-colors hover:bg-muted/50 cursor-pointer select-none",
                         size === "sm" ? "h-8 text-xs" : "h-9 text-sm",
                         disabled && "cursor-not-allowed opacity-50",
                         open && "ring-1 ring-ring",
@@ -187,7 +187,7 @@ export function DateTimePicker({
                     )}
                 >
                     <div className="flex items-center gap-2 truncate">
-                        <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                         {formattedDisplay ? (
                             <span className="font-semibold text-foreground truncate">{formattedDisplay}</span>
                         ) : (
@@ -203,13 +203,13 @@ export function DateTimePicker({
                             className="ml-1 p-0.5 text-muted-foreground/60 hover:text-destructive transition-colors rounded-sm"
                             title={isThai ? "ล้างข้อมูล" : "Clear"}
                         >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-4 w-4" />
                         </button>
                     )}
                 </div>
             </PopoverTrigger>
             <PopoverContent
-                className="w-auto p-0 bg-card border border-border shadow-2xl rounded-lg overflow-hidden z-[100]"
+                className="w-auto p-0 bg-card border border-border shadow-2xl rounded-sm overflow-hidden z-[100]"
                 align="start"
                 sideOffset={4}
             >
@@ -229,7 +229,7 @@ export function DateTimePicker({
                                     className="h-6 w-6 text-muted-foreground hover:text-foreground"
                                     onClick={() => setViewDate((prev) => subMonths(prev, 1))}
                                 >
-                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                    <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     type="button"
@@ -238,7 +238,7 @@ export function DateTimePicker({
                                     className="h-6 w-6 text-muted-foreground hover:text-foreground"
                                     onClick={() => setViewDate((prev) => addMonths(prev, 1))}
                                 >
-                                    <ChevronRight className="h-3.5 w-3.5" />
+                                    <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
@@ -421,7 +421,7 @@ export function DateTimePicker({
                             onClick={() => setOpen(false)}
                             className="h-7 text-[11px] font-bold px-3 gap-1"
                         >
-                            <Check className="h-3 w-3" />
+                            <Check className="h-4 w-4" />
                             <span>{isThai ? "เสร็จสิ้น" : "Done"}</span>
                         </Button>
                     </div>

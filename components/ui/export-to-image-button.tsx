@@ -60,7 +60,7 @@ export function ExportToImageButton({ targetId, filename, label = "Export Image"
             disabled={isLoading}
             className={cn(className)}
         >
-            <Download className="mr-0 md:mr-2 h-4 w-4" />
+            <Download className="h-4 w-4" />
             <span className="hidden md:inline">{isLoading ? "Exporting..." : label}</span>
         </Button>
     );

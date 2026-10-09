@@ -1,7 +1,6 @@
 "use client";
 
-import { NodeTools } from "./node-tools";
-import { TournamentTemplateDialog } from "./tournament-template-dialog";
+import { TournamentTemplateDialog } from "@/features/dialogs";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     Background,
@@ -21,11 +20,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-    Loader2, Plus, Users, X,
+    Plus, Users, X,
     Settings, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, ClipboardEdit, Heart,
-    LayoutGrid, ListOrdered
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, MoreVertical, ClipboardEdit, Heart,
+    LayoutGrid, ListOrdered, ArrowLeft
 } from "lucide-react";
 import {
     Popover,
@@ -36,28 +35,34 @@ import { HelpCircle } from "lucide-react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import {
+    Dropdown,
+    DropdownContent,
+    DropdownGroup,
+    DropdownItem,
+    DropdownTrigger,
+    DropdownValue,
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/dropdown";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    ActionMenu,
+    ActionMenuContent,
+    ActionMenuItem,
+    ActionMenuTrigger,
+} from "@/components/ui/action-menu";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
-import { withdrawTournamentTeam } from "@/actions/tournaments/registration";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLocale, useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
@@ -72,14 +77,7 @@ import { MatchNode } from "./match-node";
 import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
 import { NodeSettings } from "./node-settings";
-import { CreateCategoryForm } from "@/features/tournaments/management/create-category-form";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { CreateCategoryForm } from "@/features/dialogs";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -90,6 +88,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Link } from "@/i18n/routing";
 
 const nodeTypes = {
     matchNode: MatchNode,
@@ -148,7 +147,7 @@ function DeletableEdge({
                             }}
                             title="Delete connection"
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="h-4 w-4" />
                         </button>
                     </div>
                 </EdgeLabelRenderer>
@@ -176,22 +175,15 @@ interface CanvasProps {
     userPlan?: string;
 }
 
-interface InboxItem {
+interface RegistrationNotificationItem {
     id: string;
-    registration_status: string | null;
-    payment_status: string | null;
-    roster_status: string | null;
-    contact_name: string | null;
-    contact_phone: string | null;
-    created_at: string;
-    tournament_category_id: string | number;
-    unlock_requested?: boolean;
-    slip_img?: string | null;
-    team: {
-        id: string;
-        name: string;
-        logo_img: string | null;
-    } | null;
+    tournament_category_id?: string | number | null;
+    category_id?: string | number | null;
+    registration_status?: string | null;
+    status?: string | null;
+    payment_status?: string | null;
+    roster_status?: string | null;
+    unlock_requested?: boolean | null;
 }
 
 function CanvasInternal({
@@ -324,72 +316,58 @@ function CanvasInternal({
 
     const fetchMatches = useCallback(async (categoryId: string) => {
         if (!categoryId) return;
-        console.log("[Canvas Internal] fetchMatches called for category:", categoryId);
-        const supabase = createClient();
-        const { data, error } = await supabase
-            .from("matches")
-            .select(`
-                *,
-                home_team:teams!matches_home_team_id_fkey(name, logo_img),
-                away_team:teams!matches_away_team_id_fkey(name, logo_img)
-            `)
-            .eq("tournament_category_id", categoryId)
-            .is("deleted_at", null)
-            .order("round", { ascending: true });
+        try {
+            const data = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/categories/${categoryId}/matches`);
+            if (data) {
+                const mappedMatches = (data as Match[]).map(match => {
+                    let match_date = match.match_date;
+                    let match_time = match.match_time;
+                    if (match.scheduled_at) {
+                        const parts = match.scheduled_at.split('T');
+                        match_date = parts[0];
+                        match_time = parts[1]?.substring(0, 5) || null;
+                    }
 
-        if (error) {
+                    const home_team = match.home_team ? {
+                        id: match.home_team.id || match.home_team_id || "",
+                        name: match.home_team.name || "",
+                        logo_url: (match.home_team as { logo_img?: string | null }).logo_img || match.home_team.logo_url || undefined
+                    } : undefined;
+
+                    const away_team = match.away_team ? {
+                        id: match.away_team.id || match.away_team_id || "",
+                        name: match.away_team.name || "",
+                        logo_url: (match.away_team as { logo_img?: string | null }).logo_img || match.away_team.logo_url || undefined
+                    } : undefined;
+
+                    return {
+                        ...match,
+                        match_date,
+                        match_time,
+                        home_team,
+                        away_team
+                    };
+                });
+
+                // Sort mapped matches by date and time in JavaScript
+                mappedMatches.sort((a, b) => {
+                    if (a.match_date && b.match_date) {
+                        if (a.match_date !== b.match_date) {
+                            return a.match_date.localeCompare(b.match_date);
+                        }
+                        if (a.match_time && b.match_time) {
+                            return a.match_time.localeCompare(b.match_time);
+                        }
+                    }
+                    return 0;
+                });
+
+                setActiveMatches(mappedMatches);
+            }
+        } catch (error) {
             console.error("[Canvas Internal] Failed to fetch matches:", error);
-            return;
         }
-
-        if (data) {
-            const mappedMatches = (data as Match[]).map(match => {
-                let match_date = match.match_date;
-                let match_time = match.match_time;
-                if (match.scheduled_at) {
-                    const parts = match.scheduled_at.split('T');
-                    match_date = parts[0];
-                    match_time = parts[1]?.substring(0, 5) || null;
-                }
-
-                const home_team = match.home_team ? {
-                    id: match.home_team.id || "",
-                    name: match.home_team.name || "",
-                    logo_url: (match.home_team as { logo_img?: string | null }).logo_img || match.home_team.logo_url || undefined
-                } : undefined;
-
-                const away_team = match.away_team ? {
-                    id: match.away_team.id || "",
-                    name: match.away_team.name || "",
-                    logo_url: (match.away_team as { logo_img?: string | null }).logo_img || match.away_team.logo_url || undefined
-                } : undefined;
-
-                return {
-                    ...match,
-                    match_date,
-                    match_time,
-                    home_team,
-                    away_team
-                };
-            });
-
-            // Sort mapped matches by date and time in JavaScript
-            mappedMatches.sort((a, b) => {
-                if (a.match_date && b.match_date) {
-                    if (a.match_date !== b.match_date) {
-                        return a.match_date.localeCompare(b.match_date);
-                    }
-                    if (a.match_time && b.match_time) {
-                        return a.match_time.localeCompare(b.match_time);
-                    }
-                }
-                return 0;
-            });
-
-            console.log("[Canvas Internal] fetchMatches mapped matches count:", mappedMatches.length, "data:", mappedMatches);
-            setActiveMatches(mappedMatches);
-        }
-    }, []);
+    }, [tournamentId]);
 
 
     // Calendar logic helpers
@@ -431,24 +409,92 @@ function CanvasInternal({
     } = useBracketStore();
 
     const canvasMatches = useMemo(() => {
-        const activeNodeIds = new Set(nodes.filter(n => n.type === 'matchNode').map(n => n.id));
-        const activeMatchDbIds = new Set<string>();
-        nodes.forEach(n => {
-            if (n.type === 'matchNode') {
-                const matches = (n.data as { matches?: { dbId?: string; matchId?: string }[] })?.matches || [];
-                matches.forEach(m => {
-                    if (m.dbId) activeMatchDbIds.add(m.dbId);
-                    if (m.matchId) activeMatchDbIds.add(m.matchId);
-                });
+        const result: Match[] = [];
+        const processedMatchIds = new Set<string>();
+
+        // 1. Iterate through all matchNodes on the canvas
+        const matchNodes = nodes.filter(n => n.type === 'matchNode');
+        
+        matchNodes.forEach(node => {
+            const nodeMatches = (node.data as { matches?: Array<{
+                id?: string;
+                dbId?: string;
+                matchId?: string;
+                placeholderA?: string;
+                placeholderB?: string;
+                match_date?: string;
+                match_time?: string;
+            }> })?.matches || [];
+
+            nodeMatches.forEach((m, idx) => {
+                const matchIndex = idx + 1;
+                // Look for existing active match from DB
+                const dbMatch = activeMatches.find(am => 
+                    (m.dbId && am.id === m.dbId) ||
+                    (m.matchId && am.id === m.matchId) ||
+                    (am.node_id === node.id && (am.match_index === matchIndex || (am as any).match_number === matchIndex))
+                );
+
+                if (dbMatch) {
+                    processedMatchIds.add(dbMatch.id);
+                    result.push({
+                        ...dbMatch,
+                        node_id: node.id,
+                        match_index: matchIndex,
+                        placeholder_a: dbMatch.placeholder_a || m.placeholderA || null,
+                        placeholder_b: dbMatch.placeholder_b || m.placeholderB || null,
+                        placeholder_home: dbMatch.placeholder_home || dbMatch.placeholder_a || m.placeholderA || null,
+                        placeholder_away: dbMatch.placeholder_away || dbMatch.placeholder_b || m.placeholderB || null,
+                        match_date: dbMatch.match_date || m.match_date || null,
+                        match_time: dbMatch.match_time || m.match_time || null,
+                    });
+                } else {
+                    // Match exists on canvas but not yet in DB
+                    const syntheticId = m.dbId || m.matchId || m.id || `${node.id}-${matchIndex}`;
+                    processedMatchIds.add(syntheticId);
+
+                    // Check if placeholder matches an enrolled team
+                    const homeTeam = teams.find(t => t.name === m.placeholderA);
+                    const awayTeam = teams.find(t => t.name === m.placeholderB);
+
+                    result.push({
+                        id: syntheticId,
+                        tournament_id: tournamentId,
+                        tournament_category_id: storeCategoryId || null,
+                        home_team_id: homeTeam ? (homeTeam.team_id || homeTeam.id) : null,
+                        away_team_id: awayTeam ? (awayTeam.team_id || awayTeam.id) : null,
+                        home_score: null,
+                        away_score: null,
+                        round: 1,
+                        stage: nodeMatches.length > 1 ? 'group' : 'knockout',
+                        is_manual: true,
+                        status: 'scheduled',
+                        match_date: m.match_date || null,
+                        match_time: m.match_time || null,
+                        scheduled_at: (m.match_date && m.match_time) ? `${m.match_date}T${m.match_time}:00Z` : null,
+                        match_index: matchIndex,
+                        node_id: node.id,
+                        placeholder_a: m.placeholderA || null,
+                        placeholder_b: m.placeholderB || null,
+                        placeholder_home: m.placeholderA || null,
+                        placeholder_away: m.placeholderB || null,
+                        created_at: new Date().toISOString(),
+                        home_team: homeTeam ? { id: homeTeam.team_id || homeTeam.id, name: homeTeam.name, logo_url: homeTeam.logo_url } : undefined,
+                        away_team: awayTeam ? { id: awayTeam.team_id || awayTeam.id, name: awayTeam.name, logo_url: awayTeam.logo_url } : undefined,
+                    });
+                }
+            });
+        });
+
+        // 2. Also include any remaining activeMatches that were not attached to nodes
+        activeMatches.forEach(am => {
+            if (!processedMatchIds.has(am.id)) {
+                result.push(am);
             }
         });
 
-        return activeMatches.filter(m => {
-            if (activeMatchDbIds.has(m.id)) return true;
-            if (m.node_id && activeNodeIds.has(m.node_id)) return true;
-            return false;
-        });
-    }, [activeMatches, nodes]);
+        return result;
+    }, [activeMatches, nodes, teams, tournamentId, storeCategoryId]);
 
     const datesWithMatches = useMemo(() => {
         return new Set(canvasMatches.map(m => m.match_date).filter(Boolean));
@@ -524,96 +570,32 @@ function CanvasInternal({
 
 
     const [categories, setCategories] = useState<TournamentCategory[]>([]);
-    const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
-    const [_isInboxLoading, setIsInboxLoading] = useState(false);
-    const [withdrawingItem, setWithdrawingItem] = useState<InboxItem | null>(null);
-    const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
-    const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [registrationTeams, setRegistrationTeams] = useState<RegistrationNotificationItem[]>([]);
 
-    const fetchInboxItems = useCallback(async () => {
-        if (categories.length === 0) return;
-        setIsInboxLoading(true);
+    const fetchRegistrationNotifications = useCallback(async () => {
+        if (!tournamentId) return;
         try {
-            const supabase = createClient();
-            const { data, error } = await supabase
-                .from("tournament_teams")
-                .select(`
-                    id,
-                    registration_status,
-                    payment_status,
-                    roster_status,
-                    contact_name,
-                    contact_phone,
-                    created_at,
-                    tournament_category_id,
-                    unlock_requested,
-                    slip_img,
-                    team:teams (
-                        id,
-                        name,
-                        logo_img
-                    )
-                `)
-                .in("tournament_category_id", categories.map(c => c.id))
-                .is("deleted_at", null)
-                .order("created_at", { ascending: false });
-
-            if (!error && data) {
-                const formattedItems: InboxItem[] = data.map((item) => {
-                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
-                    return {
-                        id: item.id,
-                        registration_status: item.registration_status,
-                        payment_status: item.payment_status,
-                        roster_status: (item as { roster_status: string | null }).roster_status || null,
-                        contact_name: item.contact_name,
-                        contact_phone: item.contact_phone,
-                        created_at: item.created_at,
-                        tournament_category_id: item.tournament_category_id,
-                        unlock_requested: (item as { unlock_requested?: boolean | null }).unlock_requested || false,
-                        slip_img: (item as { slip_img?: string | null }).slip_img || null,
-                        team: teamData ? {
-                            id: teamData.id,
-                            name: teamData.name,
-                            logo_img: teamData.logo_img
-                        } : null
-                    };
-                });
-                setInboxItems(formattedItems);
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/teams`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                setRegistrationTeams(Array.isArray(data) ? data : []);
             }
         } catch (err) {
-            console.error("Error fetching inbox items:", err);
-        } finally {
-            setIsInboxLoading(false);
+            console.error("Error fetching registration notifications:", err);
         }
-    }, [categories]);
+    }, [tournamentId]);
 
-    const handleOpenInboxSettings = useCallback(() => {
-        const currentActiveId = useBracketStore.getState().activeNodeId;
-        if (currentActiveId === 'inbox-setting-node') {
-            setActiveNodeId(null);
-            selectNode(null);
-            updateUrlParams({ tab: null, subtab: null });
-        } else {
-            setActiveSidebar('teams');
-            setActiveNodeId('inbox-setting-node');
-            selectNode('inbox-setting-node');
-            fetchInboxItems();
-            updateUrlParams({ tab: 'inbox', subtab: null });
-        }
-    }, [setActiveNodeId, selectNode, fetchInboxItems, updateUrlParams]);
+    useEffect(() => {
+        fetchRegistrationNotifications();
+    }, [fetchRegistrationNotifications]);
 
     // Synchronize tab and subtab from URL
     useEffect(() => {
         const tab = searchParams.get("tab");
         const subtab = searchParams.get("subtab");
 
-        if (tab === "inbox") {
-            setActiveSidebar("teams");
-            setActiveNodeId("inbox-setting-node");
-            selectNode("inbox-setting-node");
-            fetchInboxItems();
-        } else if (tab === "announcements" || tab === "announcement") {
+        if (tab === "announcements" || tab === "announcement") {
             setActiveSidebar("teams");
             setActiveNodeId("announcement-setting-node");
             selectNode("announcement-setting-node");
@@ -621,6 +603,7 @@ function CanvasInternal({
             setActiveSidebar("teams");
             setActiveNodeId("registration-setting-node");
             selectNode("registration-setting-node");
+            fetchRegistrationNotifications();
         } else if (tab === "sponsors" || tab === "sponsor") {
             setActiveSidebar("teams");
             setActiveNodeId("sponsor-setting-node");
@@ -639,12 +622,112 @@ function CanvasInternal({
         } else if (!tab) {
             setActiveSidebar(prev => (prev === 'schedule' || prev === 'settings' ? 'teams' : prev));
             const currentActiveId = useBracketStore.getState().activeNodeId;
-            if (['inbox-setting-node', 'announcement-setting-node', 'registration-setting-node', 'sponsor-setting-node'].includes(currentActiveId || '')) {
+            if (['announcement-setting-node', 'registration-setting-node', 'sponsor-setting-node'].includes(currentActiveId || '')) {
                 setActiveNodeId(null);
                 selectNode(null);
             }
         }
-    }, [searchParams, fetchInboxItems, setActiveNodeId, selectNode]);
+    }, [searchParams, fetchRegistrationNotifications, setActiveNodeId, selectNode]);
+
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [currentName, setCurrentName] = useState(tournamentName);
+    const [tempName, setTempName] = useState(tournamentName);
+    const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
+    const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
+    const [isCategoryLoading, setIsCategoryLoading] = useState(false);
+    const [userInvitationRole, setUserInvitationRole] = useState<string | null>(null);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Determine if tournament has passed the registration deadline
+    const isPastDeadline = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        const deadline = tournament?.document_deadline
+            ? new Date(tournament.document_deadline).toISOString().split('T')[0]
+            : tournament?.start_date
+                ? new Date(tournament.start_date).toISOString().split('T')[0]
+                : null;
+        if (!deadline) {
+            // If no deadline/start_date is configured, infer from status if post-deadline status is already active
+            return ['upcoming', 'ongoing', 'completed', 'finished', 'cancelled'].includes(currentStatus);
+        }
+        return today > deadline;
+    }, [tournament?.document_deadline, tournament?.start_date, currentStatus]);
+
+    const handleSetStatus = async (newStatus: TournamentStatus) => {
+        if (readonly || isUpdatingStatus) return;
+        setIsUpdatingStatus(true);
+        try {
+            const formData = new FormData();
+            formData.set("status", newStatus);
+            const isOpen = newStatus === 'registration_open';
+            formData.set("is_registration_open", isOpen ? 'true' : 'false');
+            const res = await updateTournament(tournamentId, null, formData);
+            if (res.success) {
+                setCurrentStatus(newStatus);
+                const statusLabels: Record<string, { th: string; en: string }> = {
+                    draft: { th: "แบบร่าง", en: "Draft" },
+                    published: { th: "เผยแพร่แล้ว", en: "Published" },
+                    registration_open: { th: "เปิดรับสมัคร", en: "Registration Open" },
+                    registration_closed: { th: "ปิดรับสมัคร", en: "Registration Closed" },
+                    upcoming: { th: "เร็วๆ นี้", en: "Upcoming" },
+                    ongoing: { th: "กำลังแข่งขัน", en: "Ongoing" },
+                    completed: { th: "เสร็จสิ้น", en: "Completed" },
+                    finished: { th: "สิ้นสุดแล้ว", en: "Finished" },
+                    cancelled: { th: "ยกเลิก", en: "Cancelled" },
+                };
+                const label = statusLabels[newStatus]?.[locale === 'th' ? 'th' : 'en'] || newStatus;
+                toast({
+                    title: locale === 'th' ? "สำเร็จ" : "Success",
+                    description: locale === 'th'
+                        ? `เปลี่ยนสถานะเป็น "${label}" เรียบร้อยแล้ว`
+                        : `Status changed to "${label}" successfully`,
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || (locale === 'th' ? "ไม่สามารถเปลี่ยนสถานะได้" : "Failed to update status"),
+                    variant: "destructive"
+                });
+            }
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err?.message || "An error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    // Fetch user's invitation role for this tournament
+    useEffect(() => {
+        let isSubscribed = true;
+        async function checkRole() {
+            if (!tournamentId) return;
+            try {
+                const { getUserRole } = await import("@/actions/tournaments/staff");
+                const roleRes = await getUserRole(tournamentId);
+                if (isSubscribed && roleRes.success && roleRes.data) {
+                    if (roleRes.data.isOwner) {
+                        setUserInvitationRole("organizer");
+                    } else {
+                        // Check specific role from invitations
+                        const { getAllUserInvites } = await import("@/actions/tournaments/staff");
+                        const invitesRes = await getAllUserInvites();
+                        const myInvite = (invitesRes.data || []).find((inv: any) => inv.tournament_id === tournamentId && inv.status === 'accepted');
+                        setUserInvitationRole(myInvite?.role || (roleRes.data.role === 'admin' ? 'organizer' : 'staff'));
+                    }
+                }
+            } catch (err) {
+                console.error("Error checking user role in canvas:", err);
+            }
+        }
+        checkRole();
+        return () => {
+            isSubscribed = false;
+        };
+    }, [tournamentId]);
 
     const settingsTabOptions = useMemo<TabOption<SettingsTab>[]>(() => {
         const options: TabOption<SettingsTab>[] = [
@@ -670,57 +753,15 @@ function CanvasInternal({
             options.push({ value: 'staff', label: tSettings("staff"), icon: Users });
         }
 
-        options.push({ value: 'danger', label: tSettings("danger_zone"), icon: ShieldAlert });
+        // Only show Danger Zone for owner / organizer (hide for co_organizer, staff, referee)
+        const isCoOrganizer = userInvitationRole === 'co_organizer' || userInvitationRole === 'co-organizer';
+        const isStaff = userInvitationRole === 'staff' || userInvitationRole === 'referee';
+        if (!isCoOrganizer && !isStaff) {
+            options.push({ value: 'danger', label: tSettings("danger_zone"), icon: ShieldAlert });
+        }
 
         return options;
-    }, [tSettings, userPlan]);
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [currentName, setCurrentName] = useState(tournamentName);
-    const [tempName, setTempName] = useState(tournamentName);
-    const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
-    const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
-    const [isCategoryLoading, setIsCategoryLoading] = useState(false);
-    const [userInvitationRole, setUserInvitationRole] = useState<string | null>(null);
-
-    // Fetch user's invitation role for this tournament
-    useEffect(() => {
-        let isSubscribed = true;
-        async function checkRole() {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user || !tournamentId) return;
-
-            // Check if owner first
-            const { data: tour } = await supabase
-                .from("tournaments")
-                .select("organizer_id")
-                .eq("id", tournamentId)
-                .maybeSingle();
-
-            if (tour && tour.organizer_id === user.id) {
-                if (isSubscribed) setUserInvitationRole("organizer");
-                return;
-            }
-
-            // Check invitation role in tournament_invitations
-            const { data: invite } = await supabase
-                .from("tournament_invitations")
-                .select("role")
-                .eq("tournament_id", tournamentId)
-                .or(`user_id.eq.${user.id},email.eq.${user.email?.toLowerCase()}`)
-                .eq("status", "accepted")
-                .is("deleted_at", null)
-                .maybeSingle();
-
-            if (isSubscribed) {
-                setUserInvitationRole(invite?.role || null);
-            }
-        }
-        checkRole();
-        return () => {
-            isSubscribed = false;
-        };
-    }, [tournamentId]);
+    }, [tSettings, userPlan, userInvitationRole]);
 
 
     // Sync isLocked with readonly prop or finished status if it changes
@@ -802,63 +843,24 @@ function CanvasInternal({
         setPendingAction(null);
     };
 
-    const handleWithdrawTeam = async () => {
-        if (!withdrawingItem || !withdrawingItem.team) return;
-        if (withdrawConfirmText !== withdrawingItem.team.name) {
-            toast({
-                title: locale === 'th' ? "ชื่อทีมไม่ถูกต้อง" : "Invalid team name",
-                description: locale === 'th' ? "กรุณากรอกชื่อทีมให้ถูกต้องเพื่อยืนยัน" : "Please enter the correct team name to confirm.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        setIsWithdrawing(true);
-        try {
-            const res = await withdrawTournamentTeam(withdrawingItem.id);
-            if (res.success) {
-                toast({
-                    title: locale === 'th' ? "ถอนทีมสำเร็จ" : "Team withdrawn",
-                    description: res.message || (locale === 'th' ? "ถอนทีมออกจากการแข่งขันแล้ว" : "The team has been withdrawn from the tournament.")
-                });
-                setWithdrawingItem(null);
-                setWithdrawConfirmText("");
-                fetchInboxItems();
-                // Re-fetch bracket store teams so sidebar + canvas update in real-time
-                if (activeCategoryId) {
-                    useBracketStore.getState().fetchTeams(activeCategoryId);
-                }
-            } else {
-                toast({
-                    title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
-                    description: res.error,
-                    variant: "destructive"
-                });
-            }
-        } catch (err) {
-            toast({
-                title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
-                description: err instanceof Error ? err.message : "Failed to withdraw team",
-                variant: "destructive"
-            });
-        } finally {
-            setIsWithdrawing(false);
-        }
-    };
-
-    useEffect(() => {
-        if (categories.length > 0) {
-            fetchInboxItems();
-        }
-    }, [categories, fetchInboxItems]);
     // Read persisted category from URL (?category=id), fallback to null (first category)
     const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
         searchParams.get("category")
     );
-    const filteredInboxItems = useMemo(() => {
-        if (!activeCategoryId) return inboxItems;
-        return inboxItems.filter(item => String(item.tournament_category_id) === String(activeCategoryId));
-    }, [inboxItems, activeCategoryId]);
+    const hasPendingRegistration = useMemo(() => {
+        return registrationTeams.some(item => {
+            const itemCatId = item.tournament_category_id ?? item.category_id;
+            const isCategoryMatch = !activeCategoryId || !itemCatId || String(itemCatId) === String(activeCategoryId);
+            if (!isCategoryMatch) return false;
+            return (
+                item.registration_status === 'pending' ||
+                item.status === 'pending' ||
+                item.payment_status === 'pending' ||
+                item.roster_status === 'pending' ||
+                Boolean(item.unlock_requested)
+            );
+        });
+    }, [registrationTeams, activeCategoryId]);
     const [ageCategories, setAgeCategories] = useState<{ id: number; category_name: string }[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const toCategoryId = useCallback((id: unknown) => String(id), []);
@@ -903,41 +905,56 @@ function CanvasInternal({
     // Fetch categories and age categories.
     // Pass targetCategoryId to switch to a specific category after loading (e.g. after creating one).
     const loadCategories = useCallback(async (targetCategoryId?: string) => {
-        const supabase = createClient();
-        const { data: catData } = await supabase
-            .from("tournament_categories")
-            .select(`
-                *,
-                age_categories(category_name)
-            `)
-            .eq("tournament_id", tournamentId)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: true });
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const res = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+            if (!res.ok) return [];
+            const data = await res.json();
+            const rawCategories = data.categories || [];
 
-        if (catData && catData.length > 0) {
-            setCategories(catData);
+            const catData: TournamentCategory[] = rawCategories.map((c: any) => ({
+                id: c.id,
+                tournament_id: c.tournament_id || tournamentId,
+                name: c.name || c.category_name || "Open",
+                age_category_id: c.age_category_id || c.age_min || 1,
+                gender_type: c.gender_type || c.settings?.gender_type || 'male',
+                max_teams: Number(c.max_teams || c.team_limit || 16),
+                registration_fee: Number(c.registration_fee ?? c.settings?.registration_fee ?? 0),
+                rules_config: c.rules_config ?? c.settings?.rules_config ?? null,
+                canvas_data: c.canvas_data ?? c.settings?.canvas_data ?? null,
+                age_categories: c.age_categories || {
+                    category_name: c.category_name || c.name || "Open"
+                }
+            }));
 
-            const fallbackCategoryId = toCategoryId(catData[0].id);
-            const requestedCategoryId = targetCategoryId ?? searchParams.get("category") ?? activeCategoryId;
-            const matchedCategory = requestedCategoryId
-                ? catData.find((c: TournamentCategory) => toCategoryId(c.id) === requestedCategoryId)
-                : null;
-            const resolvedCategoryId = matchedCategory ? toCategoryId(matchedCategory.id) : fallbackCategoryId;
-            const resolvedCategory = matchedCategory ?? catData[0];
+            if (catData && catData.length > 0) {
+                setCategories(catData);
 
-            hydrate(resolvedCategory?.canvas_data ?? null);
-            setActiveCategoryId(resolvedCategoryId);
-            setStoreCategoryId(resolvedCategoryId);
-            fetchTeams(resolvedCategoryId);
-            fetchMatches(resolvedCategoryId);
+                const fallbackCategoryId = toCategoryId(catData[0].id);
+                const requestedCategoryId = targetCategoryId ?? searchParams.get("category") ?? activeCategoryId;
+                const matchedCategory = requestedCategoryId
+                    ? catData.find((c: TournamentCategory) => toCategoryId(c.id) === requestedCategoryId)
+                    : null;
+                const resolvedCategoryId = matchedCategory ? toCategoryId(matchedCategory.id) : fallbackCategoryId;
+                const resolvedCategory = matchedCategory ?? catData[0];
+
+                hydrate(resolvedCategory?.canvas_data ?? null);
+                setActiveCategoryId(resolvedCategoryId);
+                setStoreCategoryId(resolvedCategoryId);
+                fetchTeams(resolvedCategoryId);
+                fetchMatches(resolvedCategoryId);
+            }
+
+            return catData;
+        } catch (err) {
+            console.error("Error loading categories:", err);
+            return [];
         }
-
-        return catData ?? [];
     }, [tournamentId, hydrate, toCategoryId, searchParams, activeCategoryId, fetchMatches, fetchTeams, setStoreCategoryId]);
 
     useEffect(() => {
         loadCategories();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     useEffect(() => {
@@ -957,30 +974,34 @@ function CanvasInternal({
         fetchTeams(urlCategoryId);
         fetchMatches(urlCategoryId);
     }, [searchParams, categories, activeCategoryId, hydrate, setStoreCategoryId, fetchTeams, toCategoryId, fetchMatches]);
+
     useEffect(() => {
-        async function loadAgeCategories() {
-            const supabase = createClient();
-            const { data } = await supabase
-                .from("age_categories")
-                .select("id, category_name")
-                .is("deleted_at", null)
-                .order("id", { ascending: true });
-            if (data) {
-                setAgeCategories(data);
-            }
-        }
-        loadAgeCategories();
+        setAgeCategories([
+            { id: 1, category_name: "Open" },
+            { id: 2, category_name: "U12" },
+            { id: 3, category_name: "U14" },
+            { id: 4, category_name: "U16" },
+            { id: 5, category_name: "U18" },
+            { id: 6, category_name: "35+" },
+            { id: 7, category_name: "40+" }
+        ]);
     }, []);
 
     // (Hydration is now handled directly in loadCategories and handleCategorySwitch)
 
     const getCategoryDisplayName = useCallback((cat: TournamentCategory) => {
-        const ageName = cat.age_categories?.category_name;
-        const gender = cat.gender_type === 'open' ? (locale === 'th' ? 'รุ่นทั่วไป' : 'Open')
-            : cat.gender_type === 'male' ? (locale === 'th' ? 'ชาย' : 'Male')
-                : cat.gender_type === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
-                    : (locale === 'th' ? 'ผสม' : 'Mixed');
-        return `${ageName} (${gender})`;
+        let ageName = cat.age_categories?.category_name || cat.name || (locale === 'th' ? 'รุ่นทั่วไป' : 'Open');
+        if (locale === 'th' && (ageName.toLowerCase() === 'open' || ageName === 'Open')) {
+            ageName = 'รุ่นทั่วไป';
+        }
+        const genderVal = cat.gender_type || (cat as any).settings?.gender_type;
+        if (!genderVal || genderVal === 'open' || ageName === 'รุ่นทั่วไป' || ageName.toLowerCase() === 'open') {
+            return ageName;
+        }
+        const gender = genderVal === 'male' ? (locale === 'th' ? 'ชาย' : 'Male')
+            : genderVal === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
+                : (locale === 'th' ? 'ผสม' : 'Mixed');
+        return `${ageName} ${gender}`;
     }, [locale]);
 
     useEffect(() => {
@@ -1016,8 +1037,8 @@ function CanvasInternal({
     // initialCanvasData is intentionally NOT used to hydrate here.
     // Each category's canvas_data is loaded independently via loadCategories.
 
-    const handleSave = useCallback(async (showToast = false) => {
-        if (!isDirty || isSaving || readonly) return;
+    const handleSave = useCallback(async (showToast = false, force = false) => {
+        if ((!isDirty && !force) || isSaving || readonly) return;
 
         setIsSaving(true);
         try {
@@ -1095,7 +1116,7 @@ function CanvasInternal({
     }, [getCanvasData, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId, locale, fetchMatches]);
 
     // Auto-save effect: save seamlessly in background like Figma/Canva
-    // 1. Debounce timer is set to a snappy 800ms after user stops typing/dragging.
+    // 1. Debounce timer is set to 800ms after user stops typing/dragging.
     // 2. Triggers INSTANT auto-save as soon as user blurs (clicks out of) an input field.
     useEffect(() => {
         if (!isDirty || isSaving || readonly) return;
@@ -1305,8 +1326,13 @@ function CanvasInternal({
             {/* Mobile Portrait Orientation Warning removed - full portrait mobile layout enabled */}
 
             <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1" id="tour-console-header">
-                <div className="flex items-center gap-2 lg:gap-4">
-                    <div className="flex items-center">
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon-sm" asChild className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                            <Link href="/dashboard/tournaments">
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
+                        </Button>
                         {isEditingName && !readonly ? (
                             <Input
                                 size="sm"
@@ -1336,30 +1362,32 @@ function CanvasInternal({
                             </span>
                         )}
 
-                        <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={startTour}
-                        >
-                            <HelpCircle className="h-4 w-4" />
-                        </Button>
-
-                        {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                        <div className="flex items-center">
                             <Button
-                                variant={isLocked ? "default" : "ghost"}
+                                variant="ghost"
                                 size="icon-sm"
-                                onClick={() => setIsLocked(!isLocked)}
-                                disabled={currentStatus === 'finished' || readonly}
-                                className={cn(
-                                    "transition-all",
-                                    isLocked
-                                        ? "bg-warning"
-                                        : "text-warning"
-                                )}
+                                onClick={startTour}
                             >
-                                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                <HelpCircle className="h-4 w-4" />
                             </Button>
-                        )}
+
+                            {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                <Button
+                                    variant={isLocked ? "default" : "ghost"}
+                                    size="icon-sm"
+                                    onClick={() => setIsLocked(!isLocked)}
+                                    disabled={currentStatus === 'finished' || readonly}
+                                    className={cn(
+                                        "transition-all",
+                                        isLocked
+                                            ? "bg-warning"
+                                            : "text-warning"
+                                    )}
+                                >
+                                    {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                </Button>
+                            )}
+                        </div>
 
                         {/* Category Select Selector */}
                         <div id="tour-console-category">
@@ -1391,7 +1419,7 @@ function CanvasInternal({
                                     }
                                 }}
                             >
-                                <SelectTrigger size="sm" className="w-[160px] h-8 text-xs">
+                                <SelectTrigger size="sm" className="w-fit h-8 text-xs font-semibold">
                                     <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1402,13 +1430,14 @@ function CanvasInternal({
                                     ) : (
                                         categories.map((cat) => {
                                             const catName = getCategoryDisplayName(cat);
+                                            const teamCountText = cat.max_teams ? `${cat.max_teams} ${locale === 'th' ? 'ทีม' : 'Teams'}` : '';
                                             return (
                                                 <SelectItem
                                                     key={cat.id}
                                                     value={toCategoryId(cat.id)}
                                                     className="cursor-pointer text-xs font-bold"
                                                 >
-                                                    {catName} ({cat.max_teams} Teams)
+                                                    {catName} {teamCountText}
                                                 </SelectItem>
                                             );
                                         })
@@ -1423,6 +1452,117 @@ function CanvasInternal({
                                     )}
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        {/* Tournament Status Controller Dropdown */}
+                        <div id="tour-console-status-toggle">
+                            {readonly || userInvitationRole === 'staff' || userInvitationRole === 'referee' ? (
+                                <Badge
+                                    variant="outline"
+                                    className={cn(
+                                        currentStatus === 'registration_open' && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
+                                        currentStatus === 'registration_closed' && "border-amber-500/40 bg-amber-500/10 text-amber-600",
+                                        currentStatus === 'ongoing' && "border-rose-500/40 bg-rose-500/10 text-rose-600",
+                                        currentStatus === 'upcoming' && "border-blue-500/40 bg-blue-500/10 text-blue-600",
+                                        (currentStatus === 'finished' || currentStatus === 'completed') && "border-primary/40 bg-primary/10 text-primary",
+                                        currentStatus === 'cancelled' && "border-destructive/40 bg-destructive/10 text-destructive",
+                                        (currentStatus === 'draft' || currentStatus === 'published') && "border-border bg-muted/40 text-muted-foreground"
+                                    )}
+                                >
+                                    <span>
+                                        {currentStatus === 'registration_open' && (locale === 'th' ? "เปิดรับสมัคร" : "Registration Open")}
+                                        {currentStatus === 'registration_closed' && (locale === 'th' ? "ปิดรับสมัคร" : "Registration Closed")}
+                                        {currentStatus === 'ongoing' && (locale === 'th' ? "กำลังแข่งขัน" : "Ongoing")}
+                                        {currentStatus === 'upcoming' && (locale === 'th' ? "เร็วๆ นี้" : "Upcoming")}
+                                        {currentStatus === 'completed' && (locale === 'th' ? "เสร็จสิ้น" : "Completed")}
+                                        {currentStatus === 'finished' && (locale === 'th' ? "สิ้นสุดแล้ว" : "Finished")}
+                                        {currentStatus === 'cancelled' && (locale === 'th' ? "ยกเลิก" : "Cancelled")}
+                                        {currentStatus === 'draft' && (locale === 'th' ? "แบบร่าง" : "Draft")}
+                                        {currentStatus === 'published' && (locale === 'th' ? "เผยแพร่แล้ว" : "Published")}
+                                    </span>
+                                </Badge>
+                            ) : (
+                                <Dropdown
+                                    value={currentStatus}
+                                    onValueChange={(val) => handleSetStatus(val as TournamentStatus)}
+                                    disabled={isUpdatingStatus}
+                                >
+                                    <DropdownTrigger
+                                        size="sm"
+                                        className={cn(
+                                            "w-fit h-8 text-xs font-bold gap-2 cursor-pointer transition-all",
+                                            currentStatus === 'registration_open' && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20",
+                                            currentStatus === 'registration_closed' && "border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20",
+                                            currentStatus === 'ongoing' && "border-rose-500/40 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20",
+                                            currentStatus === 'upcoming' && "border-blue-500/40 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20",
+                                            (currentStatus === 'finished' || currentStatus === 'completed') && "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20",
+                                            currentStatus === 'cancelled' && "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
+                                            (currentStatus === 'draft' || currentStatus === 'published') && "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                                        )}
+                                    >
+                                        <DropdownValue placeholder={locale === 'th' ? "เลือกสถานะ" : "Select Status"} />
+                                    </DropdownTrigger>
+                                    <DropdownContent>
+                                        {!isPastDeadline ? (
+                                            /* ช่วงก่อน Deadline (รับสมัคร/เตรียมการ) */
+                                            <DropdownGroup>
+                                                <DropdownItem
+                                                    value="draft"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-muted-foreground focus:bg-muted focus:text-foreground"
+                                                >
+                                                    {locale === 'th' ? "แบบร่าง (Draft)" : "Draft"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="registration_open"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-emerald-600 focus:bg-emerald-500/10 focus:text-emerald-600"
+                                                >
+                                                    {locale === 'th' ? "เปิดรับสมัคร (Open)" : "Registration Open"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="registration_closed"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-amber-600 focus:bg-amber-500/10 focus:text-amber-600"
+                                                >
+                                                    {locale === 'th' ? "ปิดรับสมัคร (Close)" : "Registration Closed"}
+                                                </DropdownItem>
+                                            </DropdownGroup>
+                                        ) : (
+                                            /* ช่วงหลัง Deadline (ดำเนินการแข่งขัน) */
+                                            <DropdownGroup>
+                                                <DropdownItem
+                                                    value="upcoming"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-blue-600 focus:bg-blue-500/10 focus:text-blue-600"
+                                                >
+                                                    {locale === 'th' ? "เร็วๆ นี้ (Upcoming)" : "Upcoming"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="ongoing"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-rose-600 focus:bg-rose-500/10 focus:text-rose-600"
+                                                >
+                                                    {locale === 'th' ? "กำลังแข่งขัน (Ongoing)" : "Ongoing"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="completed"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-primary focus:bg-primary/10 focus:text-primary"
+                                                >
+                                                    {locale === 'th' ? "เสร็จสิ้น (Completed)" : "Completed"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="finished"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-primary focus:bg-primary/10 focus:text-primary"
+                                                >
+                                                    {locale === 'th' ? "สิ้นสุดการแข่งขัน (Finished)" : "Finished"}
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    value="cancelled"
+                                                    className="cursor-pointer text-xs font-semibold py-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                                >
+                                                    {locale === 'th' ? "ยกเลิก (Cancelled)" : "Cancelled"}
+                                                </DropdownItem>
+                                            </DropdownGroup>
+                                        )}
+                                    </DropdownContent>
+                                </Dropdown>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1440,8 +1580,8 @@ function CanvasInternal({
                                 <div className="hidden md:flex items-center" id="tour-console-sidebar-buttons">
 
                                     <div id="tour-console-share-select">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
+                                        <ActionMenu>
+                                            <ActionMenuTrigger asChild>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon-sm"
@@ -1450,54 +1590,32 @@ function CanvasInternal({
                                                 >
                                                     <Share2 className="h-4 w-4" />
                                                 </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-fit min-w-[180px] bg-card shadow-2xl rounded-sm p-1">
-                                                <DropdownMenuItem
+                                            </ActionMenuTrigger>
+                                            <ActionMenuContent align="end" className="w-fit min-w-[180px] bg-card shadow-2xl rounded-sm p-1">
+                                                <ActionMenuItem
                                                     onClick={handleOpenLink}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
                                                 >
-                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                     <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
+                                                </ActionMenuItem>
+                                                <ActionMenuItem
                                                     onClick={handleOpenLinkRegister}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
                                                 >
-                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                     <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
+                                                </ActionMenuItem>
+                                                <ActionMenuItem
                                                     onClick={handleOpenLinkDocumentions}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
                                                 >
-                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                     <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                                </ActionMenuItem>
+                                            </ActionMenuContent>
+                                        </ActionMenu>
                                     </div>
-
-                                <Button
-                                    variant={activeNodeId === 'inbox-setting-node' ? "default" : "ghost"}
-                                    size="icon-sm"
-                                    onClick={handleOpenInboxSettings}
-                                    title={locale === 'th' ? "กล่องข้อความ" : "Inbox"}
-                                    className={cn(
-                                        "relative transition-all",
-                                        activeNodeId === 'inbox-setting-node'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <Inbox className="h-4 w-4" />
-                                    {filteredInboxItems.some(item => 
-                                        item.registration_status === 'pending' || 
-                                        item.unlock_requested || 
-                                        (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
-                                    ) && (
-                                        <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
-                                    )}
-                                </Button>
 
                                 <Button
                                     variant={activeNodeId === 'announcement-setting-node' ? "default" : "ghost"}
@@ -1520,13 +1638,16 @@ function CanvasInternal({
                                     onClick={handleOpenRegistrationSettings}
                                     title={locale === 'th' ? "การลงทะเบียน" : "Registration"}
                                     className={cn(
-                                        "transition-all",
+                                        "relative transition-all",
                                         activeNodeId === 'registration-setting-node'
                                             ? "bg-primary"
                                             : "text-foreground"
                                     )}
                                 >
                                     <ClipboardEdit className="h-4 w-4" />
+                                    {hasPendingRegistration && (
+                                        <span className="absolute top-1.5 right-1.5 bg-destructive rounded-full h-2 w-2 ring-2 ring-card" />
+                                    )}
                                 </Button>
 
                                 <Button
@@ -1618,66 +1739,50 @@ function CanvasInternal({
                                         <X className="h-4 w-4" />
                                     </Button>
                                 ) : (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
+                                    <ActionMenu>
+                                        <ActionMenuTrigger asChild>
                                             <Button
                                                 variant="ghost"
                                                 size="icon-sm"
                                                 className="relative text-foreground"
                                             >
                                                 <MoreVertical className="h-4 w-4" />
-                                                {filteredInboxItems.some(item => 
-                                                    item.registration_status === 'pending' || 
-                                                    item.unlock_requested || 
-                                                    (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
-                                                ) && (
-                                                    <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
+                                                {hasPendingRegistration && (
+                                                    <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2 ring-2 ring-background animate-pulse" />
                                                 )}
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
-                                             <DropdownMenuItem
-                                                onClick={handleOpenInboxSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Inbox className="h-4 w-4" />
-                                                    <span>{locale === 'th' ? "กล่องข้อความ" : "Inbox"}</span>
-                                                </div>
-                                                {filteredInboxItems.some(item => 
-                                                    item.registration_status === 'pending' || 
-                                                    item.unlock_requested || 
-                                                    (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
-                                                ) && (
-                                                    <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
-                                                )}
-                                            </DropdownMenuItem>
-
-                                            <DropdownMenuItem
+                                        </ActionMenuTrigger>
+                                        <ActionMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
+                                            <ActionMenuItem
                                                 onClick={handleOpenAnnouncementSettings}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
                                                 <Megaphone className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
-                                            </DropdownMenuItem>
+                                            </ActionMenuItem>
 
-                                            <DropdownMenuItem
+                                            <ActionMenuItem
                                                 onClick={handleOpenRegistrationSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                                className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
                                             >
-                                                <ClipboardEdit className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "การลงทะเบียน" : "Registration"}</span>
-                                            </DropdownMenuItem>
+                                                <div className="flex items-center gap-2">
+                                                    <ClipboardEdit className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "การลงทะเบียน" : "Registration"}</span>
+                                                </div>
+                                                {hasPendingRegistration && (
+                                                    <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
+                                                )}
+                                            </ActionMenuItem>
 
-                                            <DropdownMenuItem
+                                            <ActionMenuItem
                                                 onClick={handleOpenSponsorSettings}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
                                                 <Heart className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}</span>
-                                            </DropdownMenuItem>
+                                            </ActionMenuItem>
 
-                                             <DropdownMenuItem
+                                             <ActionMenuItem
                                                 onClick={async () => {
                                                     setActiveNodeId(null);
                                                     selectNode(null);
@@ -1694,10 +1799,10 @@ function CanvasInternal({
                                             >
                                                 <Calendar className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "ตารางการแข่งขัน" : "Schedule"}</span>
-                                            </DropdownMenuItem>
+                                            </ActionMenuItem>
 
                                             {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
-                                                <DropdownMenuItem
+                                                <ActionMenuItem
                                                     onClick={() => {
                                                         setActiveNodeId(null);
                                                         selectNode(null);
@@ -1708,7 +1813,7 @@ function CanvasInternal({
                                                 >
                                                     <Settings className="h-4 w-4" />
                                                     <span>{locale === 'th' ? "ตั้งค่าทัวร์นาเมนต์" : "Settings"}</span>
-                                                </DropdownMenuItem>
+                                                </ActionMenuItem>
                                             )}
 
                                             <div className="border-t my-1" />
@@ -1717,31 +1822,31 @@ function CanvasInternal({
                                                 {locale === 'th' ? "ลิงก์และการแชร์" : "Links & Share"}
                                             </div>
 
-                                            <DropdownMenuItem
+                                            <ActionMenuItem
                                                 onClick={handleOpenLink}
                                                 className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
                                             >
-                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <ExternalLink className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
-                                            </DropdownMenuItem>
+                                            </ActionMenuItem>
 
-                                            <DropdownMenuItem
+                                            <ActionMenuItem
                                                 onClick={handleOpenLinkRegister}
                                                 className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
                                             >
-                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <ExternalLink className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
-                                            </DropdownMenuItem>
+                                            </ActionMenuItem>
 
-                                            <DropdownMenuItem
+                                            <ActionMenuItem
                                                 onClick={handleOpenLinkDocumentions}
                                                 className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
                                             >
-                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <ExternalLink className="h-4 w-4" />
                                                 <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                            </ActionMenuItem>
+                                        </ActionMenuContent>
+                                    </ActionMenu>
                                 )}
                             </div>
                         </>
@@ -1826,18 +1931,18 @@ function CanvasInternal({
                                             </button>
                                             <div className="flex items-center justify-between px-1 gap-0.5 h-full">
                                                 <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
-                                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                                    <ChevronLeft className="h-4 w-4" />
                                                 </button>
                                                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" size="sm" className="h-7 gap-1 px-1.5 hover:bg-muted transition-all">
-                                                            <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                                                            <CalendarIcon className="h-4 w-4 text-primary" />
                                                             <span className="text-xs font-semibold tracking-tight truncate">
                                                                 {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                                             </span>
                                                         </Button>
                                                     </PopoverTrigger>
-                                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="bottom" sideOffset={5}>
+                                                    <PopoverContent className="w-80 p-0 bg-card rounded-sm shadow-2xl" align="start" side="bottom" sideOffset={5}>
                                                         <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                                             <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                 <ChevronLeft className="h-4 w-4" />
@@ -1906,7 +2011,7 @@ function CanvasInternal({
                                                     </PopoverContent>
                                                 </Popover>
                                                 <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
-                                                    <ChevronRight className="h-3.5 w-3.5" />
+                                                    <ChevronRight className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1988,13 +2093,13 @@ function CanvasInternal({
                                                     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                                         <PopoverTrigger asChild>
                                                             <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center">
-                                                                <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                                <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
                                                                 <span className="text-xs font-semibold tracking-tight truncate">
                                                                     {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                                                 </span>
                                                             </Button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
+                                                        <PopoverContent className="w-80 p-0 bg-card rounded-sm shadow-2xl" align="start" side="right" sideOffset={10}>
                                                             <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                                                 <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                     <ChevronLeft className="h-4 w-4" />
@@ -2154,6 +2259,7 @@ function CanvasInternal({
                                                 endDate={tournament.end_date}
                                                 externalFilterStage={filterStage}
                                                 externalSelectedDate={selectedDate}
+                                                canvasData={getCanvasData()}
                                             />
                                         </div>
                                     </div>
@@ -2202,6 +2308,8 @@ function CanvasInternal({
                                                 teams={initialTeamsData}
                                                 activeTab={activeSettingsTab}
                                                 activeCategoryId={activeCategoryId}
+                                                onCategoryUpdated={() => loadCategories()}
+                                                userRole={userInvitationRole}
                                             />
                                         </div>
                                     </main>
@@ -2217,15 +2325,15 @@ function CanvasInternal({
                                                 maxTeams={(categories.find((c) => toCategoryId(c.id) === activeCategoryId)?.max_teams ?? tournament?.max_teams) || 8}
                                                 onApplyTemplate={() => handleSave(false)}
                                             />
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
+                                            <ActionMenu>
+                                                <ActionMenuTrigger asChild>
                                                     <Button size="sm" className="gap-1.5 font-bold shadow-xs">
                                                         <Plus className="h-4 w-4" />
                                                         <span>{t("new_element")}</span>
                                                     </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-fit min-w-[200px] bg-card shadow-2xl rounded-sm p-1">
-                                                    <DropdownMenuItem
+                                                </ActionMenuTrigger>
+                                                <ActionMenuContent align="end" className="w-fit min-w-[200px] bg-card shadow-2xl rounded-sm p-1">
+                                                    <ActionMenuItem
                                                         onClick={() => addMatchNode(getCenterPos())}
                                                         className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-2/10 focus:bg-node-2/10 group"
                                                     >
@@ -2236,9 +2344,9 @@ function CanvasInternal({
                                                             <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มแมตช์" : "Add Match"}</span>
                                                             <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "รอบน็อคเอาท์" : "Knockout Slot"}</span>
                                                         </div>
-                                                    </DropdownMenuItem>
+                                                    </ActionMenuItem>
 
-                                                    <DropdownMenuItem
+                                                    <ActionMenuItem
                                                         onClick={() => addGroupNode(getCenterPos())}
                                                         className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-5/10 focus:bg-node-5/10 group"
                                                     >
@@ -2249,9 +2357,9 @@ function CanvasInternal({
                                                             <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มกลุ่ม" : "Add Group"}</span>
                                                             <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "แบ่งกลุ่ม / สาย" : "Stage / Pool"}</span>
                                                         </div>
-                                                    </DropdownMenuItem>
+                                                    </ActionMenuItem>
 
-                                                    <DropdownMenuItem
+                                                    <ActionMenuItem
                                                         onClick={() => addStandingNode(getCenterPos())}
                                                         className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-1/10 focus:bg-node-1/10 group"
                                                     >
@@ -2262,9 +2370,9 @@ function CanvasInternal({
                                                             <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มตารางคะแนน" : "Add Standing"}</span>
                                                             <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "อันดับคะแนนในกลุ่ม" : "Group Ranking"}</span>
                                                         </div>
-                                                    </DropdownMenuItem>
+                                                    </ActionMenuItem>
 
-                                                    <DropdownMenuItem
+                                                    <ActionMenuItem
                                                         onClick={() => addTeamListNode(teams, getCenterPos())}
                                                         className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-3/10 focus:bg-node-3/10 group"
                                                     >
@@ -2275,9 +2383,9 @@ function CanvasInternal({
                                                             <span className="font-bold text-foreground">{locale === 'th' ? "รายชื่อทีม" : "Teams List"}</span>
                                                             <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "กล่องรายชื่อทีม" : "Team List"}</span>
                                                         </div>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                                    </ActionMenuItem>
+                                                </ActionMenuContent>
+                                            </ActionMenu>
                                         </div>
                                     )}
                                     <div className="w-full h-full" id="tour-console-canvas-wrapper">
@@ -2380,7 +2488,7 @@ function CanvasInternal({
 
             {/* Unsaved Changes Warning Dialog */}
             <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
-                <AlertDialogContent className="rounded-xl">
+                <AlertDialogContent className="rounded-sm">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="p-2 lg:p-4 border-b">
                             {locale === 'th' ? 'คุณแน่ใจหรือไม่?' : 'Are you sure?'}
@@ -2401,65 +2509,6 @@ function CanvasInternal({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <Dialog open={!!withdrawingItem} onOpenChange={(open) => {
-                if (!open) {
-                    setWithdrawingItem(null);
-                    setWithdrawConfirmText("");
-                }
-            }}>
-                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
-                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                        <DialogTitle>
-                            {locale === 'th' ? "ถอนทีมออกจากการแข่งขัน" : "Withdraw Team from Tournament"}
-                        </DialogTitle>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="absolute right-2 top-2"
-                            onClick={() => {
-                                setWithdrawingItem(null);
-                                setWithdrawConfirmText("");
-                            }}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </DialogHeader>
-                    <div className="p-2 lg:p-4 space-y-1 lg:space-y-2">
-                        <DialogDescription>
-                            {locale === 'th'
-                                ? "คุณแน่ใจหรือไม่ที่จะถอนทีมนี้ออกจากการแข่งขัน? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
-                                : "Are you sure you want to withdraw this team from the tournament? This action cannot be undone."}
-                        </DialogDescription>
-                        <div className="space-y-1 lg:space-y-2">
-                            <DialogDescription className="font-bold">
-                                {locale === 'th'
-                                    ? `กรุณากรอกชื่อทีม "${withdrawingItem?.team?.name}" เพื่อยืนยันการถอนทีม`
-                                    : `Please type "${withdrawingItem?.team?.name}" to confirm.`}
-                            </DialogDescription>
-                            <Input
-                                value={withdrawConfirmText}
-                                onChange={(e) => setWithdrawConfirmText(e.target.value)}
-                                autoComplete="off"
-                                className="h-9 text-xs"
-                            />
-                        </div>
-                    </div>
-                    <div className="p-2 md:p-4 border-t gap-2">
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={isWithdrawing || withdrawConfirmText !== withdrawingItem?.team?.name}
-                            onClick={handleWithdrawTeam}
-                            className="w-full"
-                        >
-                            {isWithdrawing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            {locale === 'th' ? "ยืนยันการถอนทีม" : "Confirm Withdraw"}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

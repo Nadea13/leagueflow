@@ -4,24 +4,24 @@ import { Link } from "@/i18n/routing"
 import { useTheme } from "next-themes"
 import { Laptop, Moon, Sun, LogOut, User, CreditCard, Shield } from "lucide-react"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuPortal,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { signOut } from "@/actions/common/auth"
+    ActionMenu,
+    ActionMenuContent,
+    ActionMenuGroup,
+    ActionMenuItem,
+    ActionMenuLabel,
+    ActionMenuPortal,
+    ActionMenuSeparator,
+    ActionMenuSub,
+    ActionMenuSubContent,
+    ActionMenuSubTrigger,
+    ActionMenuTrigger,
+} from "@/components/ui/action-menu"
 import Image from "next/image"
 import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ApiClient } from "@/lib/api-client"
 
 export function UserDropdown({
     email,
@@ -56,10 +56,10 @@ export function UserDropdown({
     const displayName = name || email;
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="lg" className={cn("w-full justify-center md:justify-start md:group-hover/sidebar:justify-start p-0 md:py-2 md:group-hover/sidebar:p-2 h-auto transition-all text-left overflow-hidden", className)}>
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60 shrink-0">
+        <ActionMenu>
+            <ActionMenuTrigger asChild>
+                <Button suppressHydrationWarning variant="ghost" size="lg" className={cn("w-full justify-center md:justify-start md:group-hover/sidebar:justify-start p-0 md:py-2 md:group-hover/sidebar:p-2 h-auto transition-all duration-300 ease-in-out text-left overflow-hidden", className)}>
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60 shrink-0 transition-all duration-300 ease-in-out">
                         {avatar ? (
                             <Image
                                 src={avatar}
@@ -73,22 +73,21 @@ export function UserDropdown({
                         )}
                     </div>
                     {!hideText && (
-                        <div className="flex flex-col min-w-0 transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto md:group-hover/sidebar:ml-2 overflow-hidden">
+                        <div className="flex flex-col min-w-0 transition-all duration-300 ease-in-out opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto md:group-hover/sidebar:ml-2 overflow-hidden">
                             <span className="text-xs font-bold text-foreground truncate">{name || displayName}</span>
                             {email && <span className="text-[10px] text-muted-foreground truncate">{email}</span>}
                         </div>
                     )}
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
+            </ActionMenuTrigger>
+            <ActionMenuContent
                 className="w-64 bg-card border shadow-2xl ml-4 mt-3 p-2 rounded-sm"
                 side={side}
                 align={align}
                 sideOffset={sideOffset}
                 alignOffset={alignOffset}
-                forceMount
             >
-                <DropdownMenuLabel className="mb-2">
+                <ActionMenuLabel className="mb-2">
                     <div className="flex flex-col space-y-1">
                         <p className="text-xs font-bold tracking-widest text-primary">{tCommon("user")}</p>
                         <p className="text-sm font-medium leading-none text-foreground truncate">
@@ -98,69 +97,74 @@ export function UserDropdown({
                             <p className="text-xs text-muted-foreground truncate">{email}</p>
                         )}
                     </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuGroup>
-                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                        <Link href={profileHref} className="w-full flex items-center">
-                            <User className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                </ActionMenuLabel>
+                <ActionMenuSeparator className="bg-border" />
+                <ActionMenuGroup>
+                    <ActionMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                        <Link href={profileHref} className="w-full flex items-center gap-2 md:gap-3">
+                            <User className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
                             <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("profile")}</span>
                         </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                        <Link href="/dashboard/settings?tab=billing" className="w-full flex items-center">
-                            <CreditCard className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                    </ActionMenuItem>
+                    <ActionMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                        <Link href="/dashboard/settings?tab=billing" className="w-full flex items-center gap-2 md:gap-3">
+                            <CreditCard className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
                             <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tSettings("billing")}</span>
                         </Link>
-                    </DropdownMenuItem>
+                    </ActionMenuItem>
                     {role === "admin" && (
-                        <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                            <Link href="/admin" className="w-full flex items-center">
-                                <Shield className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                        <ActionMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                            <Link href="/admin" className="w-full flex items-center gap-2 md:gap-3">
+                                <Shield className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
                                 <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("admin") || "Admin"}</span>
                             </Link>
-                        </DropdownMenuItem>
+                        </ActionMenuItem>
                     )}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator className="bg-border" />
+                </ActionMenuGroup>
+                <ActionMenuSeparator className="bg-border" />
                 <LanguageSubMenu />
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                        <Sun className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                        <Moon className="absolute mr-2 md:mr-3 h-4 w-4 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <ActionMenuSub>
+                    <ActionMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm flex items-center gap-2 md:gap-3">
+                        <div className="relative flex items-center justify-center h-4 w-4 shrink-0">
+                            <Sun className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            <Moon className="absolute h-4 w-4 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                        </div>
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                        <DropdownMenuSubContent
-                            className="bg-background border border-border min-w-[120px] rounded-lg shadow-xl p-1.5"
+                    </ActionMenuSubTrigger>
+                    <ActionMenuPortal>
+                        <ActionMenuSubContent
+                            className="bg-background border border-border min-w-[120px] rounded-sm shadow-xl p-1.5"
                             sideOffset={8}
                         >
-                            <DropdownMenuItem onClick={() => setTheme("light")} className="focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Sun className="mr-3 h-4 w-4" />
+                            <ActionMenuItem onClick={() => setTheme("light")} className="focus:bg-muted focus:text-primary text-xs font-bold flex items-center gap-2.5">
+                                <Sun className="h-4 w-4 shrink-0" />
                                 {tCommon("light")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")} className="focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Moon className="mr-3 h-4 w-4" />
+                            </ActionMenuItem>
+                            <ActionMenuItem onClick={() => setTheme("dark")} className="focus:bg-muted focus:text-primary text-xs font-bold flex items-center gap-2.5">
+                                <Moon className="h-4 w-4 shrink-0" />
                                 {tCommon("dark")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")} className="focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Laptop className="mr-3 h-4 w-4" />
+                            </ActionMenuItem>
+                            <ActionMenuItem onClick={() => setTheme("system")} className="focus:bg-muted focus:text-primary text-xs font-bold flex items-center gap-2.5">
+                                <Laptop className="h-4 w-4 shrink-0" />
                                 {tCommon("system")}
-                            </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem asChild className="text-destructive focus:text-red-400 focus:bg-red-500/10 py-2 rounded-sm">
-                    <form action={signOut} className="w-full">
-                        <input type="hidden" name="locale" value={locale} />
-                        <button className="w-full flex items-center text-left cursor-pointer">
-                            <LogOut className="mr-3 h-4 w-4 text-red-500" />
-                            <span className="text-xs font-bold tracking-tight">{t("logout")}</span>
-                        </button>
-                    </form>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                            </ActionMenuItem>
+                        </ActionMenuSubContent>
+                    </ActionMenuPortal>
+                </ActionMenuSub>
+                <ActionMenuSeparator className="bg-border" />
+                <ActionMenuItem 
+                    onClick={() => {
+                        ApiClient.setToken(null);
+                        window.location.href = `/${locale}/sign-in`;
+                    }} 
+                    className="text-destructive focus:text-red-400 focus:bg-red-500/10 py-2 rounded-sm cursor-pointer"
+                >
+                    <div className="w-full flex items-center gap-2.5 text-left">
+                        <LogOut className="h-4 w-4 text-red-500 shrink-0" />
+                        <span className="text-xs font-bold tracking-tight">{t("logout")}</span>
+                    </div>
+                </ActionMenuItem>
+            </ActionMenuContent>
+        </ActionMenu>
     )
 }

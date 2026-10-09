@@ -50,7 +50,7 @@ export const VolleyballStandingNode = memo(({
     const storeTeams = useBracketStore((state) => state.teams);
     const params = useParams();
     const tournamentId = params.id as string;
-    const supabase = createClient();
+    const supabase = React.useMemo(() => createClient(), []);
 
     const [loading, setLoading] = React.useState(true);
     const [standings, setStandings] = React.useState<CalculatedVolleyballStanding[]>([]);
@@ -218,8 +218,12 @@ export const VolleyballStandingNode = memo(({
                     return b.sw - a.sw;
                 });
 
-                setStandings(result);
-                updateNodeData(id, { rankings: result.map(s => s.name) }, true);
+                const newRankings = result.map(s => s.name);
+                setStandings(prev => JSON.stringify(prev) !== JSON.stringify(result) ? result : prev);
+                const currentRankings = (data as { rankings?: string[] })?.rankings || [];
+                if (JSON.stringify(currentRankings) !== JSON.stringify(newRankings)) {
+                    updateNodeData(id, { rankings: newRankings }, true);
+                }
             } catch (err) {
                 console.error("Error calculating volleyball standings:", err);
             } finally {
@@ -228,7 +232,7 @@ export const VolleyballStandingNode = memo(({
         }
 
         fetchAndCalculate();
-    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData, activeCategoryId]);
+    }, [tournamentId, teamsJson, id, supabase, updateNodeData, activeCategoryId]);
 
     const showPlayed = data.showPlayed !== false;
     const showWin = data.showWin !== false;
@@ -274,7 +278,7 @@ export const VolleyballStandingNode = memo(({
                         {data.label}
                     </span>
                     {loading && effectiveTeams.length > 0 && (
-                        <Loader2 className="h-3 w-3 animate-spin text-node-1" />
+                        <Loader2 className="h-4 w-4 animate-spin text-node-1" />
                     )}
                 </div>
             </div>
@@ -282,7 +286,7 @@ export const VolleyballStandingNode = memo(({
             <div className="custom-scrollbar">
                 <table className="w-full text-[10px] border-collapse">
                     <thead>
-                        <tr className="border-b border-node-1/50">
+                        <tr className="border-b border-border">
                             <th className="px-2 py-1.5 text-left font-black text-muted-foreground w-8">#</th>
                             <th className="py-1.5 text-left font-black text-muted-foreground min-w-[100px]">TEAM</th>
                             {showPlayed && <th className="px-1 py-1.5 text-center font-black text-muted-foreground w-6">MP</th>}
@@ -297,7 +301,7 @@ export const VolleyballStandingNode = memo(({
                             <th className="p-0 w-0"></th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-node-1/50">
+                    <tbody className="divide-y divide-border">
                         {effectiveTeams.length === 0 ? (
                             <tr>
                                 <td colSpan={12} className="py-4 text-center text-muted-foreground">
@@ -347,7 +351,7 @@ export const VolleyballStandingNode = memo(({
                                                             <div
                                                                 key={i}
                                                                 className={cn(
-                                                                    "w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-black text-white transition-all",
+                                                                    "h-4 w-4 rounded-full flex items-center justify-center text-[6px] font-black text-white transition-all",
                                                                     res === 'W' ? "bg-primary" :
                                                                     res === 'L' ? "bg-destructive" :
                                                                     "bg-muted-foreground/20 border border-muted-foreground/10"

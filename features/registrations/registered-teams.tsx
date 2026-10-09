@@ -1,6 +1,5 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock, Users } from "lucide-react";
@@ -34,22 +33,22 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
     };
 
     return (
-        <div className="bg-card border space-y-2 md:space-y-3 p-4 md:p-6">
+        <div className="bg-card border rounded-sm space-y-2 md:space-y-3 p-4 md:p-6">
             <div className="flex items-center gap-2 md:gap-3">
                 <CheckCircle className="h-6 w-6 text-primary" />
                 <h2 className="text-2xl font-black tracking-tighter text-foreground">
                     {t("registered_teams")}
                 </h2>
             </div>
-            <div className="grid gap-3">
+            <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
                 {userRegistrations.map((reg) => (
-                    <Card key={reg.id} className="border p-4 md:p-6 transition-all hover:border-primary relative overflow-hidden group">
+                    <div key={reg.id} className="p-4 transition-all hover:bg-muted/30 relative">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2 md:gap-3">
-                                    <h3 className="text-md font-black tracking-tight group-hover:text-primary">{reg.team_name}</h3>
+                                    <h3 className="text-md font-black tracking-tight hover:text-primary">{reg.team_name}</h3>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={getStatusVariant(reg.payment_status)} className="font-black text-[10px] tracking-widest">
+                                        <Badge variant={getStatusVariant(reg.payment_status)}>
                                             {reg.payment_status}
                                         </Badge>
                                         {getStatusIcon(reg.payment_status)}
@@ -57,7 +56,7 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
                                 </div>
                                 <div className="flex items-center gap-2 md:gap-3 text-[10px] font-bold text-muted-foreground/60 tracking-wider">
                                     <span className="flex items-center gap-1.5">
-                                        <Clock className="h-3 w-3" />
+                                        <Clock className="h-4 w-4" />
                                         {reg.created_at ? format(new Date(reg.created_at), "PPP p") : "Unknown Date"}
                                     </span>
                                 </div>
@@ -65,8 +64,8 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
                             <div className="flex items-center gap-2">
                                 {reg.tournament_team_id && (
                                     <Button variant="default" size="sm" asChild className="font-black tracking-widest text-[10px] h-9 bg-primary text-primary-foreground hover:bg-primary/90">
-                                        <Link href={`/manager/my-registrations/${reg.tournament_team_id}`}>
-                                            <Users className="h-4 w-4 mr-2" />
+                                        <Link href={`/manager/my-registrations/${reg.tournament_team_id}`} className="flex items-center gap-1.5">
+                                            <Users className="h-4 w-4" />
                                             {t("edit_roster")}
                                         </Link>
                                     </Button>
@@ -80,7 +79,7 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
                                 )}
                             </div>
                         </div>
-                    </Card>
+                    </div>
                 ))}
             </div>
         </div>

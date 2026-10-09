@@ -1,11 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@/lib/supabase/client";
 import { revalidatePath } from "next/cache";
-import { ActionResponse, Match, BracketCanvasData } from "@/types/index";
+import { ActionResponse, Match, MatchStatus, BracketCanvasData } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { validateTournamentAccess } from "@/lib/security";
+import { getServerSession } from "@/lib/auth-server";
 
 const getScoreTotal = (scoreObj: unknown): number => {
     if (!scoreObj) return 0;
@@ -26,7 +26,7 @@ export async function updateMatch(
         penalty_home_score?: number | null;
         penalty_away_score?: number | null;
         winner_id?: string | null;
-        status?: 'scheduled' | 'live' | 'finished' | 'canceled';
+        status?: MatchStatus;
         match_date?: string | null;
         match_time?: string | null;
         venue?: string | null;
@@ -39,13 +39,8 @@ export async function updateMatch(
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
 
-    const supabase = await createClient();
-
-    const { data: currentMatch } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('id', matchId)
-        .single();
+    const session = await getServerSession();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
     const updateData: Record<string, unknown> = {};
     if (data.home_team_id !== undefined) updateData.home_team_id = data.home_team_id;
@@ -57,69 +52,52 @@ export async function updateMatch(
         const minVal = Number(data.current_minute);
         updateData.current_minute = isNaN(minVal) ? null : minVal;
     }
-
     if (data.home_score !== undefined && data.home_score !== null) {
-        updateData.home_score = { total: data.home_score };
+        updateData.home_score = data.home_score;
     }
     if (data.away_score !== undefined && data.away_score !== null) {
-        updateData.away_score = { total: data.away_score };
+        updateData.away_score = data.away_score;
+    }
+    if (data.penalty_home_score !== undefined) {
+        updateData.home_penalty_score = data.penalty_home_score;
+    }
+    if (data.penalty_away_score !== undefined) {
+        updateData.away_penalty_score = data.penalty_away_score;
+    }
+    if (data.venue !== undefined) {
+        updateData.field_name = data.venue;
     }
 
     if (data.match_date !== undefined || data.match_time !== undefined) {
-        const datePart = data.match_date !== undefined ? data.match_date : (currentMatch?.scheduled_at ? currentMatch.scheduled_at.split('T')[0] : null);
-        const timePart = data.match_time !== undefined ? data.match_time : (currentMatch?.scheduled_at ? currentMatch.scheduled_at.split('T')[1]?.substring(0, 5) : null);
-        if (datePart) {
-            const t = timePart || "00:00";
-            updateData.scheduled_at = new Date(`${datePart}T${t}:00`).toISOString();
-        } else {
-            updateData.scheduled_at = null;
+        if (data.match_date) {
+            const t = data.match_time || "00:00";
+            updateData.scheduled_at = new Date(`${data.match_date}T${t}:00`).toISOString();
+            updateData.scheduled_time = updateData.scheduled_at;
         }
     }
 
-    const { data: updatedMatch, error } = await supabase
-        .from('matches')
-        .update(updateData)
-        .eq('id', matchId)
-        .select('*')
-        .single();
+    try {
+        const res = await fetch(`${apiUrl}/matches/${matchId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session?.token || ''}`,
+            },
+            body: JSON.stringify(updateData)
+        });
 
-    if (error) {
-        console.error("Error updating match:", error);
-        return { success: false, error: error.message };
-    }
-
-    // Auto-Advance Winner & Propagate Standings
-    if (updatedMatch && updatedMatch.status === 'finished') {
-        if (updatedMatch.stage === 'group') {
-            await propagateGroupStandings(updatedMatch.tournament_category_id, supabase);
-        } else {
-            await propagateKnockoutResults(updatedMatch, supabase);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            return { success: false, error: errData.error || "Failed to update match" };
         }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        await logActivity('UPDATE_MATCH', 'match', matchId, { tournament_id: tournamentId, ...data });
+        return { success: true };
+    } catch (err: any) {
+        console.error("Error updating match:", err);
+        return { success: false, error: err?.message || "Failed to update match" };
     }
-
-    // Auto-Activate Tournament
-    if (data.status === 'live') {
-        const { data: tournament } = await supabase
-            .from('tournaments')
-            .select('status')
-            .eq('id', tournamentId)
-            .single();
-
-        if (tournament && tournament.status !== 'ongoing') {
-            const { error: activateError } = await supabase
-                .from('tournaments')
-                .update({ status: 'ongoing' })
-                .eq('id', tournamentId);
-                
-            if (activateError) {
-                console.error("Error activating tournament:", activateError);
-            }
-        }
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_MATCH', 'match', matchId, { tournament_id: tournamentId, ...data });
-    return { success: true };
 }
 
 async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseClient) {
@@ -134,7 +112,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
 
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
-    const indexInRound = currentRoundMatches.findIndex((m) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
     if (indexInRound === -1) return;
 
     const nextRound = match.round + 1;
@@ -152,7 +130,16 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
         const nextMatch = nextRoundMatches[nextMatchPosition];
         const updateData = isHomePos ? { home_team_id: winnerId } : { away_team_id: winnerId };
 
-        await supabase.from('matches').update(updateData).eq('id', nextMatch.id);
+        const session = await getServerSession();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        await fetch(`${apiUrl}/matches/${nextMatch.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session?.token || ''}`,
+            },
+            body: JSON.stringify(updateData),
+        }).catch(err => console.error("Failed to advance winner via Go API:", err));
     }
 }
 
@@ -179,13 +166,13 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
         const dbMatches = matchesRes.data || [];
         const dbTeams = teamsRes.data || [];
 
-        const teams = dbTeams.map((tt) => ({
+        const teams = dbTeams.map((tt: any) => ({
             id: tt.team_id,
             name: (tt.team as unknown as { name: string } | null)?.name || ""
         }));
 
         const teamIdToName = new Map<string, string>();
-        dbTeams.forEach((t) => {
+        dbTeams.forEach((t: any) => {
             const name = (t.team as unknown as { name: string } | null)?.name || (t as unknown as { name: string }).name;
             if (name && t.team_id) {
                 teamIdToName.set(t.team_id, name);
@@ -200,8 +187,8 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                 statsMap[key] = { name, gf: 0, ga: 0, gd: 0, pts: 0 };
             });
 
-            const groupTeamIds = groupTeamNames.map(name => teams.find(t => t.name === name)?.id).filter(Boolean);
-            const groupMatches = dbMatches.filter(m => 
+            const groupTeamIds = groupTeamNames.map(name => teams.find((t: any) => t.name === name)?.id).filter(Boolean);
+            const groupMatches = dbMatches.filter((m: any) => 
                 m.stage === 'group' &&
                 m.home_team_id && m.away_team_id && 
                 groupTeamIds.includes(m.home_team_id) && 
@@ -209,10 +196,10 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
             );
 
             // Check if all group matches are finished
-            const isGroupFinished = groupMatches.length > 0 && groupMatches.every(m => m.status === 'finished');
+            const isGroupFinished = groupMatches.length > 0 && groupMatches.every((m: any) => m.status === 'finished');
             if (!isGroupFinished) return [];
 
-            groupMatches.forEach(m => {
+            groupMatches.forEach((m: any) => {
                 const homeName = m.home_team_id ? teamIdToName.get(m.home_team_id) : m.placeholder_home || m.placeholder_a;
                 const awayName = m.away_team_id ? teamIdToName.get(m.away_team_id) : m.placeholder_away || m.placeholder_b;
                 if (!homeName || !awayName) return;
@@ -278,7 +265,7 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                 const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const team = teams.find(t => String(t.id) === String(teamId));
+                    const team = teams.find((t: any) => String(t.id) === String(teamId));
                     return team?.id || null;
                 }
             }
@@ -291,7 +278,7 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                     const teamName = rankings[rankIndex];
                     if (!teamName || teamName === "TBD") return null;
 
-                    const team = teams.find(t => t.name === teamName);
+                    const team = teams.find((t: any) => t.name === teamName);
                     return team?.id || null;
                 }
             }
@@ -304,7 +291,7 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                     const sourceMatch = sourceMatches[winnerIndex];
                     if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
                         const matchId = sourceMatch.dbId || sourceMatch.matchId;
-                        const dbM = dbMatches.find(m => m.id === matchId);
+                        const dbM = dbMatches.find((m: any) => m.id === matchId);
                         if (dbM && dbM.status === 'finished') {
                             const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: unknown }).total) || 0 : Number(dbM.home_score) || 0;
                             const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: unknown }).total) || 0 : Number(dbM.away_score) || 0;
@@ -320,7 +307,7 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                     const sourceMatch = sourceMatches[loserIndex];
                     if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
                         const matchId = sourceMatch.dbId || sourceMatch.matchId;
-                        const dbM = dbMatches.find(m => m.id === matchId);
+                        const dbM = dbMatches.find((m: any) => m.id === matchId);
                         if (dbM && dbM.status === 'finished') {
                             const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: unknown }).total) || 0 : Number(dbM.home_score) || 0;
                             const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: unknown }).total) || 0 : Number(dbM.away_score) || 0;
@@ -439,6 +426,9 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
         const winnerHandleId = `winner-${matchIndexInNode}`;
         const winnerEdge = canvasData.edges.find(e => e.source === sourceNodeId && e.sourceHandle === winnerHandleId);
         
+        const session = await getServerSession();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+
         if (winnerEdge && winnerId) {
             const targetNode = canvasData.nodes.find(n => n.id === winnerEdge.target);
             const targetHandle = winnerEdge.targetHandle || "";
@@ -453,7 +443,14 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
                 if (targetMatchItem && (targetMatchItem.dbId || targetMatchItem.matchId)) {
                     const targetMatchId = targetMatchItem.dbId || targetMatchItem.matchId;
                     const updateData = slot === 'a' ? { home_team_id: winnerId } : { away_team_id: winnerId };
-                    await supabase.from('matches').update(updateData).eq('id', targetMatchId);
+                    await fetch(`${apiUrl}/matches/${targetMatchId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${session?.token || ''}`,
+                        },
+                        body: JSON.stringify(updateData),
+                    }).catch(err => console.error("Failed to update winner match via Go API:", err));
                 }
             }
         }
@@ -476,7 +473,14 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
                 if (targetMatchItem && (targetMatchItem.dbId || targetMatchItem.matchId)) {
                     const targetMatchId = targetMatchItem.dbId || targetMatchItem.matchId;
                     const updateData = slot === 'a' ? { home_team_id: loserId } : { away_team_id: loserId };
-                    await supabase.from('matches').update(updateData).eq('id', targetMatchId);
+                    await fetch(`${apiUrl}/matches/${targetMatchId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${session?.token || ''}`,
+                        },
+                        body: JSON.stringify(updateData),
+                    }).catch(err => console.error("Failed to update loser match via Go API:", err));
                 }
             }
         }

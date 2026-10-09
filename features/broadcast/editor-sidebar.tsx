@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Tab } from "@/components/ui/tab";
 import {
     Sliders, Settings, Check, Copy, Trash2,
@@ -139,7 +139,6 @@ export function EditorSidebar({
                 value={activeTab}
                 onChange={setActiveTab}
                 fullWidth
-                className="bg-card"
             />
 
             <div className="flex-1 overflow-y-auto min-h-0 pr-0.5 flex flex-col">
@@ -905,3 +904,4 @@ export function EditorSidebar({
         </div>
     );
 }
+

@@ -12,7 +12,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/dropdown";
 import { Loader2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RosterDialog } from "./roster-manager";
@@ -101,7 +101,7 @@ function TeamItem({
                             />
                         ) : (
                             <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
-                                <Users className="h-3 w-3 text-muted-foreground" />
+                                <Users className="h-4 w-4 text-muted-foreground" />
                             </div>
                         )}
 
@@ -112,7 +112,7 @@ function TeamItem({
                                         {team.name}
                                     </span>
                                     {isReadOnly && (
-                                        <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground/40 text-[8px] font-black tracking-widest px-1.5 py-0">
+                                        <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground/40">
                                             {t("managed_by_manager")}
                                         </Badge>
                                     )}
@@ -127,7 +127,7 @@ function TeamItem({
                             <div className="flex items-center gap-2 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                                 {showGroupSelector && !isReadOnly ? (
                                     <div className="flex items-center gap-2">
-                                        {isGroupLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                                        {isGroupLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                                         <Select
                                             defaultValue={team.group_name || "none"}
                                             onValueChange={handleGroupChange}
@@ -147,7 +147,7 @@ function TeamItem({
                                         </Select>
                                     </div>
                                 ) : team.group_name ? (
-                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5">
+                                    <Badge className="bg-primary/10 text-primary border-none">
                                         {tGroup("group")} {team.group_name}
                                     </Badge>
                                 ) : (
@@ -161,4 +161,5 @@ function TeamItem({
         </div>
     );
 }
+
 

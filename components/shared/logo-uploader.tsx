@@ -106,10 +106,10 @@ export function LogoUploader({
                     <button
                         type="button"
                         onClick={handleRemoveLogo}
-                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground p-1 rounded-full shadow-sm hover:scale-110 transition-transform"
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full shadow-sm hover:scale-110 transition-transform"
                         title="Remove image"
                     >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                     </button>
                 )}
             </div>

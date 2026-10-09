@@ -1,27 +1,25 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef, useMemo } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { Upload } from "lucide-react";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { LogoUploader } from "@/components/shared/logo-uploader";
-import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/date";
+import { DateRangePicker, DatePicker } from "@/components/ui/date-picker";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/dropdown";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -63,42 +61,31 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
     const [endDate, setEndDate] = useState<string>(
         tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""
     );
-    const [viewDate, setViewDate] = useState<Date>(
-        tournament.start_date ? new Date(tournament.start_date) : new Date()
-    );
 
     const [docDeadline, setDocDeadline] = useState<string>(
         tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""
     );
-    const [docViewDate, setDocViewDate] = useState<Date>(
-        tournament.document_deadline ? new Date(tournament.document_deadline) : new Date()
-    );
 
-    const calendarDays = useMemo(() => {
-        const monthStart = startOfMonth(viewDate);
-        const monthEnd = endOfMonth(monthStart);
-        const start = startOfWeek(monthStart);
-        const end = endOfWeek(monthEnd);
-
-        const days = eachDayOfInterval({ start, end });
-        return days.map(day => day.getMonth() === viewDate.getMonth() ? day : null);
-    }, [viewDate]);
-
-    const docCalendarDays = useMemo(() => {
-        const monthStart = startOfMonth(docViewDate);
-        const monthEnd = endOfMonth(monthStart);
-        const start = startOfWeek(monthStart);
-        const end = endOfWeek(monthEnd);
-
-        const days = eachDayOfInterval({ start, end });
-        return days.map(day => day.getMonth() === docViewDate.getMonth() ? day : null);
-    }, [docViewDate]);
-
-    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(tournament.logo_img || null);
-    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(tournament.cover_img || null);
+    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(tournament.logo_img || (tournament as any).logo_url || null);
+    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(tournament.cover_img || (tournament as any).banner_url || null);
     const [logoRemoved, setLogoRemoved] = useState(false);
     const [coverRemoved, setCoverRemoved] = useState(false);
     const coverInputRef = useRef<HTMLInputElement>(null);
+
+    const prevLogoRef = useRef(tournament.logo_img || (tournament as any).logo_url);
+    const prevCoverRef = useRef(tournament.cover_img || (tournament as any).banner_url);
+    useEffect(() => {
+        const currentLogo = tournament.logo_img || (tournament as any).logo_url;
+        const currentCover = tournament.cover_img || (tournament as any).banner_url;
+        if (prevLogoRef.current !== currentLogo) {
+            setLogoPreviewUrl(currentLogo || null);
+            prevLogoRef.current = currentLogo;
+        }
+        if (prevCoverRef.current !== currentCover) {
+            setCoverPreviewUrl(currentCover || null);
+            prevCoverRef.current = currentCover;
+        }
+    }, [tournament.logo_img, (tournament as any).logo_url, tournament.cover_img, (tournament as any).banner_url]);
 
     useEffect(() => {
         if (state.success) {
@@ -245,207 +232,85 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             <Label>{isThai ? "สถานะการแข่งขัน" : "Tournament Status"}</Label>
                             <Select
                                 name="status"
-                                defaultValue={tournament.status}
+                                defaultValue={tournament.status || "draft"}
                             >
                                 <SelectTrigger size="sm" className="w-full bg-transparent text-foreground">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card">
                                     <SelectItem value="draft" className="text-muted-foreground font-black text-xs cursor-pointer">
-                                        {isThai ? "แบบร่าง" : "Draft"}
+                                        {isThai ? "แบบร่าง (Draft)" : "Draft"}
                                     </SelectItem>
-                                    <SelectItem value="upcoming" className="text-amber-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "เร็วๆ นี้" : "Upcoming"}
+                                    <SelectItem value="published" className="text-sky-500 font-black text-xs cursor-pointer">
+                                        {isThai ? "เผยแพร่แล้ว (Published)" : "Published"}
                                     </SelectItem>
-                                    <SelectItem value="ongoing" className="text-emerald-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "กำลังดำเนินการ" : "Ongoing"}
+                                    <SelectItem value="registration_open" className="text-emerald-500 font-black text-xs cursor-pointer">
+                                        {isThai ? "เปิดรับสมัคร (Registration Open)" : "Registration Open"}
+                                    </SelectItem>
+                                    <SelectItem value="registration_closed" className="text-amber-500 font-black text-xs cursor-pointer">
+                                        {isThai ? "ปิดรับสมัคร (Registration Closed)" : "Registration Closed"}
+                                    </SelectItem>
+                                    <SelectItem value="upcoming" className="text-blue-500 font-black text-xs cursor-pointer">
+                                        {isThai ? "เร็วๆ นี้ (Upcoming)" : "Upcoming"}
+                                    </SelectItem>
+                                    <SelectItem value="ongoing" className="text-emerald-600 font-black text-xs cursor-pointer">
+                                        {isThai ? "กำลังแข่งขัน (Ongoing)" : "Ongoing"}
+                                    </SelectItem>
+                                    <SelectItem value="completed" className="text-primary font-black text-xs cursor-pointer">
+                                        {isThai ? "เสร็จสิ้นการแข่งขัน (Completed)" : "Completed"}
                                     </SelectItem>
                                     <SelectItem value="finished" className="text-primary font-black text-xs cursor-pointer">
-                                        {isThai ? "เสร็จสิ้น" : "Finished"}
+                                        {isThai ? "สิ้นสุด (Finished)" : "Finished"}
+                                    </SelectItem>
+                                    <SelectItem value="cancelled" className="text-destructive font-black text-xs cursor-pointer">
+                                        {isThai ? "ยกเลิก (Cancelled)" : "Cancelled"}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div className="grid gap-2 md:grid-cols-2">
-                            {/* Date Range Picker Component */}
+                            {/* Tournament Period: Date Range */}
                             <div className="space-y-1">
-                                <Label>{isThai ? "ระยะเวลาการแข่งขัน" : "Tournament Period (Start - End)"} <span className="text-destructive">*</span></Label>
+                                <Label>
+                                    {isThai ? "ระยะเวลาการแข่งขัน (เริ่ม - สิ้นสุด)" : "Tournament Period (Start - End)"} <span className="text-destructive">*</span>
+                                </Label>
 
                                 {/* Hidden inputs to pass data seamlessly to server action */}
                                 <input type="hidden" name="start_date" value={startDate} required />
                                 <input type="hidden" name="end_date" value={endDate} required />
 
-                                <div className="p-1 lg:p-2 border rounded-sm">
-                                    <div className="space-y-1 lg:space-y-2 select-none">
-                                        {/* Calendar Header: Month & Navigation */}
-                                        <div className="flex items-center justify-between">
-                                            <button
-                                                type="button"
-                                                onClick={() => setViewDate(subMonths(viewDate, 1))}
-                                                className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </button>
-                                            <span className="text-xs font-bold tracking-tight">
-                                                {viewDate.toLocaleString(isThai ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setViewDate(addMonths(viewDate, 1))}
-                                                className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                        </div>
-
-                                        {/* Days of week header */}
-                                        <div className="grid grid-cols-7 text-center">
-                                            {(isThai ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
-                                                <div key={i} className="text-xs font-bold text-muted-foreground">{d}</div>
-                                            ))}
-                                        </div>
-
-                                        {/* Month Days Grid */}
-                                        <div className="grid grid-cols-7">
-                                            {calendarDays.map((day, idx) => {
-                                                if (!day) return <div key={`empty-${idx}`} />;
-                                                const dateStr = format(day, 'yyyy-MM-dd');
-                                                const isStart = startDate === dateStr;
-                                                const isEnd = endDate === dateStr;
-                                                const isInRange = startDate && endDate && dateStr > startDate && dateStr < endDate;
-                                                const isSelected = isStart || isEnd;
-                                                const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-
-                                                return (
-                                                    <button
-                                                        key={dateStr}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (!startDate || (startDate && endDate)) {
-                                                                setStartDate(dateStr);
-                                                                setEndDate("");
-                                                            } else if (startDate && !endDate) {
-                                                                if (dateStr < startDate) {
-                                                                    setStartDate(dateStr);
-                                                                } else {
-                                                                    setEndDate(dateStr);
-                                                                }
-                                                            }
-                                                        }}
-                                                        className={cn(
-                                                            "h-8 w-full flex items-center justify-center text-xs rounded-sm transition-all relative font-medium",
-                                                            isSelected && "bg-primary/10 text-primary border border-primary/50 z-10 font-bold",
-                                                            isInRange && "text-primary font-bold",
-                                                            !isSelected && !isInRange && "hover:bg-muted text-foreground",
-                                                            isToday && !isSelected && !isInRange && "border text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {format(day, 'd')}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Range Indicator */}
-                                        <div className="flex items-center justify-between text-xs pt-1 lg:pt-2 border-t">
-                                            <span className="text-muted-foreground font-medium">
-                                                {startDate && endDate ? (
-                                                    `${formatDate(startDate, "d MMM yyyy", locale)} – ${formatDate(endDate, "d MMM yyyy", locale)}`
-                                                ) : startDate ? (
-                                                    isThai ? `เริ่มต้น: ${formatDate(startDate, "d MMM yyyy", locale)} (เลือกวันสิ้นสุด...)` : `Start: ${formatDate(startDate, "d MMM yyyy", locale)} (select end date...)`
-                                                ) : (
-                                                    isThai ? "คลิกวันเริ่มและวันสิ้นสุด" : "Click start and end dates"
-                                                )}
-                                            </span>
-                                            {(startDate || endDate) && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setStartDate(""); setEndDate(""); }}
-                                                    className="text-destructive text-[10px] font-bold hover:underline"
-                                                >
-                                                    {isThai ? "ล้างค่า" : "Clear"}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                <DateRangePicker
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    onChange={({ startDate: s, endDate: e }) => {
+                                        setStartDate(s);
+                                        setEndDate(e);
+                                    }}
+                                    size="sm"
+                                    minYear={new Date().getFullYear() - 5}
+                                    maxYear={new Date().getFullYear() + 5}
+                                    defaultViewYear={startDate ? new Date(startDate).getFullYear() : new Date().getFullYear()}
+                                    placeholder={isThai ? "เลือกวันเริ่มต้น - สิ้นสุดการแข่งขัน" : "Select start - end date"}
+                                    disabled={isPending}
+                                />
                             </div>
 
+                            {/* Document Deadline */}
                             <div className="space-y-1">
-                                <Label>{t("document_deadline")}</Label>
+                                <Label>{t("document_deadline") || (isThai ? "วันปิดรับเอกสาร" : "Document Deadline")}</Label>
                                 <input type="hidden" name="document_deadline" value={docDeadline} />
-                                <div className="p-1 lg:p-2 border rounded-sm">
-                                    <div className="space-y-1 lg:space-y-2 select-none">
-                                        <div className="flex items-center justify-between">
-                                            <button
-                                                type="button"
-                                                onClick={() => setDocViewDate(subMonths(docViewDate, 1))}
-                                                className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                            </button>
-                                            <span className="text-xs font-bold tracking-tight">
-                                                {docViewDate.toLocaleString(isThai ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setDocViewDate(addMonths(docViewDate, 1))}
-                                                className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-7 text-center">
-                                            {(isThai ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
-                                                <div key={i} className="text-xs font-bold text-muted-foreground">{d}</div>
-                                            ))}
-                                        </div>
-
-                                        <div className="grid grid-cols-7">
-                                            {docCalendarDays.map((day, idx) => {
-                                                if (!day) return <div key={`empty-${idx}`} />;
-                                                const dateStr = format(day, 'yyyy-MM-dd');
-                                                const isSelected = docDeadline === dateStr;
-                                                const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-
-                                                return (
-                                                    <button
-                                                        key={dateStr}
-                                                        type="button"
-                                                        onClick={() => setDocDeadline(dateStr)}
-                                                        className={cn(
-                                                            "h-8 w-full flex items-center justify-center text-xs rounded-sm transition-all relative",
-                                                            isSelected && "bg-primary/10 text-primary border border-primary/50 z-10",
-                                                            !isSelected && "hover:bg-muted text-foreground",
-                                                            isToday && !isSelected && "border text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {format(day, 'd')}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="flex items-center justify-between text-xs pt-1 lg:pt-2 border-t">
-                                            <span className="text-muted-foreground font-medium">
-                                                {docDeadline
-                                                    ? (isThai ? `วันที่เลือก: ${formatDate(docDeadline, "d MMM yyyy", locale)}` : `Selected: ${formatDate(docDeadline, "d MMM yyyy", locale)}`)
-                                                    : (isThai ? "คลิกเพื่อเลือกวัน" : "Click date to select")}
-                                            </span>
-                                            {docDeadline && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDocDeadline("")}
-                                                    className="text-destructive text-[10px] font-bold hover:underline"
-                                                >
-                                                    {isThai ? "ล้างค่า" : "Clear"}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                <DatePicker
+                                    value={docDeadline}
+                                    onChange={setDocDeadline}
+                                    size="sm"
+                                    clearable
+                                    minYear={new Date().getFullYear() - 5}
+                                    maxYear={new Date().getFullYear() + 5}
+                                    defaultViewYear={docDeadline ? new Date(docDeadline).getFullYear() : new Date().getFullYear()}
+                                    placeholder={isThai ? "เลือกวันปิดรับเอกสาร (ถ้ามี)" : "Select document deadline (optional)"}
+                                    disabled={isPending}
+                                />
                             </div>
                         </div>
 
@@ -511,3 +376,4 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
         </div>
     );
 }
+

@@ -5,6 +5,37 @@ import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentMember } from "@/types";
 import { logActivity } from "@/lib/audit";
 import { validateTournamentAccess } from "@/lib/security";
+import { getServerSession } from "@/lib/auth-server";
+import { resolveStorageUrl } from "@/lib/storage-utils";
+
+async function getStaffUser(): Promise<{ id: string; email: string; full_name?: string } | null> {
+    try {
+        const session = await getServerSession();
+        if (session?.user) {
+            return {
+                id: session.user.id,
+                email: session.user.email,
+                full_name: session.user.full_name
+            };
+        }
+    } catch (e) {
+        console.error("Error in getServerSession:", e);
+    }
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            return {
+                id: user.id,
+                email: user.email || '',
+                full_name: user.user_metadata?.full_name || ''
+            };
+        }
+    } catch (e) {
+        console.error("Error in supabase.auth.getUser:", e);
+    }
+    return null;
+}
 
 /**
  * Invite a collaborator to a tournament by email.
@@ -15,156 +46,183 @@ export async function inviteStaff(
     email: string,
     role: 'co_organizer' | 'staff' | 'referee' = 'staff'
 ): Promise<ActionResponse<TournamentMember>> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    // Security Check: Only the tournament owner (Admin) can invite collaborators
-    const access = await validateTournamentAccess(tournamentId, 'admin');
-    if (!access.success || !access.user) return { success: false, error: access.error };
-    const user = access.user;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/invitations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                email: email.toLowerCase(),
+                role: role,
+                status: 'pending',
+            }),
+        });
 
-    // Check if the email is already invited
-    const { data: existing } = await supabase
-        .from("tournament_invitations")
-        .select("id, status")
-        .eq("tournament_id", tournamentId)
-        .eq("email", email.toLowerCase())
-        .is("deleted_at", null)
-        .maybeSingle();
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to invite staff" };
+        }
 
-    if (existing) {
-        return { success: false, error: "This email has already been invited" };
+        const data = await res.json();
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        await logActivity('INVITE_MEMBER', 'tournament', tournamentId, { email, role });
+        return { success: true, data: data as TournamentMember };
+    } catch (e) {
+        console.error("Error inviting staff:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    // Check if the email is the owner's email
-    if (user.email?.toLowerCase() === email.toLowerCase()) {
-        return { success: false, error: "You cannot invite yourself" };
-    }
-
-    // Create the invitation
-    const { data, error } = await supabase
-        .from("tournament_invitations")
-        .insert({
-            tournament_id: tournamentId,
-            email: email.toLowerCase(),
-            role: role,
-            status: 'pending',
-            user_id: null // Will be linked when they accept
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error("Error inviting collaborator:", error);
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('INVITE_MEMBER', 'tournament', tournamentId, { email, role });
-    return { success: true, data: data as TournamentMember };
 }
 
-/**
- * Get all collaborators for a tournament.
- */
 export async function getStaffs(
     tournamentId: string
 ): Promise<ActionResponse<TournamentMember[]>> {
-    // Security Check: Only collaborators or owner can see the member list
-    const access = await validateTournamentAccess(tournamentId, 'viewer');
-    if (!access.success) return { success: false, error: access.error };
+    try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        
+        // Fetch invitations
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/invitations`, {
+            cache: 'no-store'
+        });
+        const invitations: TournamentMember[] = res.ok ? ((await res.json()) || []) : [];
 
-    const supabase = await createClient();
+        // Fetch tournament to get owner info
+        const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            cache: 'no-store'
+        });
+        let ownerMember: TournamentMember | null = null;
+        if (tourRes.ok) {
+            const tourJson = await tourRes.json();
+            const tourData = tourJson?.tournament || tourJson;
+            if (tourData) {
+                const organizerEmail = tourData.settings?.organizer_email 
+                    || (tourData.settings?.organizer_name ? `${tourData.settings.organizer_name}` : null)
+                    || (tourData.organizer_id ? `organizer@leagueflow.com` : null);
+                
+                ownerMember = {
+                    id: `owner-${tourData.id || tournamentId}`,
+                    tournament_id: tourData.id || tournamentId,
+                    user_id: tourData.organizer_id || null,
+                    email: organizerEmail || "Organizer",
+                    role: 'owner',
+                    status: 'accepted',
+                    avatar_url: tourData.settings?.organizer_avatar || null,
+                    full_name: tourData.settings?.organizer_name || null,
+                    created_at: tourData.created_at || new Date().toISOString()
+                };
+            }
+        }
 
-    const { data, error } = await supabase
-        .from("tournament_invitations")
-        .select("*")
-        .eq("tournament_id", tournamentId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: true });
+        // Fallback if API couldn't find tournament or ownerMember was not constructed
+        if (!ownerMember) {
+            const session = await getServerSession();
+            ownerMember = {
+                id: `owner-${tournamentId}`,
+                tournament_id: tournamentId,
+                user_id: session?.user?.id || null,
+                email: session?.user?.email || "Organizer",
+                role: 'owner',
+                status: 'accepted',
+                avatar_url: (session?.user as any)?.profile_img || (session?.user as any)?.avatar_url || null,
+                full_name: (session?.user as any)?.full_name || (session?.user as any)?.name || null,
+                created_at: new Date().toISOString()
+            };
+        }
 
-    if (error) {
-        console.error("Error fetching collaborators:", error);
-        return { success: false, error: error.message };
+        const members: TournamentMember[] = [ownerMember, ...invitations];
+        return { success: true, data: members };
+    } catch (e) {
+        console.error("Error fetching staff:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    return { success: true, data: data as TournamentMember[] || [] };
 }
 
-/**
- * Remove a collaborator from a tournament (soft delete).
- */
+export async function updateStaffRole(
+    memberId: string,
+    tournamentId: string,
+    role: 'co_organizer' | 'staff' | 'referee'
+): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/invitations/${memberId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({ role }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update staff role" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        await logActivity('UPDATE_MEMBER_ROLE', 'tournament', tournamentId, { member_id: memberId, role });
+        return { success: true };
+    } catch (e) {
+        console.error("Error updating staff role:", e);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
 export async function removeStaff(
     memberId: string,
     tournamentId: string
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    // Security Check: Only the tournament owner (Admin) can remove collaborators
-    const access = await validateTournamentAccess(tournamentId, 'admin');
-    if (!access.success) return { success: false, error: access.error };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/invitations/${memberId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.token}`,
+            },
+        });
 
-    const { error } = await supabase
-        .from("tournament_invitations")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", memberId)
-        .eq("tournament_id", tournamentId);
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to remove staff" };
+        }
 
-    if (error) {
-        console.error("Error removing collaborator:", error);
-        return { success: false, error: error.message };
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        await logActivity('REMOVE_MEMBER', 'tournament', tournamentId, { member_id: memberId });
+        return { success: true };
+    } catch (e) {
+        console.error("Error removing staff:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('REMOVE_MEMBER', 'tournament', tournamentId, { member_id: memberId });
-    return { success: true };
 }
 
-/**
- * Get the current user's role for a specific tournament.
- * Returns null if the user has no access.
- */
 export async function getUserRole(
     tournamentId: string
 ): Promise<ActionResponse<{ role: 'admin' | 'editor' | 'viewer' | null; isOwner: boolean }>> {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const access = await validateTournamentAccess(tournamentId, 'viewer');
+    if (!access.success || !access.user) {
         return { success: true, data: { role: null, isOwner: false } };
     }
 
-    // Check if user is the owner
-    const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("organizer_id")
-        .eq("id", tournamentId)
-        .single();
-
-    if (tournament && tournament.organizer_id === user.id) {
-        return { success: true, data: { role: 'admin', isOwner: true } };
-    }
-
-    // Check if user is a collaborator (by user_id or email)
-    const { data: member } = await supabase
-        .from("tournament_invitations")
-        .select("role, status")
-        .eq("tournament_id", tournamentId)
-        .or(`user_id.eq.${user.id},email.eq.${user.email?.toLowerCase()}`)
-        .eq("status", "accepted")
-        .is("deleted_at", null)
-        .maybeSingle();
-
-    if (member) {
-        const roleMap: Record<'co_organizer' | 'staff' | 'referee', 'admin' | 'editor' | 'viewer'> = {
-            co_organizer: 'admin',
-            staff: 'editor',
-            referee: 'viewer'
-        };
-        const mappedRole = roleMap[member.role as 'co_organizer' | 'staff' | 'referee'] || 'viewer';
-        return { success: true, data: { role: mappedRole, isOwner: false } };
-    }
-
-    return { success: true, data: { role: null, isOwner: false } };
+    return {
+        success: true,
+        data: {
+            role: access.role || 'admin',
+            isOwner: access.role === 'admin'
+        }
+    };
 }
 
 /**
@@ -174,49 +232,36 @@ export async function getUserRole(
 export async function acceptInvite(
     tournamentId: string
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: false, error: "Please log in to accept the invite" };
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
-        return { success: false, error: "Please log in to accept the invite" };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/invitations/${tournamentId}/accept`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to accept invite" };
+        }
+
+        // Refresh relevant paths
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/dashboard/invites`);
+        revalidatePath(`/dashboard/inboxes`);
+        revalidatePath(`/dashboard`);
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error accepting invite:", e);
+        return { success: false, error: e?.message || "Failed to accept invite" };
     }
-
-    // Find pending invite for this email
-    const { data: member, error: fetchError } = await supabase
-        .from("tournament_invitations")
-        .select("*")
-        .eq("tournament_id", tournamentId)
-        .eq("email", user.email.toLowerCase())
-        .eq("status", "pending")
-        .is("deleted_at", null)
-        .maybeSingle();
-
-    if (fetchError || !member) {
-        return { success: false, error: "No pending invite found for your email" };
-    }
-
-    // Update the member record
-    const { data: updated, error } = await supabase
-        .from("tournament_invitations")
-        .update({
-            user_id: user.id,
-            status: 'accepted'
-        })
-        .eq("id", member.id)
-        .select()
-        .single();
-
-    if (error || !updated) {
-        console.error("Error accepting invite:", error);
-        return { success: false, error: error?.message || "Failed to accept invite" };
-    }
-
-    // Refresh relevant paths
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    revalidatePath(`/dashboard/invites`);
-    revalidatePath(`/dashboard`);
-
-    return { success: true };
 }
 
 /**
@@ -229,40 +274,39 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
     tournament_name?: string;
     role: string;
 }>>> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/invitations/my`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            return { success: true, data: [] };
+        }
+
+        const data = await res.json();
+        const pending = (data || [])
+            .filter((item: any) => item.status === 'pending')
+            .map((item: any) => ({
+                id: item.id,
+                tournament_id: item.tournament_id,
+                tournament_name: item.tournament_name,
+                role: item.role
+            }));
+
+        return { success: true, data: pending };
+    } catch (e) {
+        console.error("Error fetching pending invites:", e);
         return { success: true, data: [] };
     }
-
-    const { data, error } = await supabase
-        .from("tournament_invitations")
-        .select(`
-            id,
-            tournament_id,
-            role,
-            tournaments (
-                name
-            )
-        `)
-        .eq("email", user.email.toLowerCase())
-        .eq("status", "pending")
-        .is("deleted_at", null);
-
-    if (error) {
-        console.error("Error fetching pending invites:", error);
-        return { success: false, error: error.message };
-    }
-
-    const invites = (data || []).map((item) => ({
-        id: item.id,
-        tournament_id: item.tournament_id,
-        tournament_name: (item.tournaments as unknown as { name: string } | null)?.name,
-        role: item.role
-    }));
-
-    return { success: true, data: invites };
 }
 
 /**
@@ -272,50 +316,39 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
 export async function rejectInvite(
     tournamentId: string
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: false, error: "Please log in to reject the invite" };
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
-        return { success: false, error: "Please log in to reject the invite" };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/invitations/${tournamentId}/reject`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to reject invite" };
+        }
+
+        revalidatePath(`/dashboard/invites`);
+        revalidatePath(`/dashboard/notifications`);
+        revalidatePath(`/dashboard/inboxes`);
+        revalidatePath(`/dashboard`);
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error rejecting invite:", e);
+        return { success: false, error: e?.message || "Failed to reject invite" };
     }
-
-    // Find pending invite for this email
-    const { data: member, error: fetchError } = await supabase
-        .from("tournament_invitations")
-        .select("*")
-        .eq("tournament_id", tournamentId)
-        .eq("email", user.email.toLowerCase())
-        .eq("status", "pending")
-        .is("deleted_at", null)
-        .maybeSingle();
-
-    if (fetchError || !member) {
-        return { success: false, error: "No pending invite found for your email" };
-    }
-
-    // Update the member record to rejected
-    const { error } = await supabase
-        .from("tournament_invitations")
-        .update({
-            status: 'rejected'
-        })
-        .eq("id", member.id);
-
-    if (error) {
-        console.error("Error rejecting invite:", error);
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/dashboard/invites`);
-    revalidatePath(`/dashboard/notifications`);
-    revalidatePath(`/dashboard/inboxes`);
-    revalidatePath(`/dashboard`);
-
-    return { success: true };
 }
 
 /**
- * Get all invitations (pending, accepted, rejected) for the current user.
+ * Get all invitations (pending, accepted, rejected) for the current user from tournament_invitations.
  */
 export async function getAllUserInvites(): Promise<ActionResponse<Array<{
     id: string;
@@ -326,46 +359,41 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
     status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
 }>>> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !user.email) {
-        return { success: true, data: [] };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/invitations/my`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch user invites" };
+        }
+
+        const data = await res.json();
+        const invites = (data || []).map((item: any) => ({
+            id: item.id,
+            tournament_id: item.tournament_id,
+            tournament_name: item.tournament_name || "Tournament",
+            tournament_logo: resolveStorageUrl(item.tournament_logo || null),
+            role: item.role,
+            status: item.status as 'pending' | 'accepted' | 'rejected',
+            created_at: item.created_at,
+        }));
+
+        return { success: true, data: invites };
+    } catch (error: any) {
+        console.error("Error fetching all user invites from Go API:", error);
+        return { success: false, error: error?.message || "Failed to fetch user invites" };
     }
-
-    const { data, error } = await supabase
-        .from("tournament_invitations")
-        .select(`
-            id,
-            tournament_id,
-            role,
-            status,
-            created_at,
-            tournaments (
-                name,
-                logo_img
-            )
-        `)
-        .eq("email", user.email.toLowerCase())
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Error fetching all user invites:", error);
-        return { success: false, error: error.message };
-    }
-
-    const invites = (data || []).map((item) => ({
-        id: item.id,
-        tournament_id: item.tournament_id,
-        tournament_name: (item.tournaments as unknown as { name: string; logo_img?: string | null } | null)?.name,
-        tournament_logo: (item.tournaments as unknown as { name: string; logo_img?: string | null } | null)?.logo_img || null,
-        role: item.role,
-        status: item.status as 'pending' | 'accepted' | 'rejected',
-        created_at: item.created_at,
-    }));
-
-    return { success: true, data: invites };
 }
 
 /**
@@ -373,6 +401,7 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
  */
 export async function getUserRegistrations(): Promise<ActionResponse<Array<{
     id: string;
+    tournament_id?: string;
     team_id: string;
     team_name: string;
     team_logo?: string | null;
@@ -382,111 +411,44 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
     payment_status: 'pending' | 'paid' | 'waived' | 'failed';
     created_at: string;
 }>>> {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: true, data: [] };
-    }
-
-    // 1. Get user's teams
-    const { data: userTeams, error: teamsError } = await supabase
-        .from("teams")
-        .select("id")
-        .eq("user_id", user.id)
-        .is("deleted_at", null);
-
-    if (teamsError || !userTeams || userTeams.length === 0) {
-        return { success: true, data: [] };
-    }
-
-    const teamIds = userTeams.map(t => t.id);
-
-    // 2. Get registrations for these teams
-    const { data: regData, error: regError } = await supabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            team_id,
-            registration_status,
-            payment_status,
-            created_at,
-            team:teams (
-                name,
-                logo_img
-            ),
-            tournament_categories (
-                gender_type,
-                age_categories (
-                    category_name
-                ),
-                tournaments (
-                    name,
-                    logo_img
-                )
-            )
-        `)
-        .in("team_id", teamIds)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-
-    if (regError) {
-        console.error("Error fetching user registrations:", regError);
-        return { success: false, error: regError.message };
-    }
-
-    interface RegistrationRow {
-        id: string;
-        team_id: string;
-        registration_status: string;
-        payment_status: string;
-        created_at: string;
-        team: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
-        tournament_categories: {
-            gender_type?: string;
-            age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
-            tournaments: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
-        } | null | Array<{
-            gender_type?: string;
-            age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
-            tournaments: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
-        }>;
-    }
-
-    const registrations = (regData as unknown as RegistrationRow[] || []).map((item) => {
-        const team = Array.isArray(item.team) ? item.team[0] : item.team;
-        const teamName = team?.name || "Unknown Team";
-        const teamLogo = team?.logo_img || null;
-        const category = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
-        const tournament = category?.tournaments;
-        const tournamentObj = Array.isArray(tournament) ? tournament[0] : tournament;
-        const rawTournamentName = tournamentObj?.name || "Unknown Tournament";
-        const tournamentLogo = tournamentObj?.logo_img || null;
-
-        const ageCategoryObj = Array.isArray(category?.age_categories) ? category.age_categories[0] : category?.age_categories;
-        const ageName = ageCategoryObj?.category_name;
-        const gender = category?.gender_type;
-
-        let tournamentName = rawTournamentName;
-        if (ageName) {
-            const formattedGender = gender ? ` - ${gender.charAt(0).toUpperCase() + gender.slice(1)}` : "";
-            tournamentName = `${rawTournamentName} ${ageName}${formattedGender}`;
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
         }
 
-        return {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/registrations/my`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch user registrations" };
+        }
+
+        const data = await res.json();
+        const registrations = (data || []).map((item: any) => ({
             id: item.id,
+            tournament_id: item.tournament_id || "",
             team_id: item.team_id,
-            team_name: teamName,
-            team_logo: teamLogo,
-            tournament_name: tournamentName,
-            tournament_logo: tournamentLogo,
+            team_name: item.team_name || "Unknown Team",
+            team_logo: resolveStorageUrl(item.team_logo || null),
+            tournament_name: item.tournament_name || "Unknown Tournament",
+            tournament_logo: resolveStorageUrl(item.tournament_logo || null),
             registration_status: item.registration_status as 'pending' | 'approved' | 'rejected',
             payment_status: item.payment_status as 'pending' | 'paid' | 'waived' | 'failed',
             created_at: item.created_at,
-        };
-    });
+        }));
 
-    return { success: true, data: registrations };
+        return { success: true, data: registrations };
+    } catch (e: any) {
+        console.error("Error fetching user registrations from Go API:", e);
+        return { success: false, error: e?.message || "An unexpected error occurred" };
+    }
 }
 
 /**
@@ -494,61 +456,50 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
  */
 export async function getUserTeamManagementRequests(): Promise<ActionResponse<Array<{
     id: string;
+    team_id?: string;
     team_name: string;
     team_logo?: string | null;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
 }>>> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
+        }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: true, data: [] };
-    }
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/team-management-requests/my`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
 
-    const { data, error } = await adminSupabase
-        .from("team_management_requests")
-        .select(`
-            id,
-            status,
-            created_at,
-            team:teams (
-                name,
-                logo_img
-            )
-        `)
-        .eq("requester_id", user.id)
-        .order("created_at", { ascending: false });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch my team requests" };
+        }
 
-    if (error) {
-        console.error("Error fetching team management requests:", error);
-        return { success: false, error: error.message };
-    }
-
-    interface MgmtRequestRow {
-        id: string;
-        status: string;
-        created_at: string;
-        team: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
-    }
-
-    const requests = (data as unknown as MgmtRequestRow[] || []).map((item) => {
-        const team = Array.isArray(item.team) ? item.team[0] : item.team;
-        return {
+        const data = await res.json();
+        const formatted = (data || []).map((item: any) => ({
             id: item.id,
-            team_name: team?.name || "Unknown Team",
-            team_logo: team?.logo_img || null,
+            team_id: item.team_id,
+            team_name: item.team?.name || "Unknown Team",
+            team_logo: resolveStorageUrl(item.team?.logo_img || item.team?.logo_url || null),
             status: item.status as 'pending' | 'approved' | 'rejected',
             created_at: item.created_at,
-        };
-    });
+        }));
 
-    return { success: true, data: requests };
+        return { success: true, data: formatted };
+    } catch (e: any) {
+        console.error("Error fetching my team management requests from Go API:", e);
+        return { success: false, error: e?.message || "An unexpected error occurred" };
+    }
 }
 
 /**
- * Get team management requests submitted by other users for teams in tournaments where the current user is organizer or collaborator.
+ * Get team management requests submitted by other users for teams in tournaments where the current user is organizer or collaborator, or owned teams.
  */
 export async function getIncomingTeamManagementRequests(): Promise<ActionResponse<Array<{
     id: string;
@@ -564,117 +515,43 @@ export async function getIncomingTeamManagementRequests(): Promise<ActionRespons
     created_at: string;
 }>>> {
     try {
-        const supabase = await createClient();
-        const adminSupabase = createAdminClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
             return { success: true, data: [] };
         }
 
-        // 1. Get tournaments where user is organizer
-        const { data: ownedTournaments } = await adminSupabase
-            .from("tournaments")
-            .select("id")
-            .eq("organizer_id", user.id);
-
-        // 2. Get tournaments where user is an accepted collaborator
-        const { data: collabTournaments } = await adminSupabase
-            .from("tournament_invitations")
-            .select("tournament_id")
-            .eq("user_id", user.id)
-            .eq("status", "accepted");
-
-        const tournamentIds = [
-            ...(ownedTournaments || []).map(t => t.id),
-            ...(collabTournaments || []).map(t => t.tournament_id)
-        ];
-
-        if (tournamentIds.length === 0) {
-            return { success: true, data: [] };
-        }
-
-        // 3. Get teams registered in these tournaments
-        const { data: registeredTeams } = await adminSupabase
-            .from("tournament_teams")
-            .select(`
-                team_id,
-                tournament_categories!inner (
-                    tournament_id
-                )
-            `)
-            .in("tournament_categories.tournament_id", tournamentIds);
-
-        const teamIds = Array.from(new Set((registeredTeams || []).map(t => t.team_id)));
-
-        if (teamIds.length === 0) {
-            return { success: true, data: [] };
-        }
-
-        // 4. Get team management requests for these teams
-        const { data: requests, error } = await adminSupabase
-            .from("team_management_requests")
-            .select(`
-                id,
-                team_id,
-                requester_id,
-                contact_phone,
-                message,
-                status,
-                created_at
-            `)
-            .in("team_id", teamIds)
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            console.error("Error fetching incoming team management requests:", error);
-            return { success: false, error: error.message };
-        }
-
-        if (!requests || requests.length === 0) {
-            return { success: true, data: [] };
-        }
-
-        // 5. Gather team names & logos
-        const uniqueTeamIds = Array.from(new Set(requests.map(r => r.team_id)));
-        const { data: teamsData } = await adminSupabase
-            .from("teams")
-            .select("id, name, logo_img")
-            .in("id", uniqueTeamIds);
-        const teamMap = new Map((teamsData || []).map(t => [t.id, { name: t.name, logo: t.logo_img }]));
-
-        // 6. Gather requester profile info from public.users
-        const uniqueRequesterIds = Array.from(new Set(requests.map(r => r.requester_id)));
-        const { data: usersData } = await adminSupabase
-            .from("users")
-            .select("id, full_name, email, profile_img")
-            .in("id", uniqueRequesterIds);
-        const userMap = new Map((usersData || []).map(u => [u.id, { name: u.full_name, email: u.email, avatar: u.profile_img }]));
-
-        const formatted = requests.map((item) => {
-            const teamInfo = teamMap.get(item.team_id);
-            const teamName = teamInfo?.name || "Unknown Team";
-            const teamLogo = teamInfo?.logo || null;
-            const requester = userMap.get(item.requester_id);
-            return {
-                id: item.id,
-                team_id: item.team_id,
-                team_name: teamName,
-                team_logo: teamLogo,
-                requester_name: requester?.name || "Unknown User",
-                requester_email: requester?.email || "",
-                requester_avatar: requester?.avatar || null,
-                contact_phone: item.contact_phone,
-                message: item.message,
-                status: item.status as 'pending' | 'approved' | 'rejected',
-                created_at: item.created_at,
-            };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/team-management-requests/incoming`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
         });
 
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch incoming team requests" };
+        }
+
+        const data = await res.json();
+        const formatted = (data || []).map((item: any) => ({
+            id: item.id,
+            team_id: item.team_id,
+            team_name: item.team?.name || "Unknown Team",
+            team_logo: resolveStorageUrl(item.team?.logo_img || item.team?.logo_url || null),
+            requester_name: item.requester?.full_name || "Unknown User",
+            requester_email: item.requester?.email || "",
+            requester_avatar: resolveStorageUrl(item.requester?.avatar_url || null),
+            contact_phone: item.contact_phone,
+            message: item.message || null,
+            status: item.status as 'pending' | 'approved' | 'rejected',
+            created_at: item.created_at,
+        }));
+
         return { success: true, data: formatted };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Unexpected error in getIncomingTeamManagementRequests:", error);
-        return { success: false, error: "An unexpected error occurred" };
+        return { success: false, error: error?.message || "An unexpected error occurred" };
     }
 }
 
@@ -685,53 +562,32 @@ export async function approveTeamManagementRequest(
     requestId: string
 ): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const adminSupabase = createAdminClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
             return { success: false, error: "Authentication required" };
         }
 
-        // 1. Fetch the request details
-        const { data: request, error: fetchError } = await adminSupabase
-            .from("team_management_requests")
-            .select("team_id, requester_id, status")
-            .eq("id", requestId)
-            .single();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/team-management-requests/${requestId}/approve`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
 
-        if (fetchError || !request) {
-            return { success: false, error: "Request not found" };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to approve request" };
         }
 
-        if (request.status !== "pending") {
-            return { success: false, error: "Request is already processed" };
-        }
-
-        // 2. Update request status to approved
-        const { error: updateReqError } = await adminSupabase
-            .from("team_management_requests")
-            .update({ status: "approved" })
-            .eq("id", requestId);
-
-        if (updateReqError) {
-            return { success: false, error: updateReqError.message };
-        }
-
-        // 3. Update the team owner (user_id) to the requester_id
-        const { error: updateTeamError } = await adminSupabase
-            .from("teams")
-            .update({ user_id: request.requester_id })
-            .eq("id", request.team_id);
-
-        if (updateTeamError) {
-            return { success: false, error: updateTeamError.message };
-        }
+        revalidatePath(`/dashboard/inboxes`);
+        revalidatePath(`/dashboard/teams`);
+        revalidatePath(`/dashboard`);
 
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Unexpected error in approveTeamManagementRequest:", error);
-        return { success: false, error: "An unexpected error occurred" };
+        return { success: false, error: error?.message || "An unexpected error occurred" };
     }
 }
 
@@ -742,28 +598,377 @@ export async function rejectTeamManagementRequest(
     requestId: string
 ): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const adminSupabase = createAdminClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
             return { success: false, error: "Authentication required" };
         }
 
-        // 1. Update request status to rejected
-        const { error } = await adminSupabase
-            .from("team_management_requests")
-            .update({ status: "rejected" })
-            .eq("id", requestId);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/team-management-requests/${requestId}/reject`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
 
-        if (error) {
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to reject request" };
+        }
+
+        revalidatePath(`/dashboard/inboxes`);
+        revalidatePath(`/dashboard/teams`);
+        revalidatePath(`/dashboard`);
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Unexpected error in rejectTeamManagementRequest:", error);
+        return { success: false, error: error?.message || "An unexpected error occurred" };
+    }
+}
+
+/**
+ * Get system notifications from notifications table for current user.
+ */
+export async function getUserSystemNotifications(): Promise<ActionResponse<Array<{
+    id: string;
+    title: string;
+    message: string;
+    type: 'invite' | 'payment' | 'system';
+    link?: string | null;
+    is_read: boolean;
+    created_at: string;
+}>>> {
+    try {
+        const user = await getStaffUser();
+        if (!user) return { success: true, data: [] };
+        const adminSupabase = createAdminClient();
+
+        // 1. Fetch persistent notifications
+        const { data: dbNotifs } = await adminSupabase
+            .from("notifications")
+            .select("id, title, message, type, link, is_read, created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+
+        const dynamicNotifs: Array<{
+            id: string;
+            title: string;
+            message: string;
+            type: 'invite' | 'payment' | 'system';
+            link?: string | null;
+            is_read: boolean;
+            created_at: string;
+        }> = [];
+
+        // 2. Reminder Check: 2 days before start_date or document_deadline for teams user owns
+        try {
+            const { data: userTeams } = await adminSupabase
+                .from("teams")
+                .select("id")
+                .eq("user_id", user.id);
+
+            const userTeamIds = (userTeams || []).map(t => t.id);
+
+            if (userTeamIds.length > 0) {
+                const { data: participations } = await adminSupabase
+                    .from("tournament_teams")
+                    .select(`
+                        id,
+                        team_id,
+                        roster_status,
+                        registration_status,
+                        teams ( name ),
+                        tournament_categories (
+                            name,
+                            min_players,
+                            tournaments (
+                                id,
+                                name,
+                                start_date,
+                                document_deadline
+                            )
+                        )
+                    `)
+                    .in("team_id", userTeamIds)
+                    .neq("registration_status", "rejected");
+
+                const now = new Date();
+                const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
+
+                for (const part of (participations || [])) {
+                    const cat = part.tournament_categories as any;
+                    const tournament = cat?.tournaments;
+                    if (!tournament) continue;
+
+                    const targetDateStr = tournament.document_deadline || tournament.start_date;
+                    if (!targetDateStr) continue;
+
+                    const targetDate = new Date(targetDateStr);
+                    const timeDiff = targetDate.getTime() - now.getTime();
+
+                    // Within 2 days before target date and in the future (or today)
+                    if (timeDiff > 0 && timeDiff <= twoDaysMs) {
+                        // Check if team has valid approved or submitted roster
+                        const { count: submissionCount } = await adminSupabase
+                            .from("tournament_roster_submissions")
+                            .select("id", { count: 'exact', head: true })
+                            .eq("tournament_team_id", part.id)
+                            .is("deleted_at", null);
+
+                        const minRequired = cat?.min_players || 1;
+                        if (!submissionCount || submissionCount < minRequired) {
+                            const teamName = (part.teams as any)?.name || "ทีมของคุณ";
+                            const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                            dynamicNotifs.push({
+                                id: `reminder-roster-${part.id}`,
+                                title: `⏰ แจ้งเตือน: กรุณาส่งรายชื่อนักกีฬา (${teamName})`,
+                                message: `เหลือเวลาอีก ${daysLeft} วัน ก่อนกำหนดปิดรับรายชื่อสำหรับรายการ "${tournament.name}" กรุณาส่งรายชื่อนักกีฬาให้ครบตามเกณฑ์ (${minRequired} คนขึ้นไป)`,
+                                type: 'system',
+                                link: `/dashboard/tournament-teams/${part.id}`,
+                                is_read: false,
+                                created_at: new Date().toISOString(),
+                            });
+                        }
+                    }
+                }
+            }
+        } catch (remErr) {
+            console.warn("[getUserSystemNotifications] Reminder calculation error:", remErr);
+        }
+
+        const combined = [...dynamicNotifs, ...(dbNotifs || [])];
+        return { success: true, data: combined as any };
+    } catch {
+        return { success: true, data: [] };
+    }
+}
+
+/**
+ * Get pending tournament actions (team registration approval, roster/document verification, unlock requests)
+ * for tournaments where the current user is organizer or staff.
+ */
+export async function getIncomingTournamentActions(): Promise<ActionResponse<Array<{
+    id: string;
+    tournament_id: string;
+    tournament_name: string;
+    tournament_logo?: string | null;
+    category_name?: string | null;
+    max_teams?: number;
+    approved_teams_count?: number;
+    min_players?: number;
+    max_players?: number;
+    registration_fee?: number;
+    team_id?: string | null;
+    team_name: string;
+    team_logo?: string | null;
+    contact_name?: string | null;
+    contact_phone?: string | null;
+    slip_img?: string | null;
+    action_type: 'tournament_registration' | 'tournament_roster_submission' | 'tournament_roster_unlock';
+    status: 'pending' | 'approved' | 'rejected';
+    registration_status?: 'pending' | 'approved' | 'rejected' | null;
+    payment_status?: string | null;
+    roster_player_count?: number;
+    created_at: string;
+}>>> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/actions/incoming`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch incoming tournament actions" };
+        }
+
+        const data = await res.json();
+        const actions = (data || []).map((item: any) => ({
+            id: item.id,
+            tournament_id: item.tournament_id,
+            tournament_name: item.tournament_name || "Unknown Tournament",
+            tournament_logo: resolveStorageUrl(item.tournament_logo || null),
+            category_name: item.category_name || null,
+            max_teams: item.max_teams,
+            approved_teams_count: item.approved_teams_count || 0,
+            min_players: item.min_players,
+            max_players: item.max_players,
+            registration_fee: item.registration_fee,
+            team_id: item.team_id,
+            team_name: item.team_name || "Unknown Team",
+            team_logo: resolveStorageUrl(item.team_logo || null),
+            contact_name: item.contact_name || null,
+            contact_phone: item.contact_phone || null,
+            slip_img: resolveStorageUrl(item.slip_img || null),
+            action_type: item.action_type as 'tournament_registration' | 'tournament_roster_submission' | 'tournament_roster_unlock',
+            status: item.status as 'pending' | 'approved' | 'rejected',
+            registration_status: item.registration_status || (item.action_type === 'tournament_registration' ? item.status : 'approved'),
+            payment_status: item.payment_status || null,
+            roster_player_count: item.roster_player_count || 0,
+            created_at: item.created_at,
+        }));
+
+        return { success: true, data: actions };
+    } catch (e: any) {
+        console.error("Error fetching incoming tournament actions from Go API:", e);
+        return { success: false, error: e?.message || "An unexpected error occurred" };
+    }
+}
+
+/**
+ * Fetch roster submissions for a specific tournament team registration
+ */
+export async function getTournamentTeamRoster(
+    tournamentTeamId: string
+): Promise<ActionResponse<Array<{
+    id: string;
+    tournament_team_id: string;
+    master_player_id?: string | null;
+    player_id?: string | null;
+    name: string;
+    shirt_number?: string | null;
+    position?: string | null;
+    tel?: string | null;
+    photo_url?: string | null;
+    status: string;
+    rejection_reason?: string | null;
+    created_at: string;
+}>>> {
+    try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const session = await getServerSession();
+        
+        const res = await fetch(`${apiUrl}/tournament-teams/${tournamentTeamId}/roster`, {
+            headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+            cache: 'no-store'
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch roster" };
+        }
+
+        const data = await res.json();
+        const mapped = (data || []).map((item: any) => ({
+            id: item.id,
+            tournament_team_id: item.tournament_team_id,
+            master_player_id: item.master_player_id || null,
+            player_id: item.player_id || null,
+            name: item.name,
+            shirt_number: item.shirt_number || null,
+            position: item.position || null,
+            tel: item.tel || null,
+            photo_url: resolveStorageUrl(item.photo_url || null),
+            status: item.status || 'pending',
+            rejection_reason: item.rejection_reason || null,
+            created_at: item.created_at || new Date().toISOString()
+        }));
+
+        return { success: true, data: mapped };
+    } catch (e: any) {
+        console.error("Error in getTournamentTeamRoster:", e);
+        return { success: false, error: e?.message || "Failed to fetch roster" };
+    }
+}
+
+/**
+ * Review a single roster submission (Approve or Reject)
+ */
+export async function reviewRosterSubmission(
+    submissionId: string,
+    status: 'approved' | 'rejected',
+    rejectionReason?: string
+): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        if (session?.token) {
+            headers['Authorization'] = `Bearer ${session.token}`;
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const endpoint = status === 'approved'
+            ? `${apiUrl}/tournament-roster-submissions/${submissionId}/approve`
+            : `${apiUrl}/tournament-roster-submissions/${submissionId}/reject`;
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: status === 'rejected' ? JSON.stringify({ reason: rejectionReason || 'ไม่ผ่านเกณฑ์การตรวจสอบ' }) : undefined,
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || `Failed to ${status} roster submission` };
         }
 
         return { success: true };
-    } catch (error) {
-        console.error("Unexpected error in rejectTeamManagementRequest:", error);
-        return { success: false, error: "An unexpected error occurred" };
+    } catch (e: any) {
+        console.error("Error reviewing roster submission:", e);
+        return { success: false, error: e?.message || "Failed to review roster submission" };
     }
 }
+
+/**
+ * Batch review roster submissions
+ */
+export async function batchReviewRosterSubmissions(
+    submissionIds: string[],
+    status: 'approved' | 'rejected',
+    rejectionReason?: string
+): Promise<ActionResponse> {
+    try {
+        for (const id of submissionIds) {
+            await reviewRosterSubmission(id, status, rejectionReason);
+        }
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error batch reviewing roster submissions:", e);
+        return { success: false, error: e?.message || "Failed to batch review submissions" };
+    }
+}
+
+/**
+ * Unified server action to fetch all user inbox items in one request
+ */
+export async function getUnifiedInboxData() {
+    try {
+        const [invitesRes, regsRes, mgmtReqsRes, incomingReqsRes, systemRes, tourActionsRes] = await Promise.all([
+            getAllUserInvites(),
+            getUserRegistrations(),
+            getUserTeamManagementRequests(),
+            getIncomingTeamManagementRequests(),
+            getUserSystemNotifications(),
+            getIncomingTournamentActions()
+        ]);
+
+        return {
+            success: true,
+            data: {
+                invites: invitesRes.success ? (invitesRes.data || []) : [],
+                registrations: regsRes.success ? (regsRes.data || []) : [],
+                teamRequests: mgmtReqsRes.success ? (mgmtReqsRes.data || []) : [],
+                incomingTeamRequests: incomingReqsRes.success ? (incomingReqsRes.data || []) : [],
+                systemNotifications: systemRes.success ? (systemRes.data || []) : [],
+                tournamentActions: tourActionsRes.success ? (tourActionsRes.data || []) : []
+            }
+        };
+    } catch (e: any) {
+        console.error("Error fetching unified inbox data:", e);
+        return { success: false, error: e?.message || "Failed to fetch inbox data" };
+    }
+}
+
+
 

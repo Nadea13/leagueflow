@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive, UserCheck, Link as LinkIcon, Unlink } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -313,11 +313,11 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
 
     const filteredMasterPlayers = masterPlayers.filter(mp => {
         const query = playerSearch.toLowerCase()
-        const fullNameTh = `${mp.first_name_th || ''} ${mp.last_name_th || ''}`.toLowerCase()
-        const fullNameEn = `${mp.first_name_en || ''} ${mp.last_name_en || ''}`.toLowerCase()
+        const fullNameLocal = `${mp.first_name_local || mp.first_name_th || ''} ${mp.last_name_local || mp.last_name_th || ''}`.toLowerCase()
+        const fullNameIntl = `${mp.first_name_intl || mp.first_name_en || ''} ${mp.last_name_intl || mp.last_name_en || ''}`.toLowerCase()
         const matchesQuery = (
-            fullNameTh.includes(query) ||
-            fullNameEn.includes(query) ||
+            fullNameLocal.includes(query) ||
+            fullNameIntl.includes(query) ||
             (mp.tel || "").toLowerCase().includes(query) ||
             (mp.user?.email || "").toLowerCase().includes(query) ||
             (mp.user?.full_name || "").toLowerCase().includes(query) ||
@@ -336,7 +336,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
         <div className="space-y-2 lg:space-y-4 max-w-5xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <Header level={2}>{t("title") || "Admin Dashboard"}</Header>
-                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} className="bg-card" />
+                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
             </div>
 
             {activeTab === "monitor" && (
@@ -345,8 +345,8 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                         <div>
                             <h3 className="text-sm font-bold flex items-center gap-2">
                                 System Infrastructure & Database Metrics
-                                <Badge variant="outline" className="text-[10px] text-primary bg-primary/10 border-primary/50 gap-2">
-                                    <span className="w-1 h-1 rounded-full bg-primary animate-ping" /> Live
+                                <Badge variant="outline" className="text-primary bg-primary/10 border-primary/50">
+                                    Live
                                 </Badge>
                             </h3>
                             <p className="text-xs text-muted-foreground">
@@ -385,7 +385,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                             </span>
                                         )}
                                     </span>
-                                    <Badge variant="outline" className="text-[10px]">
+                                    <Badge variant="outline">
                                         {monitorStats?.latencyMs ? `${monitorStats.latencyMs} ms` : '-'}
                                     </Badge>
                                 </div>
@@ -452,7 +452,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                     }
                                 })
                                 return (
-                                    <Badge variant="outline" className="text-[10px] font-mono bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                    <Badge variant="outline" className="font-mono bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                                         {presenceUsers.length} Online
                                     </Badge>
                                 )
@@ -487,12 +487,12 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="font-bold text-foreground truncate">{user.full_name || user.email}</span>
                                                     {isRealtimeOnline ? (
-                                                        <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/50">
-                                                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> Online
+                                                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/50">
+                                                            Online
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-[9px] bg-card">
-                                                            <span className="w-2 h-2 rounded-full bg-muted-foreground" /> Offline
+                                                        <Badge variant="outline" className="bg-card">
+                                                            Offline
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -562,7 +562,6 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                 ]}
                                 value={logFilterTab}
                                 onChange={(val) => setLogFilterTab(val)}
-                                className="bg-card"
                             />
                         </div>
                         <div>
@@ -588,7 +587,6 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                     <Badge
                                                         variant="outline"
                                                         className={cn(
-                                                            "text-[10px]",
                                                             log.level === "error" && "border-destructive/40 bg-destructive/10 text-destructive",
                                                             log.level === "warning" && "border-amber-500/40 bg-amber-500/10 text-amber-600",
                                                             log.event === "PAGE_VIEW" && "border-teal-500/40 bg-teal-500/10 text-teal-600 font-bold",
@@ -696,7 +694,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                             onClick={() => handlePaymentAction(pmt.id, 'success')}
                                                             className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] h-7 px-2"
                                                         >
-                                                            <Check className="h-3.5 w-3.5 mr-1" />
+                                                            <Check className="h-4 w-4" />
                                                             {t("approve") || "Approve"}
                                                         </Button>
                                                         <Button
@@ -706,7 +704,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                             onClick={() => handlePaymentAction(pmt.id, 'failed')}
                                                             className="font-bold text-[10px] h-7 px-2"
                                                         >
-                                                            <X className="h-3.5 w-3.5 mr-1" />
+                                                            <X className="h-4 w-4" />
                                                             {t("reject") || "Reject"}
                                                         </Button>
                                                     </div>
@@ -795,15 +793,11 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                     <Badge
                                                         variant="outline"
                                                         className={cn(
-                                                            "text-[9px] font-bold px-1.5 py-0.5",
                                                             pmt.status === "success" && "bg-green-500/10 text-green-500 border-green-500/20",
                                                             pmt.status === "pending" && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
                                                             pmt.status === "failed" && "bg-red-500/10 text-red-500 border-red-500/20"
                                                         )}
                                                     >
-                                                        {pmt.status === "success" && <CheckCircle className="h-2.5 w-2.5 mr-1 inline" />}
-                                                        {pmt.status === "pending" && <AlertCircle className="h-2.5 w-2.5 mr-1 inline" />}
-                                                        {pmt.status === "failed" && <XCircle className="h-2.5 w-2.5 mr-1 inline" />}
                                                         {t(`status_${pmt.status}`) || pmt.status}
                                                     </Badge>
                                                 </TableCell>
@@ -925,7 +919,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                             <div>
                                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                                    <UserCheck className="h-5 w-5 text-primary" />
+                                    <UserCheck className="h-4 w-4 text-primary" />
                                     Master Players Management
                                 </CardTitle>
                                 <CardDescription className="text-xs">
@@ -941,7 +935,6 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                     ]}
                                     value={playerFilter}
                                     onChange={(val) => setPlayerFilter(val)}
-                                    className="bg-card"
                                 />
                                 <div className="relative flex-1 sm:w-64">
                                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -975,18 +968,18 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                     </TableHeader>
                                     <TableBody>
                                         {filteredMasterPlayers.map((mp) => {
-                                            const nameTh = `${mp.first_name_th || ''} ${mp.middle_name_th || ''} ${mp.last_name_th || ''}`.trim()
-                                            const nameEn = `${mp.first_name_en || ''} ${mp.middle_name_en || ''} ${mp.last_name_en || ''}`.trim()
-                                            const displayName = nameTh || nameEn || "Unnamed Player"
+                                            const nameLocal = `${mp.first_name_local || mp.first_name_th || ''} ${mp.middle_name_local || mp.middle_name_th || ''} ${mp.last_name_local || mp.last_name_th || ''}`.trim()
+                                            const nameIntl = `${mp.first_name_intl || mp.first_name_en || ''} ${mp.middle_name_intl || mp.middle_name_en || ''} ${mp.last_name_intl || mp.last_name_en || ''}`.trim()
+                                            const displayName = nameLocal || nameIntl || "Unnamed Player"
 
                                             return (
                                                 <TableRow key={mp.id} className="text-xs">
                                                     <TableCell>
                                                         <div className="flex items-center gap-2.5">
-                                                            {mp.profile_img ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                            {(mp.photo_url || mp.profile_img) ? (
+                                                                 
                                                                 <img
-                                                                    src={mp.profile_img}
+                                                                    src={(mp.photo_url || mp.profile_img) || ""}
                                                                     alt={displayName}
                                                                     className="w-8 h-8 rounded-full object-cover border"
                                                                 />
@@ -997,8 +990,8 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                             )}
                                                             <div className="flex flex-col">
                                                                 <span className="font-bold text-foreground">{displayName}</span>
-                                                        {nameEn && nameTh && (
-                                                                    <span className="text-[10px] text-muted-foreground">{nameEn}</span>
+                                                                {nameIntl && nameLocal && (
+                                                                    <span className="text-[10px] text-muted-foreground">{nameIntl}</span>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1016,12 +1009,12 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                         {mp.user_id ? (
                                                             <div className="flex items-center gap-1.5">
                                                                 {mp.verified ? (
-                                                                    <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/40 gap-1 font-bold">
-                                                                        <CheckCircle className="h-3 w-3" /> Verified
+                                                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/40">
+                                                                        Verified
                                                                     </Badge>
                                                                 ) : (
-                                                                    <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/40 gap-1 font-bold animate-pulse">
-                                                                        <AlertCircle className="h-3 w-3" /> รอยืนยันคำขอ
+                                                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/40 animate-pulse">
+                                                                        รอยืนยันคำขอ
                                                                     </Badge>
                                                                 )}
                                                                 <div className="flex flex-col text-[10px]">
@@ -1030,7 +1023,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <Badge variant="outline" className="text-[10px] bg-slate-500/10 text-slate-600 border-slate-500/40 font-bold">
+                                                            <Badge variant="outline" className="bg-slate-500/10 text-slate-600 border-slate-500/40">
                                                                 Unclaimed / Master Only
                                                             </Badge>
                                                         )}
@@ -1044,7 +1037,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                                     onClick={() => handleApprovePlayer(mp.id)}
                                                                     className="h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-bold"
                                                                 >
-                                                                    <CheckCircle className="h-3 w-3" /> ยืนยัน (Accept)
+                                                                    <CheckCircle className="h-4 w-4" /> ยืนยัน (Accept)
                                                                 </Button>
                                                                 <Button
                                                                     variant="outline"
@@ -1053,7 +1046,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                                     onClick={() => handleRejectPlayer(mp.id)}
                                                                     className="h-7 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 gap-1"
                                                                 >
-                                                                    <XCircle className="h-3 w-3" /> ปฏิเสธ (Reject)
+                                                                    <XCircle className="h-4 w-4" /> ปฏิเสธ (Reject)
                                                                 </Button>
                                                             </div>
                                                         ) : mp.user_id && mp.verified ? (
@@ -1064,7 +1057,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                                 onClick={() => handleLinkPlayer(mp.id, null)}
                                                                 className="h-7 text-[11px] text-muted-foreground hover:bg-muted gap-1"
                                                             >
-                                                                <Unlink className="h-3 w-3" /> Unlink User
+                                                                <Unlink className="h-4 w-4" /> Unlink User
                                                             </Button>
                                                         ) : (
                                                             <div className="flex items-center gap-1.5">
@@ -1090,7 +1083,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                                     onClick={() => handleLinkPlayer(mp.id, selectedUserForClaim[mp.id])}
                                                                     className="h-7 text-[11px] gap-1 font-bold"
                                                                 >
-                                                                    <LinkIcon className="h-3 w-3" /> Assign User
+                                                                    <LinkIcon className="h-4 w-4" /> Assign User
                                                                 </Button>
                                                             </div>
                                                         )}
@@ -1111,3 +1104,4 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
         </div>
     )
 }
+

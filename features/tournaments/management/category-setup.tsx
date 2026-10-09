@@ -3,13 +3,12 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createTournamentCategory } from "@/actions/tournaments/general";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/ui/submit-button";
+import { Button } from "@/components/ui/button";
 import { ActionResponse } from "@/types/index";
 import { cn } from "@/lib/utils";
-import { ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound } from "lucide-react";
+import { ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Loader2 } from "lucide-react";
 
 interface CategorySetupProps {
     tournamentId: string;
@@ -29,6 +28,10 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
     const [genderType, setGenderType] = useState<string>("male");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [registrationFee, setRegistrationFee] = useState<string>("0");
+    const [bankName, setBankName] = useState<string>("PromptPay");
+    const [bankAccountNumber, setBankAccountNumber] = useState<string>("");
+    const [bankAccountName, setBankAccountName] = useState<string>("");
+
     const [state, formAction, isPending] = useActionState(
         async (_prevState: ActionResponse, _formData: FormData) => {
             let formattedCategoryName = "Open";
@@ -67,37 +70,52 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                 return { success: false, error: ageCatRes.error || "เกิดข้อผิดพลาดในการสร้างรุ่นอายุ" };
             }
 
+            const hasBankInfo = bankAccountNumber.trim() || bankAccountName.trim();
+            const bankDetails = hasBankInfo
+                ? {
+                      bank_name: bankName,
+                      bank_account_name: bankAccountName.trim(),
+                      bank_account_number: bankAccountNumber.trim(),
+                  }
+                : null;
+
             return createTournamentCategory(
                 tournamentId,
                 ageCatRes.id,
                 genderType,
                 parseInt(maxTeams),
-                parseFloat(registrationFee) || 0
+                parseFloat(registrationFee) || 0,
+                null,
+                bankDetails
             );
         },
         initialState
     );
 
     return (
-        <div className="flex items-center justify-center min-h-[70vh] w-full px-0 sm:px-4 py-0 sm:py-12">
-            <Card className="w-full sm:max-w-[480px] bg-card border-0 sm:border p-0 overflow-hidden shadow-none sm:shadow-2xl rounded-none sm:rounded-xl">
-                <CardHeader className="relative p-2 md:p-4 border-b">
-                    <CardTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
+        <div className="flex items-center justify-center h-full min-h-[calc(100vh-6rem)] w-full p-2 sm:p-4 my-auto">
+            <div className="w-full sm:max-w-[640px] h-[85vh] max-h-[90vh] bg-card border border-border shadow-2xl rounded-sm overflow-hidden flex flex-col my-auto">
+                {/* Dialog-style Header */}
+                <div className="flex flex-col gap-1 sm:text-left border-b p-3 md:p-4 shrink-0 bg-card">
+                    <h2 className="text-lg md:text-xl font-black tracking-tighter text-foreground leading-none">
                         {t("title")}
-                    </CardTitle>
-                    <CardDescription className="text-muted-foreground text-sm">
+                    </h2>
+                    <p className="text-muted-foreground text-sm">
                         {t.rich("desc", {
                             name: tournamentName,
                             span: (chunks) => <span className="text-primary font-bold">{chunks}</span>
                         })}
-                    </CardDescription>
-                </CardHeader>
+                    </p>
+                </div>
 
-                <form action={formAction}>
-                    <CardContent className="p-2 md:p-4 space-y-1 md:space-y-2">
+                {/* Dialog-style Form Body (Scrollable inside card) */}
+                <form action={formAction} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
                         {/* Age Category Type & Input */}
-                        <div className="space-y-1">
-                            <Label>{t("age_category")}</Label>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold">
+                                {t("age_category")} <span className="text-destructive">*</span>
+                            </Label>
                             <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
                                     { id: "under", label: ageValue ? t("age_under", { age: ageValue }) : t("type_under"), icon: <ArrowDownCircle className="h-4 w-4" /> },
@@ -109,12 +127,13 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                                         <button
                                             key={typeItem.id}
                                             type="button"
+                                            disabled={isPending}
                                             onClick={() => {
                                                 setAgeType(typeItem.id as "under" | "over" | "open");
                                                 if (typeItem.id === "open") setAgeValue("");
                                             }}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2.5 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
                                                     ? "bg-primary/10 text-primary font-bold"
                                                     : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
@@ -135,16 +154,17 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                             </div>
 
                             {ageType !== "open" && (
-                                <div className="space-y-1">
-                                    <Label>
+                                <div className="space-y-1 pt-1">
+                                    <Label className="text-xs font-bold">
                                         {ageType === "under" 
                                             ? "ระบุตัวเลขอายุ (เช่น 13 สื่อถึง U13)"
-                                            : "ระบุตัวเลขอายุ (เช่น 35 สื่อถึง 35+)"}
+                                            : "ระบุตัวเลขอายุ (เช่น 35 สื่อถึง 35+)"} <span className="text-destructive">*</span>
                                     </Label>
                                     <Input
                                         type="text"
                                         size="sm"
                                         value={ageValue}
+                                        disabled={isPending}
                                         onChange={(e) => {
                                             const val = e.target.value.replace(/[^0-9]/g, "");
                                             setAgeValue(val);
@@ -161,8 +181,10 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                         </div>
 
                         {/* Gender Type Selector */}
-                        <div className="space-y-1">
-                            <Label>{t("gender_group")}</Label>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold">
+                                {t("gender_group")} <span className="text-destructive">*</span>
+                            </Label>
                             <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
                                     { id: "male", label: t("gender_male"), icon: <Mars className="h-4 w-4" /> },
@@ -174,9 +196,10 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                                         <button
                                             key={genderItem.id}
                                             type="button"
+                                            disabled={isPending}
                                             onClick={() => setGenderType(genderItem.id)}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2.5 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
                                                     ? "bg-primary/10 text-primary font-bold"
                                                     : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
@@ -197,55 +220,133 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                             </div>
                         </div>
 
-                        {/* Max Teams Input */}
-                        <div className="space-y-1">
-                            <Label>{t("team_limit")}</Label>
-                            <Input
-                                type="text"
-                                name="max_teams"
-                                value={maxTeams}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^0-9]/g, "");
-                                    setMaxTeams(val);
-                                }}
-                                placeholder={t("team_limit_hint")}
-                                className="bg-transparent text-foreground focus-visible:ring-0"
-                            />
+                        {/* Max Teams and Registration Fee Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Max Teams Input */}
+                            <div className="space-y-1">
+                                <Label className="text-xs font-bold">
+                                    {t("team_limit")} <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    type="text"
+                                    size="sm"
+                                    name="max_teams"
+                                    value={maxTeams}
+                                    disabled={isPending}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9]/g, "");
+                                        setMaxTeams(val);
+                                    }}
+                                    placeholder={t("team_limit_hint")}
+                                    className="bg-transparent text-foreground focus-visible:ring-0"
+                                />
+                            </div>
+
+                            {/* Registration Fee Input */}
+                            <div className="space-y-1">
+                                <Label className="text-xs font-bold">
+                                    {t("fee")} (THB)
+                                </Label>
+                                <Input
+                                    type="text"
+                                    size="sm"
+                                    name="registration_fee"
+                                    value={registrationFee}
+                                    disabled={isPending}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                                        if ((val.match(/\./g) || []).length <= 1) {
+                                            setRegistrationFee(val);
+                                        }
+                                    }}
+                                    placeholder={t("fee_hint")}
+                                    className="bg-transparent text-foreground focus-visible:ring-0"
+                                />
+                            </div>
                         </div>
 
-                        {/* Registration Fee Input */}
-                        <div className="space-y-1">
-                            <Label>{t("fee")}</Label>
-                            <Input
-                                type="text"
-                                name="registration_fee"
-                                value={registrationFee}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^0-9.]/g, "");
-                                    // Limit to one decimal point
-                                    if ((val.match(/\./g) || []).length <= 1) {
-                                        setRegistrationFee(val);
-                                    }
-                                }}
-                                placeholder={t("fee_hint")}
-                                className="bg-transparent text-foreground focus-visible:ring-0"
-                            />
+                        {/* Bank Details Section */}
+                        <div className="-mx-4 border-t border-border" />
+                        <div className="space-y-3">
+                            <div className="flex flex-col gap-0.5">
+                                <Label className="text-xs font-bold text-foreground">
+                                    {t("bank_section_title")}
+                                </Label>
+                                <span className="text-[11px] text-muted-foreground">
+                                    {t("bank_section_desc")}
+                                </span>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="space-y-1">
+                                    <Label className="text-xs font-semibold">{t("promptpay_id")}</Label>
+                                    <Input
+                                        type="text"
+                                        size="sm"
+                                        value={bankAccountNumber}
+                                        disabled={isPending}
+                                        onChange={(e) => setBankAccountNumber(e.target.value)}
+                                        placeholder={t("promptpay_placeholder")}
+                                        className="bg-transparent text-foreground focus-visible:ring-0"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs font-semibold">{t("bank_name")}</Label>
+                                        <Input
+                                            type="text"
+                                            size="sm"
+                                            value={bankName}
+                                            disabled={isPending}
+                                            onChange={(e) => setBankName(e.target.value)}
+                                            placeholder="PromptPay / ธนาคาร"
+                                            className="bg-transparent text-foreground focus-visible:ring-0"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs font-semibold">{t("account_name")}</Label>
+                                        <Input
+                                            type="text"
+                                            size="sm"
+                                            value={bankAccountName}
+                                            disabled={isPending}
+                                            onChange={(e) => setBankAccountName(e.target.value)}
+                                            placeholder={t("account_name_placeholder")}
+                                            className="bg-transparent text-foreground focus-visible:ring-0"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {state.error && (
-                            <div className="text-xs font-bold text-destructive bg-destructive/10 rounded-sm border border-destructive p-2">
+                            <div className="text-xs font-medium text-destructive bg-destructive/10 rounded-sm border border-destructive/20 p-2.5">
                                 {state.error}
                             </div>
                         )}
-                    </CardContent>
+                    </div>
 
-                    <div className="border-t p-2 md:p-4">
-                        <SubmitButton className="w-full">
-                            {isPending ? t("setting_up") : t("setup_btn")}
-                        </SubmitButton>
+                    {/* Dialog-style Footer */}
+                    <div className="shrink-0 flex flex-row items-center justify-end gap-2 border-t p-4 sm:p-5 bg-card">
+                        <Button
+                            size="sm"
+                            type="submit"
+                            disabled={isPending}
+                            className="w-full sm:w-auto min-w-[140px]"
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    {t("setting_up")}
+                                </>
+                            ) : (
+                                t("setup_btn")
+                            )}
+                        </Button>
                     </div>
                 </form>
-            </Card>
+            </div>
         </div>
     );
 }

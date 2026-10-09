@@ -1,54 +1,36 @@
 import createMiddleware from 'next-intl/middleware';
-import { updateSession } from './lib/supabase/middleware';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
 
 const handleI18nRouting = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
-    // Extract IP address from request headers
+    // 1. Extract IP address
     const forwardedFor = request.headers.get('x-forwarded-for');
     const realIp = request.headers.get('x-real-ip');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || '127.0.0.1');
-
     request.headers.set('x-client-ip', clientIp);
 
-    // 1. Run Supabase session update
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    });
+    // 2. Check JWT Session Cookie
+    const token = request.cookies.get('leagueflow_access_token')?.value;
+    const path = request.nextUrl.pathname;
 
-    const isAuthConfirm = request.nextUrl.pathname.includes('/auth/confirm');
-    if (!isAuthConfirm) {
-        response = await updateSession(request);
-        if (response.status === 307 || response.status === 308 || response.headers.has('location')) {
-            return response;
-        }
+    // Check if user is navigating to auth pages while already logged in
+    const isAuthPage = path.includes('/sign-in') || path.includes('/sign-up') || path.includes('/login') || path.includes('/forgot-password');
+    const isRootPage = path === '/' || path === '/th' || path === '/en';
+
+    if (token && (isAuthPage || isRootPage)) {
+        // Extract current locale or default to th
+        const matchLocale = path.match(/^\/(th|en)/);
+        const locale = matchLocale ? matchLocale[1] : 'th';
+        
+        const dashboardUrl = new URL(`/${locale}/dashboard`, request.url);
+        return NextResponse.redirect(dashboardUrl);
     }
 
-    // 2. Run next-intl middleware
-    const i18nResponse = handleI18nRouting(request);
-
-    // 3. Merge responses
-    // We prioritize i18nResponse for routing (redirects/rewrites)
-    // but MUST preserve cookies/headers from the supabase response
-    
-    // Copy all cookies from Supabase response to i18nResponse
-    response.cookies.getAll().forEach((cookie) => {
-        i18nResponse.cookies.set(cookie.name, cookie.value, cookie);
-    });
-
-    // Copy important headers (except those handled by next-intl)
-    // We only copy headers that were added/modified by updateSession
-    response.headers.forEach((value, key) => {
-        if (!i18nResponse.headers.has(key)) {
-            i18nResponse.headers.set(key, value);
-        }
-    });
-
-    return i18nResponse;
+    // 3. Run next-intl middleware
+    const response = handleI18nRouting(request);
+    return response;
 }
 
 export const config = {

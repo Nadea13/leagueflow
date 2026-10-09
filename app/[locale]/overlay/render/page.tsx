@@ -369,21 +369,21 @@ function CustomOverlayRenderer() {
 
               {b.id === "logo-tournament" || b.bindTo === "logo-tournament" ? (
                 logoTournament ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                   
                   <img src={logoTournament} className="w-full h-full object-contain pointer-events-none p-1" alt="Tournament Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
               ) : b.id === "logo-home" || b.bindTo === "logo-home" ? (
                 logoHome ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                   
                   <img src={logoHome} className="w-full h-full object-contain pointer-events-none p-1" alt="Home Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
               ) : b.id === "logo-away" || b.bindTo === "logo-away" ? (
                 logoAway ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                   
                   <img src={logoAway} className="w-full h-full object-contain pointer-events-none p-1" alt="Away Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>

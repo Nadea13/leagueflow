@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+    ActionMenu,
+    ActionMenuContent,
+    ActionMenuItem,
+    ActionMenuTrigger,
+} from "@/components/ui/action-menu";
 import { Shapes, Square, Circle, Triangle, Star, Type, ChevronDown, Sparkles } from "lucide-react";
 import { CanvasBlock, getSnappedCoords } from "./types";
 import { isLightColor } from "./helpers";
@@ -365,7 +365,7 @@ export function CanvasPreview({
                 {/* Empty Canvas Helpful Tip Overlay */}
                 {!readOnly && displayBlocks.length === 0 && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none select-none z-10">
-                        <div className="bg-card/80 backdrop-blur-sm border rounded-lg p-4 shadow-md max-w-xs space-y-1.5 border-border">
+                        <div className="bg-card/80 backdrop-blur-sm border rounded-sm p-4 shadow-md max-w-xs space-y-1.5 border-border">
                             <div className="p-2 bg-primary/10 rounded-full w-fit mx-auto">
                                 <Sparkles className="h-4 w-4 text-primary" />
                             </div>
@@ -382,9 +382,9 @@ export function CanvasPreview({
                 {/* Bottom Center Floating Toolbar Menu */}
                 {!readOnly && (
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 bg-card border shadow-xl rounded-sm p-1 flex items-center">
-                        {/* Dropdown Shapes */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                        {/* ActionMenu Shapes */}
+                        <ActionMenu>
+                            <ActionMenuTrigger asChild>
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -393,28 +393,28 @@ export function CanvasPreview({
                                 >
                                     <Shapes className="h-4 w-4" />
                                     <span>{locale === 'th' ? "รูปทรง" : "Shapes"}</span>
-                                    <ChevronDown className="h-3 w-3 opacity-50" />
+                                    <ChevronDown className="h-4 w-4 opacity-50" />
                                 </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="center" side="top" sideOffset={8} className="bg-card border shadow-xl rounded-sm w-44">
-                                <DropdownMenuItem onClick={() => handleAddShape("rectangle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                            </ActionMenuTrigger>
+                            <ActionMenuContent align="center" side="top" sideOffset={8} className="bg-card border shadow-xl rounded-sm w-44">
+                                <ActionMenuItem onClick={() => handleAddShape("rectangle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
                                     <Square className="h-4 w-4" />
                                     <span>{locale === 'th' ? "สี่เหลี่ยม" : "Rectangle"}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleAddShape("circle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                </ActionMenuItem>
+                                <ActionMenuItem onClick={() => handleAddShape("circle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
                                     <Circle className="h-4 w-4" />
                                     <span>{locale === 'th' ? "วงกลม" : "Circle"}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleAddShape("polygon")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                </ActionMenuItem>
+                                <ActionMenuItem onClick={() => handleAddShape("polygon")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
                                     <Triangle className="h-4 w-4" />
                                     <span>{locale === 'th' ? "Polygon (สามเหลี่ยม)" : "Polygon"}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleAddShape("star")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                </ActionMenuItem>
+                                <ActionMenuItem onClick={() => handleAddShape("star")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
                                     <Star className="h-4 w-4" />
                                     <span>{locale === 'th' ? "ดาว" : "Star"}</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                </ActionMenuItem>
+                            </ActionMenuContent>
+                        </ActionMenu>
 
                         {/* Text Tool */}
                         <Button
@@ -526,25 +526,25 @@ export function CanvasPreview({
                                 }}
                             />
                             {b.imageUrl ? (
-                                /* eslint-disable-next-line @next/next/no-img-element */
+                                 
                                 <img src={b.imageUrl} className="w-full h-full object-contain pointer-events-none p-1" alt="" />
                             ) : b.id === "logo-tournament" || b.bindTo === "logo-tournament" ? (
                                 logoTournament ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                     
                                     <img src={logoTournament} className="w-full h-full object-contain pointer-events-none p-1" alt="" />
                                 ) : (
                                     <span className="text-[10px] opacity-60">🛡️ Tour</span>
                                 )
                             ) : b.id === "logo-home" || b.bindTo === "logo-home" ? (
                                 logoHome ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                     
                                     <img src={logoHome} className="w-full h-full object-contain pointer-events-none p-1" alt="" />
                                 ) : (
                                     <span className="text-[10px] opacity-60">🛡️ Home</span>
                                 )
                             ) : b.id === "logo-away" || b.bindTo === "logo-away" ? (
                                 logoAway ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                     
                                     <img src={logoAway} className="w-full h-full object-contain pointer-events-none p-1" alt="" />
                                 ) : (
                                     <span className="text-[10px] opacity-60">🛡️ Away</span>

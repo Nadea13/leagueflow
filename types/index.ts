@@ -1,8 +1,9 @@
 import type { Edge, Node } from "@xyflow/react";
 
-export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
-export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled';
-export type SportType = 'football' | 'volleyball';
+export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished' | 'registration_open' | 'registration_closed' | 'published' | 'completed' | 'cancelled';
+export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled' | 'warmup' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'penalties' | 'completed' | 'cancelled' | 'postponed';
+export type SportCategoryType = 'team' | 'racket' | 'individual' | 'dual' | 'combat' | 'esports';
+export type SportType = 'football' | 'volleyball' | 'basketball' | 'futsal' | 'badminton' | 'tennis' | 'takraw' | 'cricket' | string;
 
 export interface BracketCanvasData {
     nodes: Node[];
@@ -36,7 +37,10 @@ export interface Tournament {
     canvas_data?: BracketCanvasData | null;
     logo_img?: string | null;
     cover_img?: string | null;
+    logo_url?: string | null;
+    banner_url?: string | null;
     location_name?: string | null;
+    location?: string | null;
     google_map_url?: string | null;
     registration_fee?: number | null;
 }
@@ -44,37 +48,50 @@ export interface Tournament {
 export interface Match {
     id: string;
     tournament_id: string;
-    tournament_category_id?: string | null;
+    category_id?: string | null;
+    tournament_category_id?: string | null; // Alias
     home_team_id: string | null;
     away_team_id: string | null;
     home_score: number | { total?: number } | null;
     away_score: number | { total?: number } | null;
+    score_detail?: Record<string, any> | null;
     round: number;
-    stage: 'league' | 'group' | 'knockout' | 'round_of_64' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final';
+    stage: 'league' | 'group' | 'knockout' | 'round_of_64' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final' | string;
     winner_id?: string | null;
     is_manual: boolean;
     status: MatchStatus;
+    scheduled_at?: string | null;
     match_date?: string | null;
     match_time?: string | null;
-    scheduled_at?: string | null;
     venue?: string | null;
     venue_id?: string | null;
+    field_name?: string | null;
     pitch_number?: number | null;
-    match_index?: number | null;
+    idx_match?: number | null;
+    match_index?: number | null; // Alias
     node_id?: string | null;
-    placeholder_a?: string | null;
-    placeholder_b?: string | null;
-    winner_to_node_id?: string | null;
+    next_node_id?: string | null;
+    winner_to_node_id?: string | null; // Alias
+    ph_home?: string | null;
+    ph_away?: string | null;
+    placeholder_home?: string | null; // Alias
+    placeholder_away?: string | null; // Alias
+    placeholder_a?: string | null;    // Alias
+    placeholder_b?: string | null;    // Alias
     created_at: string;
     // Timer Fields
-    timer_status?: 'playing' | 'paused' | 'stopped';
-    elapsed_before_pause?: number; // Seconds calculated before pause
-    current_minute?: number | string | null;
+    timer_status?: 'playing' | 'paused' | 'stopped' | string;
+    elapsed_seconds?: number;
+    elapsed_before_pause?: number; // Alias
+    minute?: number | string | null;
+    current_minute?: number | string | null; // Alias
     home_team?: { id: string; name: string; logo_url?: string | null; description?: string | null; contact_name?: string | null; contact_phone?: string | null };
     away_team?: { id: string; name: string; logo_url?: string | null; description?: string | null; contact_name?: string | null; contact_phone?: string | null };
     // Penalty Shootout (joined)
     penalty_home_score?: number | null;
     penalty_away_score?: number | null;
+    updated_at?: string | null;
+    deleted_at?: string | null;
 }
 
 export interface Team {
@@ -85,12 +102,16 @@ export interface Team {
     logo_url?: string | null;
     contact_name?: string | null;
     contact_phone?: string | null;
+    contact_email?: string | null;
     tournament_id?: string | null;
     group_name?: string | null;
     sport: SportType;
     sport_name?: string | null;
     created_at: string;
 }
+
+export type PaymentStatus = 'pending' | 'checking' | 'paid' | 'rejected';
+export type RegistrationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface TournamentTeam {
     id: string;
@@ -107,8 +128,9 @@ export interface TournamentTeam {
     is_roster_locked: boolean;
     managed_by_manager?: boolean;
     sport: SportType;
-    payment_status?: string | null;
-    registration_status?: string | null;
+    payment_status?: PaymentStatus | null;
+    registration_status?: RegistrationStatus | null;
+    roster_status?: RegistrationStatus | null;
     created_at: string;
 }
 
@@ -132,11 +154,15 @@ export interface Player {
     team_id?: string | null;
     global_team_id?: string | null;
     name: string;
+    first_name?: string | null;
+    last_name?: string | null;
     number?: number | null;
     position?: string | null;
     birth_date?: string | null;
+    birthday?: string | null;
     photo_url?: string | null;
     global_player_id?: string | null;
+    master_player_id?: string | null;
     created_at: string;
     status?: RosterSubmissionStatus; // Status for submissions if mapped
     // Join
@@ -144,35 +170,74 @@ export interface Player {
     deleted_at?: string | null;
     tel?: string | null;
     profile_img?: string | null;
-    master_player?: {
-        id: string;
-        profile_img?: string | null;
-    } | null;
+    master_player?: MasterPlayer | null;
+}
+
+export interface MasterPlayer {
+    id: string;
+    user_id?: string | null;
+    name?: string;
+    first_name_local?: string | null;
+    middle_name_local?: string | null;
+    last_name_local?: string | null;
+    first_name_intl?: string | null;
+    middle_name_intl?: string | null;
+    last_name_intl?: string | null;
+    // Legacy support
+    first_name_th?: string | null;
+    middle_name_th?: string | null;
+    last_name_th?: string | null;
+    first_name_en?: string | null;
+    middle_name_en?: string | null;
+    last_name_en?: string | null;
+    nickname?: string | null;
+    birthday?: string | null;
+    photo_url?: string | null;
+    profile_img?: string | null;
+    tel?: string | null;
+    favorite_sport_id?: number | null;
+    preferred_hand?: string | null;
+    preferred_foot?: string | null;
+    gender?: string | null;
+    status?: string;
+    verified?: boolean;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface GlobalPlayer {
     id: string;
     name: string;
+    first_name_local?: string | null;
+    middle_name_local?: string | null;
+    last_name_local?: string | null;
+    first_name_intl?: string | null;
+    middle_name_intl?: string | null;
+    last_name_intl?: string | null;
     photo_url?: string | null;
+    profile_img?: string | null;
     id_card_url?: string | null;
     date_of_birth?: string | null;
+    birthday?: string | null;
     athlete_types: SportType[];
     created_by?: string | null;
     created_at: string;
-    profile_img?: string | null;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win' | 'possession' | 'pass' | 'missed_shot' | 'bad_pass' | 'offside' | 'cross' | 'miss_cross';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'first_half' | 'half_time' | 'second_half' | 'full_time' | 'extra_time' | 'extra_time_half_time' | 'extra_time_second_half' | 'penalties' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win' | 'possession' | 'pass' | 'missed_shot' | 'bad_pass' | 'offside' | 'cross' | 'miss_cross';
 
 export interface MatchEvent {
     id: string;
     match_id: string;
     team_id: string | null;
     player_id?: string | null;
-    event_type: EventType;
+    type?: EventType | string;
+    event_type: EventType; // Primary/alias
     minute: number;
-    extra_info?: Record<string, unknown>; // JSONB
+    detail?: Record<string, unknown>; // JSONB
+    extra_info?: Record<string, unknown>; // Alias
     created_at: string;
+    deleted_at?: string | null;
     isPending?: boolean;
     // Join
     player_name?: string; // For display convenience if joined
@@ -210,8 +275,10 @@ export interface TournamentMember {
     tournament_id: string;
     user_id: string | null;
     email: string | null;
-    role: 'co_organizer' | 'staff' | 'referee';
+    role: 'owner' | 'co_organizer' | 'staff' | 'referee';
     status: 'pending' | 'accepted' | 'rejected';
+    avatar_url?: string | null;
+    full_name?: string | null;
     created_at: string;
 }
 
@@ -406,24 +473,49 @@ export interface Registration {
 }
 
 export interface Sport {
-    id: string;
+    id: number | string;
     sport_name: string;
+    sport_type?: SportCategoryType | string;
     created_at?: string;
 }
 
+export interface AgeCategory {
+    id: number;
+    category_name: string;
+    min_age?: number | null;
+    max_age?: number | null;
+}
+
 export interface TournamentCategory {
-    id: string | number;
+    id: string;
     tournament_id: string;
-    age_category_id: number;
+    name?: string;
+    age_category_id?: number | null;
     gender_type: string;
     max_teams: number;
+    team_limit?: number;
     registration_fee?: number | null;
     rules_config?: Record<string, unknown> | null;
     canvas_data: BracketCanvasData | null;
     deleted_at?: string | null;
     created_at?: string;
-    age_categories?: {
-        category_name: string;
-    } | null;
+    updated_at?: string;
+    age_categories?: AgeCategory | null;
+    category_name?: string;
 }
+
+export interface Sponsor {
+    id: string;
+    tournament_id: string;
+    sponsor_name: string;
+    logo_img: string;
+    cover_url?: string | null;
+    link_url: string | null;
+    order_index: number;
+    created_at: string;
+    updated_at?: string;
+}
+
+export type TournamentSponsor = Sponsor;
+
 

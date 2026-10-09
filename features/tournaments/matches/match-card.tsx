@@ -10,9 +10,9 @@ import { updateMatch } from "@/actions/tournaments/matches";
 import { Button } from "@/components/ui/button";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { cn } from "@/lib/utils";
-import { Link, useRouter } from "@/i18n/routing";
+import { useRouter } from "@/i18n/routing";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { createClient } from "@/lib/supabase/client";
@@ -279,14 +279,14 @@ export function MatchCard({
                             ) : (
                                 <>
                                     <span className="line-clamp-1 py-0.5 px-1 text-foreground">
-                                        {match.home_team?.name || tMatch("tbd")}
+                                        {match.home_team?.name || match.placeholder_home || match.placeholder_a || (match as any).placeholderA || tMatch("tbd")}
                                     </span>
                                     {match.home_team?.logo_url ? (
                                         <Image src={match.home_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 p-0.5 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                     ) : (
                                         <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
                                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
-                                                {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
+                                                {(match.home_team?.name || match.placeholder_home || match.placeholder_a || (match as any).placeholderA || "?").substring(0, 2).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
@@ -342,12 +342,12 @@ export function MatchCard({
                                     ) : (
                                         <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
                                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
-                                                {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
+                                                {(match.away_team?.name || match.placeholder_away || match.placeholder_b || (match as any).placeholderB || "?").substring(0, 2).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
                                     <span className="line-clamp-1 py-0.5 px-1 text-foreground">
-                                        {match.away_team?.name || tMatch("tbd")}
+                                        {match.away_team?.name || match.placeholder_away || match.placeholder_b || (match as any).placeholderB || tMatch("tbd")}
                                     </span>
                                 </>
                             )}
@@ -360,9 +360,9 @@ export function MatchCard({
             <div className="flex items-center justify-center w-full" onClick={e => e.stopPropagation()}>
                 {isEditMode && match.away_team_id && (
                     <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
-                        className="h-10 w-10 text-muted-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="text-muted-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         onClick={() => setClearDialogOpen(true)}
                         disabled={isLoading}
                     >
@@ -413,7 +413,7 @@ export function MatchCard({
                 <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <Eraser className="h-5 w-5 text-destructive" />
+                            <Eraser className="h-4 w-4 text-destructive" />
                             {t("clear_match") || "Clear Match"}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
@@ -421,7 +421,7 @@ export function MatchCard({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -429,9 +429,8 @@ export function MatchCard({
                                 e.preventDefault();
                                 handleClear();
                             }}
-                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all"
                         >
-                            <Eraser className="h-3.5 w-3.5 mr-2" />
                             {t("clear") || "Clear"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -440,3 +439,4 @@ export function MatchCard({
         </>
     );
 }
+

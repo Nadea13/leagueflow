@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client";
 import { updateTournamentCategory, deleteTournamentCategory } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Loader2, Trophy, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TournamentCategory } from "@/types";
@@ -30,9 +29,10 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 interface CategorySettingsProps {
     tournamentId: string;
     sport?: string;
+    onCategoryUpdated?: () => void;
 }
 
-export function CategorySettings({ tournamentId, sport: initialSport }: CategorySettingsProps) {
+export function CategorySettings({ tournamentId, sport: initialSport, onCategoryUpdated }: CategorySettingsProps) {
     const locale = useLocale();
     const isThai = locale === "th";
     const { toast } = useToast();
@@ -57,44 +57,29 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const supabase = createClient();
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+            const res = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                const tournamentData = data.tournament;
+                const catData = data.categories || [];
 
-            // Fetch tournament details
-            const { data: tournamentData } = await supabase
-                .from("tournaments")
-                .select("name, sport, sports(sport_name)")
-                .eq("id", tournamentId)
-                .maybeSingle();
+                if (tournamentData) {
+                    const rawSport = tournamentData.settings?.sport_id ||
+                                     (tournamentData.name?.toLowerCase().includes("volleyball") || tournamentData.name?.includes("วอลเลย์บอล") ? "volleyball" : "football");
+                    setSport(rawSport.toLowerCase());
+                }
 
-            const rawSport = (tournamentData as unknown as { sport?: string; sports?: { sport_name?: string } })?.sport || 
-                             (tournamentData as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
-                             (tournamentData?.name?.toLowerCase().includes("volleyball") || tournamentData?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
-
-            if (rawSport) {
-                setSport(rawSport.toLowerCase());
-            }
-
-            // Fetch tournament categories
-            const { data: catData } = await supabase
-                .from("tournament_categories")
-                .select(`
-                    *,
-                    age_categories(category_name)
-                `)
-                .eq("tournament_id", tournamentId)
-                .is("deleted_at", null)
-                .order("created_at", { ascending: true });
-
-            if (catData) {
-                setCategories(catData);
-                if (catData.length > 0) {
-                    // Preselect first if none selected, or keep selected if still exists
-                    setSelectedCategoryId((current) => {
-                        const exists = catData.some(c => c.id.toString() === current);
-                        return exists ? current : catData[0].id.toString();
-                    });
-                } else {
-                    setSelectedCategoryId(null);
+                if (catData) {
+                    setCategories(catData);
+                    if (catData.length > 0) {
+                        setSelectedCategoryId((current) => {
+                            const exists = catData.some((c: any) => c.id.toString() === current);
+                            return exists ? current : catData[0].id.toString();
+                        });
+                    } else {
+                        setSelectedCategoryId(null);
+                    }
                 }
             }
         } catch (error) {
@@ -217,6 +202,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                     description: isThai ? "อัปเดตข้อมูลรุ่นการแข่งขันเรียบร้อยแล้ว" : "Tournament category has been updated."
                 });
                 await loadData();
+                onCategoryUpdated?.();
             } else {
                 toast({
                     title: "Error",
@@ -249,6 +235,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                 });
                 setSelectedCategoryId(null);
                 await loadData();
+                onCategoryUpdated?.();
             } else {
                 toast({
                     title: "Error",
@@ -282,7 +269,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
             <Card className="border border-border bg-card">
                 <CardHeader>
                     <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-primary" />
+                        <Trophy className="h-4 w-4 text-primary" />
                         {isThai ? "รุ่นการแข่งขัน" : "Tournament Categories"}
                     </CardTitle>
                     <CardDescription>
@@ -545,7 +532,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                                 >
                                                     {isDeleting ? (
                                                         <>
-                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
                                                             {isThai ? "กำลังลบ..." : "Deleting..."}
                                                         </>
                                                     ) : (
@@ -572,3 +559,4 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
         </div>
     );
 }
+

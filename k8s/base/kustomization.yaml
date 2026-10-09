@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: leagueflow
+
+resources:
+  - namespace.yaml
+  - network-policy.yaml
+  - postgres/postgres-secret.yaml
+  - postgres/postgres-service.yaml
+  - postgres/postgres-statefulset.yaml
+  - postgres/r2-backup-secret.yaml
+  - postgres/postgres-backup-cronjob.yaml
+  - redis/redis.yaml
+  - backend/backend.yaml
+  - frontend/frontend.yaml
+  - cloudflare/cloudflared.yaml

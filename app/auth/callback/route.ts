@@ -1,63 +1,26 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-    const requestUrl = new URL(request.url);
-    const code = requestUrl.searchParams.get("code");
-    const origin = requestUrl.origin;
-    const redirectTo = requestUrl.searchParams.get("redirect_to")?.toString();
+export async function GET(request: NextRequest) {
+    const searchParams = request.nextUrl.searchParams;
+    const token = searchParams.get("token");
+    const error = searchParams.get("error");
+    const locale = searchParams.get("locale") || "th";
 
-    // Destination URL
-    const destinationUrl = redirectTo
-        ? `${origin}${redirectTo}`
-        : `${origin}/dashboard`;
+    const origin = request.nextUrl.origin;
 
-    // Create response first so we can write cookies to it
-    const response = NextResponse.redirect(destinationUrl);
-
-    if (code) {
-        const cookieStore = await cookies();
-
-        // Create Supabase client that writes cookies to the response
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll();
-                    },
-                    setAll(cookiesToSet) {
-                        // Write directly to the response cookies
-                        cookiesToSet.forEach(({ name, value, options }) => {
-                            response.cookies.set(name, value, {
-                                ...options,
-                                secure: process.env.NODE_ENV === 'production',
-                            });
-                        });
-                    },
-                },
-            }
-        );
-
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-            console.error("Auth callback error:", error);
-            return NextResponse.redirect(
-                `${origin}/sign-in?error=${encodeURIComponent(error.message)}`
-            );
-        }
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const finalDestination = redirectTo
-                ? (redirectTo.startsWith('http') ? redirectTo : `${origin}${redirectTo}`)
-                : `${origin}/dashboard`;
-            
-            return NextResponse.redirect(finalDestination);
-        }
+    if (error || !token) {
+        const errorMsg = error || "authentication_failed";
+        return NextResponse.redirect(`${origin}/${locale}/sign-in?error=${encodeURIComponent(errorMsg)}`);
     }
+
+    // Redirect to dashboard and attach session cookie
+    const response = NextResponse.redirect(`${origin}/${locale}/dashboard`);
+    response.cookies.set("leagueflow_access_token", token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        sameSite: "lax",
+        httpOnly: false, // Accessible by client ApiClient as well
+    });
 
     return response;
 }

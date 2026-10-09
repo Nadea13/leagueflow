@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { PublicTournamentsListClient } from "./public-tournaments-list-client";
@@ -7,7 +8,8 @@ import { Tournament } from "@/types";
 
 export default async function TournamentsPage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const session = await getServerSession();
+    const user = session?.user || null;
 
     // Fetch list of sports for filtering tab
     const { data: sports } = await supabase

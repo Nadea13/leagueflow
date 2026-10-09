@@ -1,10 +1,11 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+export { resolveStorageUrl } from "./storage-utils";
 
 const accountId = process.env.R2_ACCOUNT_ID;
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 const bucketName = process.env.R2_BUCKET_NAME || "league-flow-local";
-const publicUrl = (process.env.R2_PUBLIC_URL || "").replace(/\/$/, "");
+const publicUrl = (process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "/api/storage").replace(/\/$/, "");
 
 // Initialize S3 Client for Cloudflare R2
 export const r2Client = new S3Client({

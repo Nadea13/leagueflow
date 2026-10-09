@@ -4,11 +4,11 @@ import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/routing"
 import {
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuItem,
-    DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu"
+    ActionMenuSub,
+    ActionMenuSubContent,
+    ActionMenuItem,
+    ActionMenuSubTrigger,
+} from "@/components/ui/action-menu"
 import { Globe, Check } from "lucide-react"
 
 export function LanguageSubMenu() {
@@ -22,23 +22,23 @@ export function LanguageSubMenu() {
     }
 
     return (
-        <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                <Globe className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+        <ActionMenuSub>
+            <ActionMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                 <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("language")}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-background border-border min-w-[120px]">
-                <DropdownMenuItem onClick={() => switchLocale("en")}>
-                    <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇺🇸</span>
+            </ActionMenuSubTrigger>
+            <ActionMenuSubContent className="bg-background border-border min-w-[120px]">
+                <ActionMenuItem onClick={() => switchLocale("en")}>
+                    <span className="h-4 w-4 text-muted-foreground group-hover:text-primary">🇺🇸</span>
                     <span className="focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">English</span>
                     {locale === "en" && <Check className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchLocale("th")}>
-                    <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇹🇭</span>
+                </ActionMenuItem>
+                <ActionMenuItem onClick={() => switchLocale("th")}>
+                    <span className="h-4 w-4 text-muted-foreground group-hover:text-primary">🇹🇭</span>
                     <span className="focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">ไทย</span>
                     {locale === "th" && <Check className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-            </DropdownMenuSubContent>
-        </DropdownMenuSub>
+                </ActionMenuItem>
+            </ActionMenuSubContent>
+        </ActionMenuSub>
     )
 }

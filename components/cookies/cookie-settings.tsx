@@ -30,47 +30,49 @@ export function CookieSettings({ open, onOpenChange, onSave }: CookieSettingsPro
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] p-0 bg-card rounded-xl">
+            <DialogContent className="sm:max-w-[425px] p-0 bg-card rounded-sm">
                 <DialogHeader className="border-b p-2 md:p-4">
                     <DialogTitle>{t("settings")}</DialogTitle>
                     <DialogDescription>
                         {t("description")}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-1 md:gap-2 p-2 md:p-4">
-                    {/* Necessary */}
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <Label>{t("necessary")}</Label>
-                            <p className="text-xs text-muted-foreground">{t("necessary_desc")}</p>
+                <div className="p-2 md:p-4">
+                    <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden">
+                        {/* Necessary */}
+                        <div className="flex items-center justify-between p-3 md:p-4 hover:bg-muted/30 transition-all">
+                            <div className="space-y-1">
+                                <Label>{t("necessary")}</Label>
+                                <p className="text-xs text-muted-foreground">{t("necessary_desc")}</p>
+                            </div>
+                            <Switch checked={true} disabled />
                         </div>
-                        <Switch checked={true} disabled />
-                    </div>
 
-                    {/* Analytics */}
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <Label>{t("analytics")}</Label>
-                            <p className="text-xs text-muted-foreground">{t("analytics_desc")}</p>
+                        {/* Analytics */}
+                        <div className="flex items-center justify-between p-3 md:p-4 hover:bg-muted/30 transition-all">
+                            <div className="space-y-1">
+                                <Label htmlFor="analytics">{t("analytics")}</Label>
+                                <p className="text-xs text-muted-foreground">{t("analytics_desc")}</p>
+                            </div>
+                            <Switch
+                                id="analytics"
+                                checked={preferences.analytics}
+                                onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, analytics: checked }))}
+                            />
                         </div>
-                        <Switch
-                            id="analytics"
-                            checked={preferences.analytics}
-                            onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, analytics: checked }))}
-                        />
-                    </div>
 
-                    {/* Marketing */}
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <Label>{t("marketing")}</Label>
-                            <p className="text-xs text-muted-foreground">{t("marketing_desc")}</p>
+                        {/* Marketing */}
+                        <div className="flex items-center justify-between p-3 md:p-4 hover:bg-muted/30 transition-all">
+                            <div className="space-y-1">
+                                <Label htmlFor="marketing">{t("marketing")}</Label>
+                                <p className="text-xs text-muted-foreground">{t("marketing_desc")}</p>
+                            </div>
+                            <Switch
+                                id="marketing"
+                                checked={preferences.marketing}
+                                onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, marketing: checked }))}
+                            />
                         </div>
-                        <Switch
-                            id="marketing"
-                            checked={preferences.marketing}
-                            onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, marketing: checked }))}
-                        />
                     </div>
                 </div>
                 <DialogFooter className="p-2 md:p-4 border-t">

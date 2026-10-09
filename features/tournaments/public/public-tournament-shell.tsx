@@ -15,7 +15,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown";
 import { Sponsor } from "@/actions/tournaments/sponsor";
 import { Header } from "@/components/ui/header";
 import { Label } from "@/components/ui/label";
@@ -615,7 +615,7 @@ export function PublicTournamentShell({
             <Tab
                 value={currentTab}
                 onChange={handleTabChange}
-                className="w-full md:w-max mb-2 md:mb-4 bg-card"
+                className="w-full md:w-max mb-2 md:mb-4"
                 itemClassName="flex-1 md:flex-none"
                 options={tabOptions}
             />
@@ -626,9 +626,9 @@ export function PublicTournamentShell({
                     <div className="relative border rounded-sm overflow-hidden bg-card">
                         {/* Cover Image */}
                         <div className="w-full aspect-2/1 lg:aspect-3/1 overflow-hidden shadow-inner bg-muted/20 relative">
-                            {tournament.cover_img ? (
+                            {(tournament.cover_img || tournament.banner_url) ? (
                                 <Image
-                                    src={tournament.cover_img}
+                                    src={tournament.cover_img || tournament.banner_url || ""}
                                     alt={tournament.name}
                                     fill
                                     className="object-cover"
@@ -645,9 +645,9 @@ export function PublicTournamentShell({
                         <div className="p-4 flex flex-col items-center text-center gap-1 lg:gap-2 relative z-10 -mt-10 md:-mt-16 p-2 lg:p-4">
                             {/* Logo */}
                             <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-4 lg:border-8 border-card bg-card overflow-hidden flex items-center justify-center shrink-0 shadow-lg relative z-20 mx-auto">
-                                {tournament.logo_img ? (
+                                {(tournament.logo_img || tournament.logo_url) ? (
                                     <Image
-                                        src={tournament.logo_img}
+                                        src={tournament.logo_img || tournament.logo_url || ""}
                                         alt={tournament.name}
                                         width={128}
                                         height={128}
@@ -687,9 +687,10 @@ export function PublicTournamentShell({
                                     )}
                                     <Header level={4}>{ann.title}</Header>
                                     {ann.content && (
-                                        <p className="text-xs text-muted-foreground mt-1 lg:mt-2 whitespace-pre-wrap leading-relaxed">
-                                            {ann.content}
-                                        </p>
+                                        <div
+                                            className="text-xs text-foreground mt-1 lg:mt-2 leading-relaxed prose prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: ann.content }}
+                                        />
                                     )}
                                     <span className="text-[9px] text-muted-foreground/50 mt-2 lg:mt-4 block font-bold">
                                         {new Date(ann.created_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {
@@ -761,10 +762,17 @@ export function PublicTournamentShell({
                                 {sponsors.map((sponsor) => {
                                     const content = (
                                         <div
-                                            className="w-16 h-16 md:w-24 md:h-24 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer rounded-sm group"
+                                            className={cn(
+                                                "flex items-center justify-center overflow-hidden shrink-0 cursor-pointer rounded-sm group transition-all",
+                                                sponsor.cover_url
+                                                    ? "h-16 md:h-24 w-auto min-w-[100px] max-w-[240px] px-2 bg-muted/20 hover:bg-muted/40 border border-border/40"
+                                                    : "w-16 h-16 md:w-24 md:h-24"
+                                            )}
                                             title={sponsor.sponsor_name}
                                         >
-                                            {sponsor.logo_img ? (
+                                            {sponsor.cover_url ? (
+                                                <Image src={sponsor.cover_url} className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105" alt={sponsor.sponsor_name} width={240} height={96} />
+                                            ) : sponsor.logo_img ? (
                                                 <Image src={sponsor.logo_img} className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110" alt={sponsor.sponsor_name} width={96} height={96} />
                                             ) : (
                                                 <span className="font-black text-2xl text-muted-foreground transition-transform duration-200 group-hover:scale-110">
@@ -804,7 +812,7 @@ export function PublicTournamentShell({
                 <div className="space-y-2 md:space-y-4">
                     <div className="flex flex-col gap-1 mb-2 md:mb-4">
                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Trophy className="h-5 w-5 text-primary" />
+                            <Trophy className="h-4 w-4 text-primary" />
                             {t("league_table")}
                         </h2>
                         <p className="text-[10px] font-bold text-muted-foreground/60">{t("league_table_desc")}</p>
@@ -848,18 +856,18 @@ export function PublicTournamentShell({
                             </button>
                             <div className="flex items-center justify-between px-1 h-full gap-0.5">
                                 <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
-                                    <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    <ChevronLeft className="h-4 w-4 md:h-4 md:w-4" />
                                 </button>
                                 <Popover open={isMatchCalendarOpen} onOpenChange={setIsMatchCalendarOpen}>
                                     <PopoverTrigger asChild>
                                         <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center">
-                                            <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                                            <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
                                             <span className="text-xs font-semibold tracking-tight truncate max-w-[120px] md:max-w-none">
                                                 {matchSelectedDate ? formatDate(matchSelectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                             </span>
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="bottom" sideOffset={5}>
+                                    <PopoverContent className="w-80 p-0 bg-card rounded-sm shadow-2xl" align="start" side="bottom" sideOffset={5}>
                                         <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                             <button onClick={() => setMatchViewDate(subMonths(matchViewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                 <ChevronLeft className="h-4 w-4" />
@@ -928,7 +936,7 @@ export function PublicTournamentShell({
                                     </PopoverContent>
                                 </Popover>
                                 <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
-                                    <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    <ChevronRight className="h-4 w-4 md:h-4 md:w-4" />
                                 </button>
                             </div>
                         </div>
@@ -1001,7 +1009,7 @@ export function PublicTournamentShell({
                 <div className="space-y-2 md:space-y-4 animate-in fade-in duration-200">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Users className="h-5 w-5 text-primary" />
+                            <Users className="h-4 w-4 text-primary" />
                             {t("player_stats")}
                         </h2>
                         <p className="text-[10px] font-bold text-muted-foreground/60">สถิตินักกีฬาในการแข่งขันทั้งหมด</p>
@@ -1026,7 +1034,7 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.scorers.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
                                                     <div className="flex flex-col">
@@ -1056,7 +1064,7 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.assists.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
                                                     <div className="flex flex-col">
@@ -1086,7 +1094,7 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.saves.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
                                                     <div className="flex flex-col">
@@ -1117,7 +1125,7 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.yellowCards.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
                                                     <div className="flex flex-col">
@@ -1148,7 +1156,7 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.redCards.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
                                                     <div className="flex flex-col">
@@ -1204,3 +1212,4 @@ export function PublicTournamentShell({
         </main>
     );
 }
+

@@ -1,24 +1,27 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Announcement } from "@/types/index";
+import { getServerSession } from "@/lib/auth-server";
 
 export async function getAnnouncements(tournamentId: string): Promise<ActionResponse<Announcement[]>> {
-    const supabase = await createClient();
+    try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/announcements`, {
+            cache: 'no-store'
+        });
 
-    const { data, error } = await supabase
-        .from("announcements")
-        .select("*")
-        .eq("tournament_id", tournamentId)
-        .order("is_pinned", { ascending: false })
-        .order("created_at", { ascending: false });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch announcements" };
+        }
 
-    if (error) {
-        return { success: false, error: error.message };
+        const data = await res.json();
+        return { success: true, data: data as Announcement[] };
+    } catch (e) {
+        console.error("Error fetching announcements:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    return { success: true, data: data as Announcement[] };
 }
 
 export async function addAnnouncement(
@@ -26,54 +29,107 @@ export async function addAnnouncement(
     title: string,
     content?: string,
     isPinned?: boolean
-): Promise<ActionResponse> {
-    const supabase = await createClient();
+): Promise<ActionResponse<Announcement>> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
 
-    const { error } = await supabase
-        .from("announcements")
-        .insert({
-            tournament_id: tournamentId,
-            title,
-            content: content || null,
-            is_pinned: isPinned || false,
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/announcements`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                title,
+                content: content || "",
+                is_pinned: isPinned || false,
+            }),
         });
 
-    if (error) {
-        return { success: false, error: error.message };
-    }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to add announcement" };
+        }
 
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
+        const data = await res.json();
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+
+        return { success: true, data: data as Announcement };
+    } catch (e) {
+        console.error("Error adding announcement:", e);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 export async function deleteAnnouncement(announcementId: string, tournamentId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
 
-    const { error } = await supabase
-        .from("announcements")
-        .delete()
-        .eq("id", announcementId);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/announcements/${announcementId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.token}`,
+            },
+        });
 
-    if (error) {
-        return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to delete announcement" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+
+        return { success: true };
+    } catch (e) {
+        console.error("Error deleting announcement:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
 }
 
 export async function toggleAnnouncementPin(announcementId: string, isPinned: boolean, tournamentId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
 
-    const { error } = await supabase
-        .from("announcements")
-        .update({ is_pinned: isPinned })
-        .eq("id", announcementId);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/announcements/${announcementId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                is_pinned: isPinned,
+            }),
+        });
 
-    if (error) {
-        return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update announcement" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+
+        return { success: true };
+    } catch (e) {
+        console.error("Error toggling announcement pin:", e);
+        return { success: false, error: "An unexpected error occurred" };
     }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
 }

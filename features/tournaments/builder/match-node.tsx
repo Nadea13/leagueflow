@@ -9,6 +9,9 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useMemo } from "react";
 import { Match, TournamentTeam, MatchEvent } from "@/types";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLocale } from "next-intl";
 
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 type MatchItem = NonNullable<MatchNodeData['matches']>[number];
@@ -25,14 +28,27 @@ export const MatchNode = memo(function MatchNode({
     const storeTeams = useBracketStore((s) => s.teams);
     const storeSport = useBracketStore((s) => s.sport);
     const params = useParams();
+    const locale = useLocale();
     const tournamentId = params.id as string;
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
+
+    const handleAddMatch = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const nextMatches = [...(Array.isArray(data.matches) ? data.matches : [])];
+        nextMatches.push({
+            id: `m-${Date.now()}-${nextMatches.length + 1}`,
+            placeholderA: "TBD",
+            placeholderB: "TBD",
+        });
+        updateNodeData(id, { matches: nextMatches });
+    };
 
     const [dbMatches, setDbMatches] = useState<Match[]>([]);
     const [dbEvents, setDbEvents] = useState<MatchEvent[]>([]);
     const [fetchedSport, setFetchedSport] = useState<string | null>(null);
     const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
     const matches = useMemo(() => Array.isArray(data.matches) ? data.matches : [], [data.matches]);
+    const matchDbIdsKey = useMemo(() => matches.map(m => m.dbId || m.id).filter(Boolean).join(","), [matches]);
 
     const sport = useMemo(() => {
         const s = storeSport || (data as { sport?: string })?.sport || fetchedSport || 'football';
@@ -48,7 +64,10 @@ export const MatchNode = memo(function MatchNode({
     }, []);
 
     useEffect(() => {
+        let isMounted = true;
         async function fetchScores() {
+            if (!tournamentId && !id && !matchDbIdsKey) return;
+
             if (tournamentId && !storeSport && !(data as { sport?: string })?.sport) {
                 const { data: tourData } = await supabase
                     .from('tournaments')
@@ -56,7 +75,7 @@ export const MatchNode = memo(function MatchNode({
                     .eq('id', tournamentId)
                     .maybeSingle();
 
-                if (tourData) {
+                if (isMounted && tourData) {
                     const sName = tourData.sport || (tourData.sports as unknown as { sport_name?: string })?.sport_name;
                     if (sName) setFetchedSport(sName.toLowerCase());
                 }
@@ -79,8 +98,8 @@ export const MatchNode = memo(function MatchNode({
 
             const { data: results } = await query;
             
-            if (results) {
-                setDbMatches(results);
+            if (isMounted && results) {
+                setDbMatches(prev => JSON.stringify(prev) !== JSON.stringify(results) ? results : prev);
                 const fetchedIds = results.map(r => r.id);
                 if (fetchedIds.length > 0) {
                     const { data: evs } = await supabase
@@ -88,15 +107,15 @@ export const MatchNode = memo(function MatchNode({
                         .select('*')
                         .in('match_id', fetchedIds);
                     
-                    if (evs) {
-                        setDbEvents(evs as MatchEvent[]);
+                    if (isMounted && evs) {
+                        setDbEvents(prev => JSON.stringify(prev) !== JSON.stringify(evs) ? (evs as MatchEvent[]) : prev);
                     }
                 }
             }
         }
 
         fetchScores();
-        const interval = setInterval(fetchScores, 2000);
+        const interval = setInterval(fetchScores, 10000);
 
         const channel = supabase
             .channel(`match-node-${id}`)
@@ -105,10 +124,11 @@ export const MatchNode = memo(function MatchNode({
             .subscribe();
 
         return () => {
+            isMounted = false;
             clearInterval(interval);
             supabase.removeChannel(channel);
         };
-    }, [id, tournamentId, supabase, matches, storeSport, data]);
+    }, [id, tournamentId, supabase, matchDbIdsKey, storeSport]);
 
     useEffect(() => {
         updateNodeInternals(id);
@@ -261,10 +281,20 @@ export const MatchNode = memo(function MatchNode({
             {/* ── Match List ── */}
             <div className="flex flex-col divide-y divide-border">
                 {matches.length === 0 ? (
-                    <div className="p-4 text-center">
+                    <div className="p-4 text-center flex flex-col items-center gap-2">
                         <p className="text-[10px] text-center text-muted-foreground">
-                            No matches in this round
+                            {locale === "th" ? "ยังไม่มีแมตช์ในโหนดนี้" : "No matches in this round"}
                         </p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[11px] gap-1 px-2 border-node-2/40 text-node-2 hover:bg-node-2/10"
+                            onClick={handleAddMatch}
+                        >
+                            <Plus className="h-4 w-4" />
+                            {locale === "th" ? "เพิ่มแมตช์" : "Add Match"}
+                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-1">
@@ -426,7 +456,7 @@ export const MatchNode = memo(function MatchNode({
                                             const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : true));
 
                                             return (
-                                                <div className="flex flex-col divide-y divide-node-2/50">
+                                                <div className="flex flex-col divide-y divide-border">
                                                     {/* Slot A Row with Handles */}
                                                     <div className="relative">
                                                         {!isGroupConnected && (

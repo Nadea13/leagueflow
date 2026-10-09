@@ -1,30 +1,69 @@
-import { getTranslations } from "next-intl/server";
-import { User } from "@supabase/supabase-js";
+"use client";
+
+import { useTranslations, useLocale } from "next-intl";
 import { Profile } from "@/types";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
-import { ChevronRight, CreditCard, Sliders, Scale, AlertTriangle, User as UserIcon } from "lucide-react";
+import { ChevronRight, CreditCard, Scale, AlertTriangle, UserCog, KeyRound, SunMoon, Languages, FileText } from "lucide-react";
 import { ProfileForm } from "./profile-form";
+import { SecurityForm } from "./security-form";
+import { ConnectedAccounts } from "./connected-accounts";
 import { BillingTab } from "./billing-tab";
-import { cn } from "@/lib/utils";
 import { SettingsTourButton } from "./settings-tour-button";
 import { Header } from "../ui/header";
+import { Button } from "../ui/button";
+import { useRouter } from "@/i18n/routing";
+import { TabOption } from "../ui/tab";
+import { cn } from "@/lib/utils";
 
-interface SettingsViewProps {
-    user: User;
-    profile?: Profile;
-    activeTab?: string;
+export interface SettingsUser {
+    id: string;
+    email?: string;
+    user_metadata?: {
+        full_name?: string;
+        avatar_url?: string;
+    };
 }
 
-export async function SettingsView({ user, profile, activeTab = "profile" }: SettingsViewProps) {
-    const t = await getTranslations("DashboardSettings");
-    const tCommon = await getTranslations("Common");
-    const tLegal = await getTranslations("Legal");
-    const tNav = await getTranslations("Nav");
+interface SettingsViewProps {
+    user: SettingsUser;
+    profile?: Profile;
+    activeTab?: string;
+    onProfileUpdated?: () => void;
+}
+
+type SettingsTabValue = "general" | "security" | "legal" | "billing" | "danger";
+
+export function SettingsView({ user, profile, activeTab = "general", onProfileUpdated }: SettingsViewProps) {
+    const t = useTranslations("DashboardSettings");
+    const tCommon = useTranslations("Common");
+    const tLegal = useTranslations("Legal");
+    const locale = useLocale();
+    const isThai = locale === "th";
+    const router = useRouter();
+
+    const currentTab: SettingsTabValue = (activeTab === 'profile' || activeTab === 'preferences' || activeTab === 'general')
+        ? 'general'
+        : (activeTab as SettingsTabValue);
+
+    const isGeneralTab = currentTab === 'general';
+
+    const tabOptions: TabOption<SettingsTabValue>[] = [
+        { value: "general", label: t("general") || "General", icon: UserCog },
+        { value: "security", label: t("security") || "Security", icon: KeyRound },
+        { value: "legal", label: t("legal"), icon: Scale },
+        { value: "billing", label: t("billing"), icon: CreditCard },
+        { value: "danger", label: t("danger_zone"), icon: AlertTriangle },
+    ];
+
+    const handleTabChange = (val: SettingsTabValue) => {
+        router.push(`/dashboard/settings?tab=${val}`);
+    };
+
     return (
-        <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
+        <div className="flex flex-col gap-3 md:gap-4 w-full">
             <div className="flex items-center justify-between" id="tour-settings-header">
                 <div>
                     <Header level={2} className="text-2xl md:text-3xl font-black tracking-tight">
@@ -34,148 +73,238 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                 <SettingsTourButton />
             </div>
 
-            <div className="flex flex-col gap-2 md:gap-4 ">
-                {/* Settings Tabs Navigation */}
-                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card overflow-x-auto scrollbar-hide" id="tour-settings-tabs">
-                    <Link
-                        href="/dashboard/settings?tab=profile"
-                        className={cn(
-                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
-                            activeTab === 'profile'
-                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
-                                : "text-muted-foreground hover:text-primary"
-                        )}
-                    >
-                        <UserIcon className="h-3.5 w-3.5" />
-                        <span>{tNav("profile") || "Profile"}</span>
-                    </Link>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                {/* Left Column: Settings Navigation Menu */}
+                <aside className="lg:col-span-4 xl:col-span-3" id="tour-settings-tabs">
+                    <div className="rounded-sm border bg-card p-4 space-y-1 lg:sticky lg:top-4">
+                        <div className="pb-4 hidden lg:block">
+                            <Header level={6}>
+                                {isThai ? "เมนูการตั้งค่า" : "Settings Menu"}
+                            </Header>
+                        </div>
+                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible">
+                            {tabOptions.map((opt) => {
+                                const Icon = opt.icon;
+                                const isActive = currentTab === opt.value;
+                                const isDanger = opt.value === 'danger';
 
-                    <Link
-                        href="/dashboard/settings?tab=preferences"
-                        className={cn(
-                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
-                            activeTab === 'preferences'
-                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
-                                : "text-muted-foreground hover:text-primary"
-                        )}
-                    >
-                        <Sliders className="h-3.5 w-3.5" />
-                        <span>{t("preferences")}</span>
-                    </Link>
-
-                    <Link
-                        href="/dashboard/settings?tab=legal"
-                        className={cn(
-                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
-                            activeTab === 'legal'
-                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
-                                : "text-muted-foreground hover:text-primary"
-                        )}
-                    >
-                        <Scale className="h-3.5 w-3.5" />
-                        <span>{t("legal")}</span>
-                    </Link>
-
-                    <Link
-                        href="/dashboard/settings?tab=billing"
-                        className={cn(
-                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
-                            activeTab === 'billing'
-                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
-                                : "text-muted-foreground hover:text-primary"
-                        )}
-                    >
-                        <CreditCard className="h-3.5 w-3.5" />
-                        <span>{t("billing")}</span>
-                    </Link>
-
-                    <Link
-                        href="/dashboard/settings?tab=danger"
-                        className={cn(
-                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
-                            activeTab === 'danger'
-                                ? "bg-destructive text-destructive-foreground rounded hover:text-destructive-foreground hover:bg-destructive"
-                                : "text-destructive hover:text-destructive"
-                        )}
-                    >
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        <span>{t("danger_zone")}</span>
-                    </Link>
-                </div>
-
-                {/* Settings Content Area */}
-                <main className="flex-1 w-full space-y-2 md:space-y-4" id="tour-settings-content">
-                    <div>
-                        {activeTab === 'profile' && (
-                            <ProfileForm user={user} profile={profile} />
-                        )}
-
-                        {activeTab === 'billing' && (
-                            <BillingTab />
-                        )}
-
-                        {activeTab === 'preferences' && (
-                            <div className="bg-card rounded-sm border divide-y overflow-hidden">                                
-                                <div className="flex items-center justify-between p-3 md:p-4">
-                                    <div className="space-y-0.5">
-                                        <Header level={4}>{tCommon("language")}</Header>
-                                        <p className="text-xs text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
-                                    </div>
-                                    <LanguageToggle />
-                                </div>
-                                <div className="flex items-center justify-between p-3 md:p-4">
-                                    <div className="space-y-0.5">
-                                        <Header level={4}>{tCommon("theme")}</Header>
-                                        <p className="text-xs text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
-                                    </div>
-                                    <ThemeToggle />
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'legal' && (
-                            <div className="bg-card rounded-sm border divide-y overflow-hidden">                                
-                                <Link href="/privacy-policy" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <Header level={4}>{tLegal("privacy")}</Header>
-                                    </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                </Link>
-                                <Link href="/terms-of-service" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <Header level={4}>{tLegal("terms")}</Header>
-                                    </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                </Link>
-                                <Link href="/refund-policy" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <Header level={4}>{tLegal("refund")}</Header>
-                                    </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                </Link>
-                            </div>
-                        )}
-
-                        {activeTab === 'danger' && (
-                            <div className="bg-card p-3 md:p-4 rounded-sm border">
-                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                                    <div className="space-y-0.5">
-                                        <Header level={4} className="text-destructive">{t("delete_account")}</Header>
-                                        <p className="text-xs text-muted-foreground font-medium">{t("delete_account_desc")}</p>
-                                    </div>
-                                    <DeleteAccountButton email={user?.email || ""} />
-                                </div>
-                            </div>
-                        )}
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => handleTabChange(opt.value)}
+                                        className={cn(
+                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full",
+                                            isActive
+                                                ? isDanger
+                                                    ? "bg-destructive text-destructive-foreground font-bold shadow-2xs"
+                                                    : "bg-primary text-primary-foreground font-bold shadow-2xs"
+                                                : isDanger
+                                                ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                        )}
+                                    >
+                                        {Icon && <Icon className="size-4 shrink-0" />}
+                                        <span className="flex-1 whitespace-nowrap lg:whitespace-normal">{opt.label}</span>
+                                        <ChevronRight className={cn(
+                                            "size-4 hidden lg:block transition-transform",
+                                            isActive ? "opacity-100 translate-x-0.5" : "opacity-0"
+                                        )} />
+                                    </button>
+                                );
+                            })}
+                        </nav>
                     </div>
-                </main>
-            </div>
-            
-            {/* Version Info */}
-            <div className="flex justify-center items-center gap-2 mt-6">
-                <span className="text-xs font-black tracking-widest text-muted-foreground">
-                    {t("version")} 1.0.2
-                </span>
+                </aside>
+
+                {/* Right Column: Active Tab Content */}
+                <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+                    {/* Tab 1: General (Single Unified Card for Profile, Preferences, and Connected Accounts) */}
+                    {isGeneralTab && (
+                        <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
+                            {/* 1. Profile Information */}
+                            <ProfileForm user={user} profile={profile} onSuccess={onProfileUpdated} />
+
+                            {/* 2. Theme & Language Preferences */}
+                            <div className="p-4 space-y-4">
+                                <div>
+                                    <Header level={4}>
+                                        {isThai ? "การตั้งค่าระบบและการแสดงผล" : "Preferences & Display"}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ปรับแต่งธีมการแสดงผลและภาษาสำหรับการใช้งานระบบ" : "Customize interface theme and preferred language."}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    {/* Theme */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                                        <div className="flex items-start gap-4 sm:w-2/3">
+                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                                <SunMoon className="size-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Header level={6}>
+                                                    {tCommon("theme")}
+                                                </Header>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t("theme_desc")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-2/3 flex justify-end">
+                                            <ThemeToggle variant="ghost" size="sm" />
+                                        </div>
+                                    </div>
+
+                                    {/* Language */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                                        <div className="flex items-start gap-4 sm:w-2/3">
+                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                                <Languages className="size-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Header level={6}>
+                                                    {tCommon("language")}
+                                                </Header>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t("language_desc")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-2/3 flex justify-end">
+                                            <LanguageToggle variant="ghost" size="sm" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. Connected Accounts */}
+                            <ConnectedAccounts email={user?.email} />
+                        </div>
+                    )}
+
+                    {/* Tab 2: Security / Password */}
+                    {activeTab === 'security' && (
+                        <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
+                            <SecurityForm />
+                        </div>
+                    )}
+
+                    {/* Tab 3: Legal */}
+                    {activeTab === 'legal' && (
+                        <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
+                            <div className="p-4 space-y-4">
+                                <div>
+                                    <Header level={4}>
+                                        {tLegal("title") || (isThai ? "ข้อกำหนดและนโยบาย" : "Legal & Compliance")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai 
+                                            ? "ข้อกำหนดการให้บริการ นโยบายความเป็นส่วนตัว และเอกสารทางกฎหมายของระบบ" 
+                                            : "Terms of service, privacy policy, and legal documentation."}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    {/* Privacy Policy */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                                        <div className="flex items-start gap-4 sm:w-2/3">
+                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                                <FileText className="size-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Header level={6}>
+                                                    {tLegal("privacy_policy")}
+                                                </Header>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {tLegal("privacy_description")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-2/3 flex justify-end">
+                                            <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 hover:text-primary hover:border-primary/50">
+                                                <Link href="/privacy-policy">
+                                                    <span>{isThai ? "อ่านนโยบาย" : "Read Policy"}</span>
+                                                    <ChevronRight className="size-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Terms of Service */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                                        <div className="flex items-start gap-4 sm:w-2/3">
+                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                                <Scale className="size-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Header level={6}>
+                                                    {tLegal("terms_of_service")}
+                                                </Header>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {tLegal("terms_description")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-2/3 flex justify-end">
+                                            <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 hover:text-primary hover:border-primary/50">
+                                                <Link href="/terms-of-service">
+                                                    <span>{isThai ? "อ่านข้อกำหนด" : "Read Terms"}</span>
+                                                    <ChevronRight className="size-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tab 4: Billing */}
+                    {activeTab === 'billing' && (
+                        <BillingTab />
+                    )}
+
+                    {/* Tab 5: Danger Zone */}
+                    {activeTab === 'danger' && (
+                        <div className="rounded-sm border border-destructive/30 bg-card divide-y divide-border overflow-hidden">
+                            <div className="p-4 space-y-4">
+                                <div>
+                                    <Header level={4} className="text-destructive">
+                                        {t("danger_zone") || (isThai ? "พื้นที่อันตราย" : "Danger Zone")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai 
+                                            ? "การดำเนินการในส่วนนี้ไม่สามารถย้อนกลับได้ โปรดใช้ความระมัดระวัง" 
+                                            : "Actions here are permanent and cannot be undone. Please proceed with caution."}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4 divide-y divide-border">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                                        <div className="flex items-start gap-4 sm:w-2/3">
+                                            <div className="size-9 rounded-sm bg-destructive/10 flex items-center justify-center shrink-0">
+                                                <AlertTriangle className="size-4 text-destructive" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Header level={6}>
+                                                    {t("delete_account_title")}
+                                                </Header>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t("delete_account_description")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-2/3 flex justify-end">
+                                            <DeleteAccountButton email={user?.email || ""} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

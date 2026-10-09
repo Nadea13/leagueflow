@@ -16,13 +16,13 @@ function Header({
     <Component
       data-slot="header"
       className={cn(
-        "text-foreground font-black tracking-tight",
+        "text-foreground font-bold tracking-tight",
         level === 1 && "text-2xl lg:text-3xl tracking-tighter",
         level === 2 && "text-xl lg:text-2xl tracking-tight",
         level === 3 && "text-lg lg:text-xl tracking-tight",
         level === 4 && "text-base tracking-tight",
         level === 5 && "text-sm",
-        level === 6 && "text-xs tracking-widest uppercase",
+        level === 6 && "text-xs tracking-wider uppercase",
         className
       )}
       {...props}

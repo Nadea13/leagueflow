@@ -85,7 +85,7 @@ export const GroupNode = memo(({
 
             {/* Config inputs moved to sidebar */}
 
-            <div className="flex flex-col divide-y divide-node-5/50">
+            <div className="flex flex-col divide-y divide-border">
                 {Math.max(0, data.teamCount || 0) === 0 ? (
                     <div className="p-4 text-center">
                         <p className="text-[10px] text-center text-muted-foreground">
@@ -147,7 +147,7 @@ export const GroupNode = memo(({
                                         }}
                                         className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/slot:opacity-100"
                                     >
-                                        <X className="h-3 w-3" />
+                                        <X className="h-4 w-4" />
                                     </button>
                                 )}
                             </div>

@@ -6,6 +6,9 @@ import { ActionResponse, Player, Sport } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { logActivity } from "@/lib/audit";
 import { uploadToR2 } from "@/lib/r2";
+import { resolveStorageUrl } from "@/lib/storage-utils";
+import { getServerSession } from "@/lib/auth-server";
+import { classifyPlayerNames } from "@/lib/name-helper";
 
 import { 
     getGlobalPlayers as getGP, 
@@ -103,38 +106,59 @@ async function isAuthorizedForTeam(teamId: string, userId: string) {
    TEAM MANAGEMENT
    ============================================================================ */
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+
+const SPORT_ID_MAP: Record<string, string> = {
+    "7cf8611f-99a1-44f6-a218-9345ca2cfa06": "Football",
+    "f193797b-8454-4870-b669-715f45d43543": "Futsal",
+    "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1": "Basketball",
+    "e193797b-8454-4870-b669-715f45d43542": "Volleyball",
+    "b193797b-8454-4870-b669-715f45d43544": "Badminton",
+    "t193797b-8454-4870-b669-715f45d43545": "Tennis",
+    "s193797b-8454-4870-b669-715f45d43546": "Sepak Takraw",
+    "c193797b-8454-4870-b669-715f45d43547": "Cricket",
+};
+
 /**
  * Get all available sports.
  */
 export async function getSports(): Promise<ActionResponse<Sport[]>> {
     try {
-        const supabase = await createClient();
-        const { data: sports, error } = await supabase
-            .from("sports")
-            .select("*")
-            .order("sport_name", { ascending: true });
+        const defaultSports: Sport[] = [
+            { id: "7cf8611f-99a1-44f6-a218-9345ca2cfa06", sport_name: "Football", created_at: new Date().toISOString() },
+            { id: "f193797b-8454-4870-b669-715f45d43543", sport_name: "Futsal", created_at: new Date().toISOString() },
+            { id: "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1", sport_name: "Basketball", created_at: new Date().toISOString() },
+            { id: "e193797b-8454-4870-b669-715f45d43542", sport_name: "Volleyball", created_at: new Date().toISOString() },
+            { id: "b193797b-8454-4870-b669-715f45d43544", sport_name: "Badminton", created_at: new Date().toISOString() },
+            { id: "t193797b-8454-4870-b669-715f45d43545", sport_name: "Tennis", created_at: new Date().toISOString() },
+            { id: "s193797b-8454-4870-b669-715f45d43546", sport_name: "Sepak Takraw", created_at: new Date().toISOString() },
+            { id: "c193797b-8454-4870-b669-715f45d43547", sport_name: "Cricket", created_at: new Date().toISOString() },
+        ];
 
-        if (error) {
-            console.error("Fetch sports error:", error);
-            return { success: false, error: error.message };
+        const supabase = await createClient();
+        const { data, error } = await supabase.from("sports").select("*").order("sport_name");
+        
+        if (!error && data && data.length > 0) {
+            const existingNames = new Set(data.map(s => (s.sport_name || '').toLowerCase()));
+            const missing = defaultSports.filter(ds => !existingNames.has(ds.sport_name.toLowerCase()));
+            return { success: true, data: [...data, ...missing] as Sport[] };
         }
 
-        return { success: true, data: sports };
+        return { success: true, data: defaultSports };
     } catch (error) {
         console.error("Unexpected error in getSports:", error);
         return { success: false, error: "An unexpected error occurred" };
     }
 }
 
+
 /**
  * Create a new global team.
  */
 export async function createTeam(prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
@@ -144,29 +168,39 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
         const description = formData.get("description") as string;
         const contact_name = formData.get("contact_name") as string;
         const contact_phone = formData.get("contact_phone") as string;
+        const contact_email = formData.get("contact_email") as string;
 
-        if (!name) {
+        if (!name || !name.trim()) {
             return { success: false, error: "Team name is required" };
         }
-        if (!contact_name) {
+        if (!contact_name || !contact_name.trim()) {
             return { success: false, error: "Contact name is required" };
         }
-        if (!contact_phone) {
+        if (!contact_phone || !contact_phone.trim()) {
             return { success: false, error: "Contact phone is required" };
         }
 
-        if (!sportId) {
-            // Find first sport in DB or default to football UUID
-            const { data: sportData } = await supabase
-                .from("sports")
-                .select("id")
-                .limit(1)
-                .maybeSingle();
-            sportId = sportData?.id || "a821b9db-6a6e-4c5b-aea4-1ed122076db2"; // fallback
+        const lowerSport = (sportId || "").toLowerCase().trim();
+        if (!sportId || lowerSport === "football" || lowerSport.includes("foot") || lowerSport.includes("ฟุตบอล")) {
+            sportId = "7cf8611f-99a1-44f6-a218-9345ca2cfa06";
+        } else if (lowerSport === "volleyball" || lowerSport.includes("volley") || lowerSport.includes("วอลเลย์")) {
+            sportId = "e193797b-8454-4870-b669-715f45d43542";
+        } else if (lowerSport === "basketball" || lowerSport.includes("basket") || lowerSport.includes("บาส")) {
+            sportId = "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1";
+        } else if (lowerSport === "futsal" || lowerSport.includes("futsal") || lowerSport.includes("ฟุตซอล")) {
+            sportId = "f193797b-8454-4870-b669-715f45d43543";
+        } else if (lowerSport === "badminton" || lowerSport.includes("badminton") || lowerSport.includes("แบดมินตัน")) {
+            sportId = "b193797b-8454-4870-b669-715f45d43544";
+        } else if (lowerSport === "tennis" || lowerSport.includes("tennis") || lowerSport.includes("เทนนิส")) {
+            sportId = "t193797b-8454-4870-b669-715f45d43545";
+        } else if (lowerSport === "sepak takraw" || lowerSport.includes("takraw") || lowerSport.includes("ตะกร้อ")) {
+            sportId = "s193797b-8454-4870-b669-715f45d43546";
+        } else if (lowerSport === "cricket" || lowerSport.includes("cricket") || lowerSport.includes("คริกเก็ต")) {
+            sportId = "c193797b-8454-4870-b669-715f45d43547";
         }
 
         const teamId = crypto.randomUUID();
-        let logoUrl = null;
+        let logoUrl: string | null = null;
 
         // Handle logo upload if provided
         if (logoFile && logoFile.size > 0) {
@@ -186,32 +220,37 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             logoUrl = uploadRes.url;
         }
 
-
-        // Insert team record
-        const { error: insertError } = await supabase
-            .from("teams")
-            .insert({
-                id: teamId,
-                name,
-                logo_img: logoUrl,
+        // Call Go Backend API to create team
+        const createRes = await fetch(`${API_BASE_URL}/teams`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                name: name.trim(),
+                description: description || '',
+                contact_name: contact_name.trim(),
+                contact_phone: contact_phone.trim(),
+                contact_email: contact_email?.trim() || session.user.email || '',
+                logo_url: logoUrl || null,
+                logo_img: logoUrl || null,
                 sport_id: sportId,
-                description: description || null,
-                contact_name,
-                contact_phone,
-                user_id: user.id,
-                created_at: new Date().toISOString(),
-            });
+            }),
+        });
 
-        if (insertError) {
-            console.error("Create team error:", insertError);
-            return { success: false, error: insertError.message };
+        if (!createRes.ok) {
+            const err = await createRes.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to create team" };
         }
-        
-        await logActivity('CREATE_TEAM', 'team', teamId, { name, sport_id: sportId });
+
+        const createdTeam = await createRes.json();
+        await logActivity('CREATE_TEAM', 'team', createdTeam?.id || teamId, { name, sport_id: sportId });
 
         revalidatePath("/manager/my-teams");
         revalidatePath("/manager/dashboard");
         revalidatePath("/organizer/dashboard"); 
+        revalidatePath("/dashboard/teams");
         
         return { success: true };
     } catch (error) {
@@ -225,42 +264,41 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
  */
 export async function getMyTeams(): Promise<ActionResponse<unknown[]>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
-        const { data, error } = await supabase
-            .from("teams")
-            .select(`
-                *,
-                sports:sport_id(sport_name),
-                participations:tournament_teams(
-                    tournament_categories(
-                        tournament:tournaments(name)
-                    )
-                )
-            `)
-            .eq("user_id", user.id)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false });
+        const res = await fetch(`${API_BASE_URL}/teams?user_id=${session.user.id}`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
 
-        if (error) {
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to fetch teams" };
         }
 
-        // Map database columns to match expected types in frontend (logo_img -> logo_url, sport_id -> sport)
-        const mappedData = (data || []).map((team) => {
-            const firstParticipation = team.participations?.[0];
-            const tournamentName = firstParticipation?.tournament_categories?.tournament?.name || null;
+        const teams = await res.json();
+        
+        // Fetch sports map
+        const supabase = await createClient();
+        const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
+        const sportMap = new Map<string, string>();
+        Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
+        (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
 
+        const mappedData = (teams || []).map((team: any) => {
+            const sportName = (team.sport_id && sportMap.get(team.sport_id)) || team.sport || team.sport_name || 'Football';
             return {
                 ...team,
-                logo_url: team.logo_img,
-                sport: team.sports?.sport_name?.toLowerCase() || 'football',
-                tournament: tournamentName ? { name: tournamentName } : null
+                logo_url: team.logo_url || team.logo_img,
+                sport: sportName,
+                sport_name: sportName,
+                sport_id: team.sport_id,
+                tournament: null
             };
         });
 
@@ -275,144 +313,214 @@ export async function getMyTeams(): Promise<ActionResponse<unknown[]>> {
  * Get detailed team information, handling both global teams and tournament participations.
  */
 export async function getTeam(teamId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return null;
 
-    const { data: teamData, error } = await supabase
-        .from("teams")
-        .select(`
-            *,
-            sports:sport_id(sport_name)
-        `)
-        .eq("id", teamId)
-        .is("deleted_at", null)
-        .single();
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
 
-    let data = teamData;
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data) return null;
 
-    let isParticipation = false;
+        const supabase = await createClient();
+        const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
+        const sportMap = new Map<string, string>();
+        Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
+        (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
 
-    // Fallback: Check if this is a tournament_team (participation)
-    if (error || !data) {
-        const { data: participation } = await supabase
-            .from("tournament_teams")
-            .select(`
-                *,
-                team:teams (
-                    id,
-                    name,
-                    logo_img,
-                    description,
-                    sport_id,
-                    sports:sport_id(sport_name)
-                ),
-                tournament_categories (
-                    tournaments ( * )
-                )
-            `)
-            .eq("id", teamId)
-            .is("deleted_at", null)
-            .single();
+        const sportName = (data.sport_id && sportMap.get(data.sport_id)) || data.sport || data.sport_name || 'Football';
 
-        if (participation) {
-            const flatTournament = (participation.tournament_categories as unknown as { tournaments: unknown } | null)?.tournaments;
-            const teamObj = (Array.isArray(participation.team) ? participation.team[0] : participation.team) as unknown as { name?: string; logo_img?: string | null; description?: string; sports?: { sport_name?: string } } | null;
-            data = {
-                ...participation,
-                name: participation.name || teamObj?.name || "Unknown Team",
-                logo_url: participation.logo_url || teamObj?.logo_img || null,
-                description: participation.description || teamObj?.description || "",
-                sport: teamObj?.sports?.sport_name?.toLowerCase() || 'football',
-                tournament: flatTournament
-            };
-            isParticipation = true;
-        } else {
-            return null;
+        const mappedData = {
+            ...data,
+            logo_url: data.logo_url || data.logo_img,
+            sport: sportName,
+            sport_name: sportName,
+            sport_id: data.sport_id
+        };
+
+        return {
+            ...mappedData,
+            isParticipation: false,
+            participations: [],
+            registrations: []
+        };
+    } catch (error) {
+        console.error("Error in getTeam:", error);
+        return null;
+    }
+}
+
+export async function getTournamentTeam(id: string) {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return null;
+
+        const res = await fetch(`${API_BASE_URL}/tournament-teams/${id}`, {
+            headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+            cache: 'no-store',
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data) {
+                const teamData = data.team || {};
+                const supabase = await createClient();
+                const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
+                const sportMap = new Map<string, string>();
+                Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
+                (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
+
+                const sportName = (teamData.sport_id && sportMap.get(teamData.sport_id)) || teamData.sport || teamData.sport_name || 'Football';
+
+                let tournament = data.tournament || data.tournaments || null;
+                let categories: any[] = [];
+                const tournamentId = data.tournament_id || data.tournament?.id;
+                if (tournamentId) {
+                    try {
+                        const tourRes = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}`, {
+                            headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+                            cache: 'no-store',
+                        });
+                        if (tourRes.ok) {
+                            const tourJson = await tourRes.json();
+                            if (!tournament) {
+                                tournament = tourJson.tournament || tourJson;
+                            }
+                            categories = tourJson.categories || [];
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch tournament in getTournamentTeam:", err);
+                    }
+                }
+
+                const resolvedTourName = tournament?.name || (tournament as any)?.tournament?.name || data.tournament_name || data.tournament?.name || null;
+                const categoryId = data.tournament_category_id || data.category_id;
+                let categoryName = data.category?.name || data.tournament_category?.name || data.category_name || null;
+                if (!categoryName && categoryId && categories.length > 0) {
+                    const matched = categories.find((c: any) => c.id === categoryId);
+                    if (matched) {
+                        categoryName = matched.name || matched.category_name || null;
+                    }
+                }
+
+                return {
+                    id: data.id,
+                    team_id: data.team_id,
+                    user_id: teamData.user_id || session.user.id || null,
+                    tournament_id: tournamentId,
+                    tournament_category_id: categoryId,
+                    tournament: tournament,
+                    tournament_name: resolvedTourName,
+                    category_name: categoryName,
+                    category: data.category || (categoryName ? { id: categoryId, name: categoryName } : null),
+                    name: teamData.name || data.name || "Unknown Team",
+                    short_name: teamData.short_name || data.short_name,
+                    description: teamData.description || null,
+                    logo_url: resolveStorageUrl(teamData.logo_url || teamData.logo_img || data.logo_url || data.logo_img),
+                    logo_img: resolveStorageUrl(teamData.logo_img || teamData.logo_url || data.logo_img || data.logo_url),
+                    contact_name: data.contact_name || teamData.contact_name,
+                    contact_phone: data.contact_phone || teamData.contact_phone,
+                    contact_email: data.contact_email || teamData.contact_email,
+                    is_roster_locked: data.is_roster_locked || false,
+                    unlock_requested: data.unlock_requested || false,
+                    registration_status: data.registration_status,
+                    roster_status: data.roster_status,
+                    payment_status: data.payment_status,
+                    sport: sportName as any,
+                    sport_name: sportName,
+                    sport_id: teamData.sport_id,
+                    created_at: data.created_at || new Date().toISOString(),
+                    isParticipation: true,
+                    participations: [],
+                    registrations: [],
+                };
+            }
         }
-    }
 
-    if (!data) return null;
-
-    // Fetch Tournament Participations (only for global teams)
-    let participations: unknown[] = [];
-    if (!isParticipation) {
-        const { data: pData } = await supabase
-            .from("tournament_teams")
-            .select(`
-                *,
-                tournament_categories (
-                    tournaments ( id, name, status, start_date )
-                )
-            `)
-            .eq("team_id", teamId)
-            .order("created_at", { ascending: false });
-        
-        participations = (pData || []).map((p) => ({
-            ...p,
-            tournament: (p.tournament_categories as unknown as { tournaments: unknown } | null)?.tournaments
-        }));
-    } else {
-        participations = [data];
-    }
-
-    // Fetch Registration Status
-    const { data: userTeams } = await supabase
-        .from("teams")
-        .select("id")
-        .eq("user_id", user.id);
-    
-    const ownedTeamIds = userTeams?.map((t) => t.id) || [];
-    
-    let registrations: unknown[] = [];
-    if (ownedTeamIds.length > 0) {
-        const { data: regData } = await supabase
+        // Direct DB fallback
+        const adminSupabase = createAdminClient();
+        const { data: ttData } = await adminSupabase
             .from("tournament_teams")
             .select(`
                 id,
+                tournament_id,
+                tournament_category_id,
+                team_id,
                 payment_status,
-                slip_img,
-                tournament_categories!inner (
-                    tournament_id
-                )
+                registration_status,
+                roster_status,
+                is_roster_locked,
+                unlock_requested,
+                contact_name,
+                contact_phone,
+                contact_email,
+                created_at,
+                teams ( id, user_id, name, short_name, description, logo_url, logo_img, sport_id ),
+                tournaments ( id, name, sport, logo_url, banner_url, status, document_deadline ),
+                tournament_categories ( id, name )
             `)
-            .in("team_id", ownedTeamIds)
-            .is("deleted_at", null);
-        
-        if (regData) {
-            registrations = regData.map((r) => ({
-                tournament_team_id: r.id,
-                payment_status: (r.payment_status || 'pending').toUpperCase(),
-                slip_url: r.slip_img,
-                tournament_id: (r.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id
-            }));
+            .eq("id", id)
+            .maybeSingle();
+
+        if (ttData) {
+            const team = (ttData.teams as any) || {};
+            const tournament = (ttData.tournaments as any) || null;
+            const category = (ttData.tournament_categories as any) || null;
+            return {
+                id: ttData.id,
+                team_id: ttData.team_id,
+                user_id: team.user_id || session.user.id || null,
+                tournament_id: ttData.tournament_id,
+                tournament_category_id: ttData.tournament_category_id,
+                tournament: tournament,
+                tournament_name: tournament?.name || null,
+                category_name: category?.name || null,
+                category: category,
+                name: team.name || "Unknown Team",
+                short_name: team.short_name,
+                description: team.description || null,
+                logo_url: resolveStorageUrl(team.logo_url || team.logo_img),
+                logo_img: resolveStorageUrl(team.logo_img || team.logo_url),
+                contact_name: ttData.contact_name,
+                contact_phone: ttData.contact_phone,
+                contact_email: ttData.contact_email,
+                is_roster_locked: ttData.is_roster_locked || false,
+                unlock_requested: ttData.unlock_requested || false,
+                registration_status: ttData.registration_status,
+                roster_status: ttData.roster_status,
+                payment_status: ttData.payment_status,
+                sport: 'Football' as any,
+                sport_name: 'Football',
+                sport_id: team.sport_id,
+                created_at: ttData.created_at || new Date().toISOString(),
+                isParticipation: true,
+                participations: [],
+                registrations: [],
+            };
         }
+
+        return null;
+    } catch (error) {
+        console.error("Error in getTournamentTeam:", error);
+        return null;
     }
-
-    // Map database columns to match expected types in frontend (logo_img -> logo_url, sport_id -> sport)
-    const mappedData = {
-        ...data,
-        logo_url: data.logo_img || data.logo_url,
-        sport: data.sports?.sport_name?.toLowerCase() || data.sport || 'football'
-    };
-
-    return {
-        ...mappedData,
-        isParticipation,
-        participations: participations || [],
-        registrations: registrations || []
-    };
 }
+
+
 
 /**
  * Update global team information.
  */
 export async function updateTeamGlobal(teamId: string, formData: FormData, _tournamentId: string): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
@@ -422,6 +530,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
         const description = formData.get("description") as string;
         const contact_name = formData.get("contact_name") as string;
         const contact_phone = formData.get("contact_phone") as string;
+        const contact_email = formData.get("contact_email") as string;
         const existingLogoUrl = formData.get("existing_logo_url") as string;
 
         if (!name) {
@@ -447,60 +556,74 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             logoUrl = uploadRes.url;
         }
 
+        const adminSupabase = createAdminClient();
 
-        // Detect which table to update
-        const { data: globalTeam } = await supabase
-            .from("teams")
-            .select("id")
-            .eq("id", teamId)
-            .eq("user_id", user.id)
-            .maybeSingle();
-
-        const tableName = globalTeam ? "teams" : "tournament_teams";
-
-        let updateData: Record<string, unknown> = {};
-        if (tableName === "teams") {
-            updateData = {
-                name,
-                logo_img: logoUrl,
-                sport_id: sport || undefined, // sport holds the sport_id UUID or is undefined
-                description: description || null,
-                contact_name: contact_name || null,
-                contact_phone: contact_phone || null,
-            };
-        } else {
-            updateData = {
-                name,
-                logo_url: logoUrl,
-                sport: sport || undefined,
-                description: description || null,
-                contact_name: contact_name || null,
-                contact_phone: contact_phone || null,
-            };
+        // 1. Try Go API
+        try {
+            await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    description: description || '',
+                    contact_name: contact_name || '',
+                    contact_phone: contact_phone || '',
+                    contact_email: contact_email?.trim() || null,
+                    logo_url: logoUrl || null,
+                    logo_img: logoUrl || null,
+                    sport_id: sport || undefined,
+                }),
+            });
+        } catch (apiErr) {
+            console.warn("[updateTeamGlobal] API PUT failed, falling back to direct DB update:", apiErr);
         }
 
-        const { error } = await supabase
-            .from(tableName)
-            .update(updateData)
-            .eq("id", teamId)
-            .eq("user_id", user.id);
+        // 2. Direct Supabase DB update
+        const teamUpdates: Record<string, unknown> = {
+            name: name.trim(),
+            description: description || null,
+            contact_name: contact_name || null,
+            contact_phone: contact_phone || null,
+            contact_email: contact_email?.trim() || null,
+            logo_img: logoUrl || null,
+            logo_url: logoUrl || null,
+        };
+        if (sport) teamUpdates.sport_id = sport;
 
-        if (error) {
-            console.error("Update team error:", error);
-            return { success: false, error: error.message };
+        const { error: dbError } = await adminSupabase
+            .from("teams")
+            .update(teamUpdates)
+            .eq("id", teamId);
+
+        if (dbError) {
+            console.error("[updateTeamGlobal] Direct DB update failed:", dbError);
+            // If teamId is a tournament_team
+            const { data: ttRec } = await adminSupabase
+                .from("tournament_teams")
+                .select("team_id")
+                .eq("id", teamId)
+                .maybeSingle();
+
+            if (ttRec?.team_id) {
+                await adminSupabase
+                    .from("teams")
+                    .update(teamUpdates)
+                    .eq("id", ttRec.team_id);
+            }
         }
 
         // Revalidate relevant paths
         revalidatePath("/manager/my-teams");
         revalidatePath("/manager/my-registrations");
         revalidatePath(`/manager/my-teams/${teamId}`);
-        revalidatePath(`/manager/my-registrations/${teamId}`);
-        
-        await logActivity('UPDATE_TEAM', 'team', teamId, { name, sport, update_type: 'global', table: tableName });
-        
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
         return { success: true };
-    } catch (error) {
-        console.error("Unexpected error in updateTeamGlobal:", error);
+    } catch (err) {
+        console.error("Error in updateTeamGlobal:", err);
         return { success: false, error: "An unexpected error occurred" };
     }
 }
@@ -508,108 +631,28 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
 /**
  * Delete a global team.
  */
-export async function deleteTeamGlobal(teamId: string, _tournamentId: string): Promise<ActionResponse> {
+export async function deleteTeamGlobal(teamId: string, _tournamentId?: string): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const adminSupabase = createAdminClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-        if (!user) {
-            return { success: false, error: "Authentication required" };
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to delete team" };
         }
 
-        // Detect which table to delete from
-        const { data: globalTeam } = await supabase
-            .from("teams")
-            .select("id")
-            .eq("id", teamId)
-            .eq("user_id", user.id)
-            .maybeSingle();
-
-        const tableName = globalTeam ? "teams" : "tournament_teams";
-        const now = new Date().toISOString();
-
-        // 1. Soft-delete the team record (either teams or tournament_teams)
-        const { error } = await adminSupabase
-            .from(tableName)
-            .update({ deleted_at: now })
-            .eq("id", teamId)
-            .eq("user_id", user.id);
-
-        if (error) {
-            console.error("Delete team error:", error);
-            return { success: false, error: error.message };
-        }
-
-        // 2. Also soft-delete tournament_teams if it was a global team
-        if (tableName === "teams") {
-            const { data: participations } = await adminSupabase
-                .from("tournament_teams")
-                .select("id")
-                .eq("team_id", teamId);
-            
-            const partIds = participations?.map(p => p.id) || [];
-            
-            await adminSupabase
-                .from("tournament_teams")
-                .update({ deleted_at: now })
-                .eq("team_id", teamId);
-
-            // Fetch player_ids from player_sports for this team and its participations
-            const orConditions = [`team_id.eq.${teamId}`];
-            if (partIds.length > 0) {
-                orConditions.push(`team_id.in.(${partIds.join(',')})`);
-            }
-
-            const { data: psRecords } = await adminSupabase
-                .from("player_sports")
-                .select("player_id")
-                .or(orConditions.join(','));
-
-            // Soft-delete player_sports
-            await adminSupabase
-                .from("player_sports")
-                .update({ deleted_at: now })
-                .or(orConditions.join(','));
-
-            // Soft-delete players
-            if (psRecords && psRecords.length > 0) {
-                const playerIds = psRecords.map((r) => r.player_id);
-                await adminSupabase
-                    .from("players")
-                    .update({ deleted_at: now })
-                    .in("id", playerIds);
-            }
-        } else {
-            // It was a participation ID
-            const { data: psRecords } = await adminSupabase
-                .from("player_sports")
-                .select("player_id")
-                .eq("team_id", teamId);
-
-            // Soft-delete player_sports
-            await adminSupabase
-                .from("player_sports")
-                .update({ deleted_at: now })
-                .eq("team_id", teamId);
-
-            // Soft-delete players
-            if (psRecords && psRecords.length > 0) {
-                const playerIds = psRecords.map((r) => r.player_id);
-                await adminSupabase
-                    .from("players")
-                    .update({ deleted_at: now })
-                    .in("id", playerIds);
-            }
-        }
-
+        revalidatePath("/dashboard/teams");
         revalidatePath("/manager/my-teams");
-        revalidatePath("/manager/my-registrations");
-        revalidatePath(`/manager/my-teams/${teamId}`);
-        
         return { success: true };
-    } catch (error) {
-        console.error("Unexpected error in deleteTeamGlobal:", error);
+    } catch (err) {
+        console.error("Error in deleteTeamGlobal:", err);
         return { success: false, error: "An unexpected error occurred" };
     }
 }
@@ -649,8 +692,102 @@ export async function toggleRosterLock(teamId: string, isLocked: boolean): Promi
         return { success: false, error: error.message };
     }
 
+    revalidatePath(`/dashboard/teams/${teamId}`);
     revalidatePath(`/manager/my-teams/${teamId}`);
     return { success: true };
+}
+
+/* ============================================================================
+   ROSTER IMPORT & MANAGEMENT (Supabase-backed)
+   ============================================================================ */
+
+/**
+ * Fetch available teams that the user owns to use as import sources.
+ */
+export async function getImportableTeams(currentTeamId: string): Promise<ActionResponse<any[]>> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    // Get current team sport to only show teams of same sport
+    let currentSportId: string | null = null;
+    const { data: curGlobal } = await adminSupabase.from("teams").select("sport_id").eq("id", currentTeamId).single();
+    if (curGlobal?.sport_id) {
+        currentSportId = curGlobal.sport_id;
+    } else {
+        const { data: curTourney } = await adminSupabase
+            .from("tournament_teams")
+            .select("tournament_categories(sport_id)")
+            .eq("id", currentTeamId)
+            .single();
+        const cat = curTourney?.tournament_categories as unknown as { sport_id: string } | null;
+        if (cat?.sport_id) currentSportId = cat.sport_id;
+    }
+
+    // 1. Fetch user's global teams
+    let globalQuery = adminSupabase
+        .from("teams")
+        .select("id, name, logo_url, sport_id")
+        .eq("user_id", user.id)
+        .neq("id", currentTeamId);
+
+    if (currentSportId) {
+        globalQuery = globalQuery.eq("sport_id", currentSportId);
+    }
+
+    const { data: globalTeams } = await globalQuery;
+
+    // 2. Fetch user's tournament participation teams
+    const tourneyQuery = adminSupabase
+        .from("tournament_teams")
+        .select(`
+            id,
+            teams ( id, name, logo_url, user_id ),
+            tournament_categories ( sport_id, name, tournaments ( name ) )
+        `)
+        .neq("id", currentTeamId);
+
+    const { data: tourneyParticipations } = await tourneyQuery;
+
+    const results: any[] = [];
+
+    // Add global teams
+    if (globalTeams) {
+        for (const t of globalTeams) {
+            results.push({
+                id: t.id,
+                name: t.name,
+                logo_url: resolveStorageUrl(t.logo_url),
+                sourceType: 'global',
+                description: 'Global Team'
+            });
+        }
+    }
+
+    // Add tournament teams
+    if (tourneyParticipations) {
+        for (const tp of tourneyParticipations) {
+            const team = tp.teams as unknown as { id: string; name: string; logo_url: string; user_id: string } | null;
+            if (team && team.user_id === user.id) {
+                const cat = tp.tournament_categories as unknown as { sport_id: string; name: string; tournaments: { name: string } } | null;
+                if (!currentSportId || cat?.sport_id === currentSportId) {
+                    if (team.id !== currentTeamId && tp.id !== currentTeamId) {
+                        results.push({
+                            id: tp.id,
+                            name: `${team.name} (${cat?.tournaments?.name || 'Tournament'} - ${cat?.name || 'Category'})`,
+                            logo_url: resolveStorageUrl(team.logo_url),
+                            sourceType: 'tournament',
+                            description: 'Tournament Participation'
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    return { success: true, data: results };
 }
 
 /* ============================================================================
@@ -661,276 +798,185 @@ export async function toggleRosterLock(teamId: string, isLocked: boolean): Promi
  * Get players for a specific team (global or tournament).
  */
 export async function getPlayers(teamId: string): Promise<ActionResponse<Player[]>> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    
-    // First, check if teamId matches a tournament_teams (participation)
-    const { data: participation } = await supabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            team_id,
-            tournament_category_id,
-            roster_status,
-            tournament_categories ( tournament_id )
-        `)
-        .eq("id", teamId)
-        .single();
+    try {
+        const session = await getServerSession();
+        let players: any[] = [];
+        let fetchedFromApi = false;
 
-    if (participation) {
-        // 1. Fetch approved players from tournament_players
-        const { data: approvedData, error: approvedError } = await supabase
-            .from("tournament_players")
-            .select(`
-                id,
-                position,
-                shirt_number,
-                tournament_team_id,
-                player:master_player_id!inner (
-                    id,
-                    first_name_en,
-                    last_name_en,
-                    first_name_th,
-                    last_name_th,
-                    birthday,
-                    tel,
-                    profile_img,
-                    created_at,
-                    deleted_at
-                )
-            `)
-            .eq("tournament_team_id", teamId)
-            .is("player.deleted_at", null);
+        try {
+            const res = await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
+                headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+                cache: 'no-store',
+            });
 
-        if (approvedError) {
-            console.error(`[getPlayers] Error fetching tournament players for ${teamId}:`, approvedError);
-            return { success: false, error: approvedError.message, data: [] };
+            if (res.ok) {
+                players = await res.json();
+                fetchedFromApi = true;
+            }
+        } catch (fetchErr) {
+            console.warn("[getPlayers] API fetch error, falling back to direct DB query:", fetchErr);
         }
 
-        const mappedPlayers: Player[] = (approvedData || []).map((tp) => {
-            const rawPlayer = Array.isArray(tp.player) ? tp.player[0] : tp.player;
-            const mp = rawPlayer as {
-                id: string;
-                first_name_en: string | null;
-                last_name_en: string | null;
-                first_name_th: string | null;
-                last_name_th: string | null;
-                birthday: string | null;
-                tel: string | null;
-                profile_img: string | null;
-                created_at: string | null;
-                deleted_at: string | null;
-            } | null;
-            return {
-                id: tp.id,
-                name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-                number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
-                position: tp.position || null,
-                birth_date: mp?.birthday || null,
-                photo_url: mp?.profile_img || null,
-                team_id: teamId,
-                global_team_id: null,
-                global_player_id: mp?.id || null,
-                tel: mp?.tel || null,
-                status: 'approved',
-                created_at: mp?.created_at || new Date().toISOString(),
-                deleted_at: mp?.deleted_at || null
-            };
-        });
+        // Direct DB Fallback if API returned empty or failed
+        if (!fetchedFromApi || !players || players.length === 0) {
+            try {
+                const adminSupabase = createAdminClient();
+                // 1. Try tournament_players first (approved roster)
+                const { data: tpData } = await adminSupabase
+                    .from("tournament_players")
+                    .select("id, tournament_team_id, master_player_id, shirt_number, position, photo_url, created_at, master_players(id, first_name_local, middle_name_local, last_name_local, first_name_intl, middle_name_intl, last_name_intl, name, photo_url, birthday, tel)")
+                    .eq("tournament_team_id", teamId)
+                    .is("deleted_at", null);
 
-        // 2. Fetch pending roster submissions
-        const { data: submissions, error: subErr } = await supabase
-            .from("tournament_roster_submissions")
-            .select("*")
-            .eq("tournament_team_id", teamId)
-            .eq("status", "pending");
+                if (tpData && tpData.length > 0) {
+                    const mapped: Player[] = tpData.map((tp: any) => {
+                        const mp = tp.master_players || {};
+                        const rawName = mp.name || (mp.first_name_local ? `${mp.first_name_local} ${mp.last_name_local || ''}` : `${mp.first_name_intl || ''} ${mp.last_name_intl || ''}`).trim();
+                        const cleanName = rawName.replace(/\s*-\s*$/, '').trim();
+                        return {
+                            id: tp.id,
+                            name: cleanName || 'Unnamed Player',
+                            number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
+                            position: tp.position || null,
+                            birth_date: mp.birthday || null,
+                            photo_url: resolveStorageUrl(tp.photo_url || mp.photo_url || null),
+                            team_id: teamId,
+                            global_team_id: null,
+                            global_player_id: tp.master_player_id || null,
+                            master_player_id: tp.master_player_id || null,
+                            tel: mp.tel || null,
+                            status: 'approved',
+                            created_at: tp.created_at || new Date().toISOString(),
+                            deleted_at: null,
+                        };
+                    });
+                    return { success: true, data: mapped };
+                }
 
-        if (!subErr && submissions) {
-            const pendingPlayers: Player[] = submissions.map((s) => ({
-                id: s.id,
-                name: s.name,
-                number: s.shirt_number ? parseInt(s.shirt_number) : null,
-                position: s.position || null,
-                birth_date: null,
-                photo_url: s.photo_url || null,
-                team_id: teamId,
-                global_team_id: null,
-                global_player_id: null,
-                tel: s.tel || null,
-                status: 'pending',
-                created_at: s.created_at,
-                deleted_at: null
-            }));
-            mappedPlayers.push(...pendingPlayers);
-        }
+                // 2. Try tournament_roster_submissions (submitted/pending roster)
+                const { data: trsData } = await adminSupabase
+                    .from("tournament_roster_submissions")
+                    .select("id, tournament_team_id, name, shirt_number, position, photo_url, tel, status, created_at")
+                    .eq("tournament_team_id", teamId)
+                    .is("deleted_at", null);
 
-        // Auto-clone roster if participation roster is empty
-        if (mappedPlayers.length === 0 && participation.team_id) {
-            const globalTeamId = participation.team_id;
-            const cloneResult = await importRoster(teamId, globalTeamId);
-            
-            if (cloneResult.success) {
-                // Re-fetch players after successful import
-                return getPlayers(teamId);
+                if (trsData && trsData.length > 0) {
+                    const mapped: Player[] = trsData.map((trs: any) => {
+                        return {
+                            id: trs.id,
+                            name: trs.name || 'Unnamed Player',
+                            number: trs.shirt_number ? parseInt(trs.shirt_number) : null,
+                            position: trs.position || null,
+                            birth_date: null,
+                            photo_url: resolveStorageUrl(trs.photo_url || null),
+                            team_id: teamId,
+                            global_team_id: null,
+                            global_player_id: null,
+                            master_player_id: null,
+                            tel: trs.tel || null,
+                            status: trs.status || 'pending',
+                            created_at: trs.created_at || new Date().toISOString(),
+                            deleted_at: null,
+                        };
+                    });
+                    return { success: true, data: mapped };
+                }
+
+                // 3. Direct query from `players` table matching exact DB schema (or via tournament_teams.team_id)
+                const { data: ttRecord } = await adminSupabase
+                    .from("tournament_teams")
+                    .select("id, team_id")
+                    .eq("id", teamId)
+                    .maybeSingle();
+
+                const targetTeamId = ttRecord?.team_id || teamId;
+
+                const { data: pData, error: pError } = await adminSupabase
+                    .from("players")
+                    .select("id, team_id, first_name, last_name, jersey_number, position, photo_url, date_of_birth, master_player_id, created_at, updated_at")
+                    .eq("team_id", targetTeamId)
+                    .is("deleted_at", null);
+
+                if (pError) {
+                    console.warn("[getPlayers] direct players select error:", pError.message);
+                } else if (pData && pData.length > 0) {
+                    players = pData;
+                }
+            } catch (dbErr) {
+                console.error("[getPlayers] DB fallback error:", dbErr);
             }
         }
 
-        return { success: true, data: mappedPlayers };
-    }
+        const masterPlayerIds = (players || [])
+            .map((p: any) => p.master_player_id || p.master_id)
+            .filter(Boolean) as string[];
 
-    let query = adminSupabase.from("player_sports").select(`
-        id,
-        position,
-        shirt_number,
-        team_id,
-        sport_id,
-        deleted_at,
-        player:player_id!inner (
-            id,
-            display_name,
-            tel,
-            created_at,
-            deleted_at,
-            master_player:master_id (
-                id,
-                first_name_en,
-                last_name_en,
-                first_name_th,
-                last_name_th,
-                birthday,
-                tel,
-                profile_img
-            )
-        )
-    `)
-    .is("deleted_at", null)
-    .is("player.deleted_at", null);
+        const masterMap = new Map<string, { photo_url?: string | null; tel?: string | null }>();
+        if (masterPlayerIds.length > 0) {
+            try {
+                const adminSupabase = createAdminClient();
+                const { data: mpData } = await adminSupabase
+                    .from("master_players")
+                    .select("id, photo_url, tel")
+                    .in("id", masterPlayerIds);
+                if (mpData) {
+                    for (const mp of mpData) {
+                        masterMap.set(mp.id, mp);
+                    }
+                }
+            } catch (err) {
+                console.error("[getPlayers] error querying master_players:", err);
+            }
+        }
 
-    query = query.eq("team_id", teamId);
+        const mappedPlayers: Player[] = (players || []).map((p: any) => {
+            const masterId = p.master_player_id || p.master_id;
+            const masterInfo = masterId ? masterMap.get(masterId) : null;
+            const photoUrl = resolveStorageUrl(p.photo_url || masterInfo?.photo_url || null);
 
-    const { data, error } = await query;
-
-    if (error) {
-        console.error(`[getPlayers] Error fetching players for ${teamId}:`, error);
-        return { success: false, error: error.message, data: [] };
-    }
-
-    // Map and filter in memory to ensure accuracy
-    let mappedPlayers: Player[] = (data || [])
-        .map((ps) => {
-            const p = ps.player as unknown as {
-                id: string;
-                display_name: string;
-                tel: string | null;
-                deleted_at: string | null;
-                created_at?: string;
-                master_player: {
-                    id: string;
-                    first_name_en?: string | null;
-                    last_name_en?: string | null;
-                    first_name_th?: string | null;
-                    last_name_th?: string | null;
-                    birthday: string | null;
-                    tel: string | null;
-                    profile_img: string | null;
-                } | null;
-            } | null;
-            const mp = p?.master_player;
             return {
-                id: p?.id || ps.id,
-                name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-                number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
-                position: ps.position || null,
-                birth_date: mp?.birthday || null,
-                photo_url: mp?.profile_img || null,
-                team_id: null,
+                id: p.id,
+                name: (p.name || `${p.first_name || ''} ${p.last_name && p.last_name !== '-' ? p.last_name : ''}`).trim() || 'Unnamed Player',
+                first_name: p.first_name || null,
+                last_name: p.last_name || null,
+                number: p.jersey_number !== undefined && p.jersey_number !== null ? parseInt(p.jersey_number) : (p.shirt_number ? parseInt(p.shirt_number) : null),
+                position: p.position || null,
+                birth_date: p.date_of_birth || p.birth_date || null,
+                photo_url: photoUrl,
+                team_id: teamId,
                 global_team_id: teamId,
-                global_player_id: mp?.id || null,
-                tel: p?.tel || mp?.tel || null,
-                created_at: p?.created_at || new Date().toISOString(),
-                deleted_at: p?.deleted_at || null
+                global_player_id: masterId || p.id,
+                master_player_id: masterId || null,
+                tel: p.tel || masterInfo?.tel || null,
+                status: 'approved',
+                created_at: p.created_at || new Date().toISOString(),
+                deleted_at: null,
             };
         });
 
-    // Auto-clone roster if participation roster is empty
-    const part = participation as { team_id: string | null } | null;
-    if (part && mappedPlayers.length === 0 && part.team_id) {
-        const globalTeamId = part.team_id;
-        const cloneResult = await importRoster(teamId, globalTeamId);
-        
-        if (cloneResult.success) {
-            // Re-fetch players after successful import
-            const freshQuery = await adminSupabase.from("player_sports").select(`
-                id,
-                position,
-                shirt_number,
-                team_id,
-                sport_id,
-                deleted_at,
-                player:player_id!inner (
-                    id,
-                    display_name,
-                    tel,
-                    created_at,
-                    deleted_at,
-                    master_player:master_id (
-                        id,
-                        first_name_en,
-                        last_name_en,
-                        first_name_th,
-                        last_name_th,
-                        birthday,
-                        tel,
-                        profile_img
-                    )
-                )
-            `)
-            .is("deleted_at", null)
-            .is("player.deleted_at", null)
-            .eq("team_id", teamId);
+        const getRolePriority = (position?: string | null): number => {
+            if (!position) return 4;
+            const pos = position.toLowerCase().trim();
+            if (pos.includes("ผู้จัดการ") || pos.includes("manager")) return 1;
+            if (pos.includes("ผู้ช่วย") || pos.includes("assistant") || pos.includes("asst")) return 3;
+            if (pos.includes("ผู้ฝึกสอน") || pos.includes("โค้ช") || pos.includes("coach")) return 2;
+            return 4;
+        };
 
-            if (freshQuery.data) {
-                mappedPlayers = freshQuery.data.map((ps) => {
-                    const p = ps.player as unknown as {
-                        id: string;
-                        display_name: string;
-                        tel: string | null;
-                        deleted_at: string | null;
-                        created_at?: string;
-                        master_player: {
-                            id: string;
-                            first_name_en?: string | null;
-                            last_name_en?: string | null;
-                            first_name_th?: string | null;
-                            last_name_th?: string | null;
-                            birthday: string | null;
-                            tel: string | null;
-                            profile_img: string | null;
-                        } | null;
-                    } | null;
-                    const mp = p?.master_player;
-                    return {
-                        id: p?.id || ps.id,
-                        name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-                        number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
-                        position: ps.position || null,
-                        birth_date: mp?.birthday || null,
-                        photo_url: mp?.profile_img || null,
-                        team_id: teamId,
-                        global_team_id: null,
-                        global_player_id: mp?.id || null,
-                        tel: p?.tel || mp?.tel || null,
-                        created_at: p?.created_at || new Date().toISOString(),
-                        deleted_at: ps.deleted_at || p?.deleted_at || null
-                    };
-                });
-            }
-        }
+        mappedPlayers.sort((a, b) => {
+            const rankA = getRolePriority(a.position);
+            const rankB = getRolePriority(b.position);
+            if (rankA !== rankB) return rankA - rankB;
+            const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            if (timeA !== timeB) return timeA - timeB;
+            return 0;
+        });
+        return { success: true, data: mappedPlayers };
+    } catch (err) {
+        console.error("Error fetching players:", err);
+        return { success: true, data: [] };
     }
-
-    mappedPlayers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    return { success: true, data: mappedPlayers };
 }
 
 /**
@@ -940,250 +986,158 @@ export async function addPlayer(
     teamId: string,
     formData: FormData
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+        const name = formData.get("name") as string;
+        const firstNameTh = formData.get("firstNameTh") as string || formData.get("first_name_th") as string || formData.get("first_name_local") as string || "";
+        const middleNameTh = formData.get("middleNameTh") as string || formData.get("middle_name_th") as string || formData.get("middle_name_local") as string || "";
+        const lastNameTh = formData.get("lastNameTh") as string || formData.get("last_name_th") as string || formData.get("last_name_local") as string || "";
+        const firstNameEn = formData.get("firstNameEn") as string || formData.get("first_name_en") as string || formData.get("first_name_intl") as string || "";
+        const middleNameEn = formData.get("middleNameEn") as string || formData.get("middle_name_en") as string || formData.get("middle_name_intl") as string || "";
+        const lastNameEn = formData.get("lastNameEn") as string || formData.get("last_name_en") as string || formData.get("last_name_intl") as string || "";
+        const nickname = formData.get("nickname") as string || "";
+        const number = formData.get("number") as string;
+        const position = formData.get("position") as string;
+        const photoFile = formData.get("photo") as File | null;
+        const dateOfBirth = formData.get("date_of_birth") as string || formData.get("birthday") as string || "";
+        const tel = formData.get("tel") as string || "";
+        const gender = formData.get("gender") as string || "male";
+        const preferredHand = formData.get("preferred_hand") as string || formData.get("preferredHand") as string || "";
+        const preferredFoot = formData.get("preferred_foot") as string || formData.get("preferredFoot") as string || "";
+        let masterPlayerId = formData.get("master_player_id") as string | null;
 
-    const name = formData.get("name") as string;
-    const number = formData.get("number") as string;
-    const position = formData.get("position") as string;
-    const tel = formData.get("tel") as string;
-    const masterPlayerId = formData.get("master_player_id") as string;
-    const photoFile = formData.get("photo") as File;
+        // Smart name classification
+        const classified = classifyPlayerNames({
+            name,
+            first_name_local: firstNameTh || null,
+            middle_name_local: middleNameTh || null,
+            last_name_local: lastNameTh || null,
+            first_name_intl: firstNameEn || null,
+            middle_name_intl: middleNameEn || null,
+            last_name_intl: lastNameEn || null,
+        });
 
-    if (!name) return { success: false, error: "Name is required" };
+        // Resolve display first and last name
+        let firstName = classified.first_name_intl || classified.first_name_local;
+        let lastName = classified.last_name_intl || classified.last_name_local || "-";
 
-    // Validate photo if present
-    if (photoFile && photoFile.size > 0) {
-        const fileCheck = validateUploadedFile(photoFile);
-        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
-    }
+        if (!firstName) {
+            if (!name || !name.trim()) return { success: false, error: "Name is required" };
+            const nameParts = name.trim().split(" ");
+            firstName = nameParts[0];
+            lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+        }
 
-    // Fetch team info
-    const { data: participation } = await adminSupabase
-        .from("tournament_teams")
-        .select(`id, team_id, tournament_category_id`)
-        .eq("id", teamId)
-        .single();
-        
-    if (participation) {
-        let photoUrl = null;
+        let photoUrl: string | null = null;
         if (photoFile && photoFile.size > 0) {
+            const fileCheck = validateUploadedFile(photoFile);
+            if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
             const fileExt = photoFile.name.split('.').pop() || 'jpg';
             const fileName = `players/${teamId}/photo_${Date.now()}.${fileExt}`;
             const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
-            
             if (uploadRes.success && uploadRes.url) {
                 photoUrl = uploadRes.url;
-            } else {
-                console.error("[addPlayer] Photo upload failed:", uploadRes.error);
             }
         }
 
+        const adminSupabase = createAdminClient();
 
-        const { error: insertErr } = await adminSupabase
-            .from("tournament_roster_submissions")
-            .insert({
-                tournament_team_id: teamId,
-                name: name,
-                shirt_number: number || null,
-                position: position || null,
-                tel: tel || null,
-                photo_url: photoUrl,
-                status: 'pending'
-            });
-
-        if (insertErr) {
-            return { success: false, error: "Failed to add player submission: " + insertErr.message };
-        }
-
-        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-        return { success: true };
-    }
-
-    let globalTeamId = null;
-    let sportId = null;
-    let tournamentId = null;
-
-    const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
-    if (globalCheck) {
-        globalTeamId = globalCheck.id;
-        sportId = globalCheck.sport_id;
-    }
-
-    if (!globalTeamId) {
-        return { success: false, error: "Team record not found." };
-    }
-
-    // Ensure we have a tournament_id (required by players table in new schema)
-    if (!tournamentId) {
-        // Fallback 1: Check if the team is in any tournament
-        const { data: parts } = await adminSupabase
-            .from("tournament_teams")
-            .select("id, tournament_category_id")
-            .eq("team_id", globalTeamId)
-            .limit(1);
-        if (parts && parts.length > 0) {
-            const part = parts[0];
-            if (part.tournament_category_id) {
-                const { data: category } = await adminSupabase
-                    .from("tournament_categories")
-                    .select("tournament_id")
-                    .eq("id", part.tournament_category_id)
-                    .single();
-                if (category) tournamentId = category.tournament_id;
-            }
-        }
-    }
-
-    if (!tournamentId) {
-        // Fallback 2: Link to any tournament in the database
-        const { data: anyTournament } = await adminSupabase
-            .from("tournaments")
-            .select("id")
-            .limit(1);
-        if (anyTournament && anyTournament.length > 0) {
-            tournamentId = anyTournament[0].id;
-        }
-    }
-
-    if (!tournamentId) {
-        // Fallback 3: Create a default tournament
-        const todayStr = new Date().toISOString().split('T')[0];
-        const { data: newTour, error: tourErr } = await adminSupabase
-            .from("tournaments")
-            .insert({
-                organizer_id: user.id,
-                sport_id: sportId,
-                name: "Default Tournament",
-                start_date: todayStr,
-                end_date: todayStr,
-                status: "draft"
-            })
-            .select("id")
-            .single();
-        if (tourErr) {
-            console.error("[addPlayer] Failed to create fallback tournament:", tourErr);
-        } else if (newTour) {
-            tournamentId = newTour.id;
-            // Create default category
-            await adminSupabase
-                .from("tournament_categories")
-                .insert({
-                    tournament_id: tournamentId,
-                    age_category_id: 1,
-                    gender_type: 'open',
-                    max_teams: 8
-                });
-        }
-    }
-
-    if (!tournamentId) {
-        return { success: false, error: "A tournament is required to add players to the roster." };
-    }
-
-    // 1. Ensure master player
-    let finalMasterId = masterPlayerId;
-    if (!finalMasterId) {
-        const nameParts = name.trim().split(" ");
-        const firstName = nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
-        
-        let matchedUserId: string | null = null;
-        if (tel) {
-            const { data: matchedUser } = await adminSupabase
-                .from("users")
-                .select("id")
-                .eq("phone", tel)
-                .maybeSingle();
-            if (matchedUser) {
-                matchedUserId = matchedUser.id;
-            }
-        }
-        
-        const { data: newMaster, error: masterErr } = await adminSupabase
-            .from("master_players")
-            .insert({
-                user_id: matchedUserId,
-                first_name_en: firstName,
-                last_name_en: lastName,
-                gender: 'unspecified',
-                birthday: '1970-01-01',
-                tel: tel || null,
-                status: 'active',
-                verified: matchedUserId ? true : false
-            })
-            .select("id")
-            .single();
-            
-        if (masterErr || !newMaster) {
-            console.error("[addPlayer] Create master player failed:", masterErr);
-            return { success: false, error: "Failed to create master player profile" };
-        }
-        finalMasterId = newMaster.id;
-
-        // If a photo file is provided, upload it to R2 and link to master player
-        if (photoFile && photoFile.size > 0) {
-            const fileExt = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `players/${finalMasterId}/photo_${Date.now()}.${fileExt}`;
-            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
-            
-            if (uploadRes.success && uploadRes.url) {
-                await adminSupabase
+        // 1. If detailed information is provided or no master player selected, create/link master_players
+        if (!masterPlayerId) {
+            try {
+                const { data: createdMP } = await adminSupabase
                     .from("master_players")
-                    .update({ profile_img: uploadRes.url })
-                    .eq("id", finalMasterId);
-            } else {
-                console.error("[addPlayer] Photo upload failed:", uploadRes.error);
+                    .insert({
+                        first_name_local: classified.first_name_local,
+                        middle_name_local: classified.middle_name_local,
+                        last_name_local: classified.last_name_local,
+                        first_name_intl: classified.first_name_intl,
+                        middle_name_intl: classified.middle_name_intl,
+                        last_name_intl: classified.last_name_intl,
+                        nickname: nickname || null,
+                        birthday: dateOfBirth || null,
+                        gender: gender || 'male',
+                        preferred_hand: preferredHand || null,
+                        preferred_foot: preferredFoot || null,
+                        tel: tel || null,
+                        photo_url: photoUrl,
+                        status: 'active',
+                        verified: false
+                    })
+                    .select("id")
+                    .single();
+
+                if (createdMP?.id) {
+                    masterPlayerId = createdMP.id;
+                }
+            } catch (mpErr) {
+                console.warn("[addPlayer] Master player insert fallback error:", mpErr);
             }
         }
 
-    }
-
-    // 2. Insert into players
-    const playerInsertData = {
-        master_id: finalMasterId,
-        display_name: name,
-        tel: tel || null
-    };
-
-    const { data: newPlayer, error: playerError } = await adminSupabase
-        .from("players")
-        .insert(playerInsertData)
-        .select("id")
-        .single();
-
-    if (playerError) {
-        console.error("[addPlayer] players insert failed:", playerError);
-        return { success: false, error: playerError.message };
-    }
-
-    // 3. Insert into player_sports (new schema table)
-    if (sportId && newPlayer) {
-        const { error: psError } = await adminSupabase
-            .from("player_sports")
-            .insert({
-                player_id: newPlayer.id,
-                sport_id: sportId,
-                team_id: teamId,
-                position: position || null,
-                shirt_number: number || null
+        // 2. Call Go Backend API
+        try {
+            await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
+                    team_id: teamId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    jersey_number: number ? parseInt(number) : null,
+                    shirt_number: number ? number.toString() : null,
+                    position: position || null,
+                    photo_url: photoUrl,
+                    date_of_birth: dateOfBirth || null,
+                    master_player_id: masterPlayerId || null,
+                }),
             });
-            
-        if (psError) {
-            // Log but don't fail the whole action if the table doesn't exist yet in the live DB
-            console.error("[addPlayer] player_sports insert failed:", psError);
+        } catch (apiErr) {
+            console.warn("[addPlayer] API POST failed, continuing with direct DB:", apiErr);
         }
-    }
 
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    return { success: true };
+        // 3. Ensure direct insert in players table if needed
+        try {
+            const { data: existingPlayer } = await adminSupabase
+                .from("players")
+                .select("id")
+                .eq("team_id", teamId)
+                .eq("first_name", firstName)
+                .eq("last_name", lastName)
+                .maybeSingle();
+
+            if (!existingPlayer) {
+                await adminSupabase
+                    .from("players")
+                    .insert({
+                        team_id: teamId,
+                        first_name: firstName,
+                        last_name: lastName,
+                        jersey_number: number ? parseInt(number) : null,
+                        shirt_number: number ? number.toString() : null,
+                        position: position || null,
+                        photo_url: photoUrl,
+                        date_of_birth: dateOfBirth || null,
+                        master_player_id: masterPlayerId || null,
+                    });
+            }
+        } catch (dbErr) {
+            console.warn("[addPlayer] direct players insert error:", dbErr);
+        }
+
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in addPlayer:", err);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 /**
@@ -1191,161 +1145,43 @@ export async function addPlayer(
  */
 export async function addPlayersBatch(
     teamId: string,
-    playersList: { name: string; number?: string; position?: string; tel?: string; }[]
+    playersList: { name: string; number?: string; position?: string; tel?: string; master_player_id?: string; }[]
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+        for (const playerInfo of playersList) {
+            if (!playerInfo.name || !playerInfo.name.trim()) continue;
 
-    // Fetch team info
-    const { data: participation } = await adminSupabase
-        .from("tournament_teams")
-        .select(`id, team_id, tournament_category_id`)
-        .eq("id", teamId)
-        .single();
-        
-    let globalTeamId = null;
-    let sportId = null;
-    let tournamentId = null;
+            const nameParts = playerInfo.name.trim().split(" ");
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
 
-    if (participation) {
-        globalTeamId = participation.team_id;
-        if (participation.tournament_category_id) {
-            const { data: category } = await adminSupabase
-                .from("tournament_categories")
-                .select("tournament_id")
-                .eq("id", participation.tournament_category_id)
-                .single();
-            if (category) tournamentId = category.tournament_id;
-        }
-        
-        const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", globalTeamId).single();
-        if (teamData) sportId = teamData.sport_id;
-    } else {
-        const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
-        if (globalCheck) {
-            globalTeamId = globalCheck.id;
-            sportId = globalCheck.sport_id;
-        }
-    }
-
-    if (!globalTeamId) {
-        return { success: false, error: "Team record not found." };
-    }
-
-    // Ensure we have a tournament_id (required by players table in new schema)
-    if (!tournamentId) {
-        const { data: parts } = await adminSupabase
-            .from("tournament_teams")
-            .select("id, tournament_category_id")
-            .eq("team_id", globalTeamId)
-            .limit(1);
-        if (parts && parts.length > 0) {
-            const part = parts[0];
-            if (part.tournament_category_id) {
-                const { data: category } = await adminSupabase
-                    .from("tournament_categories")
-                    .select("tournament_id")
-                    .eq("id", part.tournament_category_id)
-                    .single();
-                if (category) tournamentId = category.tournament_id;
-            }
-        }
-    }
-
-    if (!tournamentId) {
-        const { data: anyTournament } = await adminSupabase
-            .from("tournaments")
-            .select("id")
-            .limit(1);
-        if (anyTournament && anyTournament.length > 0) {
-            tournamentId = anyTournament[0].id;
-        }
-    }
-
-    if (!tournamentId) {
-        return { success: false, error: "A tournament is required to add players to the roster." };
-    }
-
-    for (const playerInfo of playersList) {
-        const name = playerInfo.name?.trim();
-        if (!name) continue;
-
-        const nameParts = name.split(" ");
-        const firstName = nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
-
-        let matchedUserId: string | null = null;
-        if (playerInfo.tel) {
-            const { data: matchedUser } = await adminSupabase
-                .from("users")
-                .select("id")
-                .eq("phone", playerInfo.tel)
-                .maybeSingle();
-            if (matchedUser) {
-                matchedUserId = matchedUser.id;
-            }
-        }
-
-        // 1. Create master player
-        const { data: newMaster, error: masterErr } = await adminSupabase
-            .from("master_players")
-            .insert({
-                user_id: matchedUserId,
-                first_name_en: firstName,
-                last_name_en: lastName,
-                gender: 'unspecified',
-                birthday: '1970-01-01',
-                tel: playerInfo.tel || null,
-                status: 'active',
-                verified: matchedUserId ? true : false
-            })
-            .select("id")
-            .single();
-
-        if (masterErr || !newMaster) {
-            console.error("[addPlayersBatch] Create master player failed:", masterErr);
-            continue;
-        }
-
-        // 2. Insert into players
-        const { data: newPlayer, error: playerError } = await adminSupabase
-            .from("players")
-            .insert({
-                master_id: newMaster.id,
-                display_name: name,
-                tel: playerInfo.tel || null
-            })
-            .select("id")
-            .single();
-
-        if (playerError || !newPlayer) {
-            console.error("[addPlayersBatch] players insert failed:", playerError);
-            continue;
-        }
-
-        // 3. Insert into player_sports
-        if (sportId) {
-            await adminSupabase
-                .from("player_sports")
-                .insert({
-                    player_id: newPlayer.id,
-                    sport_id: sportId,
+            await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
                     team_id: teamId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    jersey_number: playerInfo.number ? parseInt(playerInfo.number) : null,
                     position: playerInfo.position || null,
-                    shirt_number: playerInfo.number || null
-                });
+                    master_player_id: playerInfo.master_player_id || null,
+                }),
+            });
         }
-    }
 
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    return { success: true };
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in addPlayersBatch:", err);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 /**
@@ -1354,214 +1190,65 @@ export async function addPlayersBatch(
 export async function addPlayersBatchForm(
     formData: FormData
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const teamId = formData.get("teamId") as string;
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+        const teamId = formData.get("teamId") as string;
+        const count = parseInt(formData.get("count") as string || "0");
+        if (!teamId || count === 0) return { success: false, error: "No players provided" };
 
-    const count = parseInt(formData.get("count") as string || "0");
-    if (count === 0) return { success: false, error: "No players provided" };
-
-    // Fetch team info
-    const { data: participation } = await adminSupabase
-        .from("tournament_teams")
-        .select(`id, team_id, tournament_category_id`)
-        .eq("id", teamId)
-        .single();
-        
-    if (participation) {
         for (let i = 0; i < count; i++) {
             const name = formData.get(`name_${i}`) as string;
             if (!name || !name.trim()) continue;
 
             const number = formData.get(`number_${i}`) as string;
             const position = formData.get(`position_${i}`) as string;
-            const tel = formData.get(`tel_${i}`) as string;
-            const photoFile = formData.get(`photo_${i}`) as File;
+            const photoFile = formData.get(`photo_${i}`) as File | null;
+            const masterPlayerId = formData.get(`master_player_id_${i}`) as string | null;
 
-            let photoUrl = null;
+            let photoUrl: string | null = null;
             if (photoFile && photoFile.size > 0) {
                 const fileCheck = validateUploadedFile(photoFile);
                 if (fileCheck.valid) {
                     const fileExt = photoFile.name.split('.').pop() || 'jpg';
                     const fileName = `players/${teamId}/photo_${Date.now()}_${i}.${fileExt}`;
                     const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
-                    
                     if (uploadRes.success && uploadRes.url) {
                         photoUrl = uploadRes.url;
                     }
                 }
             }
 
+            const nameParts = name.trim().split(" ");
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
 
-            await adminSupabase
-                .from("tournament_roster_submissions")
-                .insert({
-                    tournament_team_id: teamId,
-                    name: name,
-                    shirt_number: number || null,
-                    position: position || null,
-                    tel: tel || null,
-                    photo_url: photoUrl,
-                    status: 'pending'
-                });
-        }
-
-        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-        return { success: true };
-    }
-
-    let globalTeamId = null;
-    let sportId = null;
-    let tournamentId = null;
-
-    const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
-    if (globalCheck) {
-        globalTeamId = globalCheck.id;
-        sportId = globalCheck.sport_id;
-    }
-
-    if (!globalTeamId) {
-        return { success: false, error: "Team record not found." };
-    }
-
-    // Ensure we have a tournament_id (required by players table in new schema)
-    if (!tournamentId) {
-        const { data: parts } = await adminSupabase
-            .from("tournament_teams")
-            .select("id, tournament_category_id")
-            .eq("team_id", globalTeamId)
-            .limit(1);
-        if (parts && parts.length > 0) {
-            const part = parts[0];
-            if (part.tournament_category_id) {
-                const { data: category } = await adminSupabase
-                    .from("tournament_categories")
-                    .select("tournament_id")
-                    .eq("id", part.tournament_category_id)
-                    .single();
-                if (category) tournamentId = category.tournament_id;
-            }
-        }
-    }
-
-    if (!tournamentId) {
-        const { data: anyTournament } = await adminSupabase
-            .from("tournaments")
-            .select("id")
-            .limit(1);
-        if (anyTournament && anyTournament.length > 0) {
-            tournamentId = anyTournament[0].id;
-        }
-    }
-
-    if (!tournamentId) {
-        return { success: false, error: "A tournament is required to add players to the roster." };
-    }
-
-    for (let i = 0; i < count; i++) {
-        const name = formData.get(`name_${i}`) as string;
-        if (!name || !name.trim()) continue;
-
-        const number = formData.get(`number_${i}`) as string;
-        const position = formData.get(`position_${i}`) as string;
-        const tel = formData.get(`tel_${i}`) as string;
-        const photoFile = formData.get(`photo_${i}`) as File | null;
-
-        const nameParts = name.trim().split(" ");
-        const firstName = nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
-
-        let matchedUserId: string | null = null;
-        if (tel) {
-            const { data: matchedUser } = await adminSupabase
-                .from("users")
-                .select("id")
-                .eq("phone", tel)
-                .maybeSingle();
-            if (matchedUser) {
-                matchedUserId = matchedUser.id;
-            }
-        }
-
-        // 1. Create master player
-        const { data: newMaster, error: masterErr } = await adminSupabase
-            .from("master_players")
-            .insert({
-                user_id: matchedUserId,
-                first_name_en: firstName,
-                last_name_en: lastName,
-                gender: 'unspecified',
-                birthday: '1970-01-01',
-                tel: tel || null,
-                status: 'active',
-                verified: matchedUserId ? true : false
-            })
-            .select("id")
-            .single();
-
-        if (masterErr || !newMaster) {
-            console.error(`[addPlayersBatchForm] Create master player failed for ${name}:`, masterErr);
-            continue;
-        }
-
-        const finalMasterId = newMaster.id;
-
-        // Upload photo if present
-        if (photoFile && photoFile.size > 0) {
-            const fileExt = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `players/${finalMasterId}/photo_${Date.now()}.${fileExt}`;
-            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
-            
-            if (uploadRes.success && uploadRes.url) {
-                await adminSupabase
-                    .from("master_players")
-                    .update({ profile_img: uploadRes.url })
-                    .eq("id", finalMasterId);
-            } else {
-                console.error(`[addPlayersBatchForm] Photo upload failed for ${name}:`, uploadRes.error);
-            }
-        }
-
-
-        // 2. Insert into players
-        const { data: newPlayer, error: playerError } = await adminSupabase
-            .from("players")
-            .insert({
-                master_id: finalMasterId,
-                display_name: name,
-                tel: tel || null
-            })
-            .select("id")
-            .single();
-
-        if (playerError || !newPlayer) {
-            console.error(`[addPlayersBatchForm] players insert failed for ${name}:`, playerError);
-            continue;
-        }
-
-        // 3. Insert into player_sports
-        if (sportId) {
-            await adminSupabase
-                .from("player_sports")
-                .insert({
-                    player_id: newPlayer.id,
-                    sport_id: sportId,
+            await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
                     team_id: teamId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    jersey_number: number ? parseInt(number) : null,
                     position: position || null,
-                    shirt_number: number || null
-                });
+                    photo_url: photoUrl,
+                    master_player_id: masterPlayerId || null,
+                }),
+            });
         }
-    }
 
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    return { success: true };
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in addPlayersBatchForm:", err);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 /**
@@ -1572,105 +1259,135 @@ export async function updatePlayer(
     teamId: string,
     data: { name?: string; number?: number | null; position?: string | null; birth_date?: string | null; photo_url?: string | null; tel?: string | null }
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    try {
+        const session = await getServerSession().catch(() => null);
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+        const nameParts = data.name ? data.name.trim().split(" ") : [];
+        const firstName = nameParts.length > 0 ? nameParts[0] : undefined;
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : (nameParts.length === 1 ? "-" : undefined);
 
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+        let updateSuccess = false;
+        let lastError = "";
 
-    // 1. Update players
-    const playerUpdate: Record<string, unknown> = {};
-    if (data.name !== undefined) {
-        playerUpdate.display_name = data.name;
+        // 1. Try Go Backend API for team player
+        try {
+            const res = await fetch(`${API_BASE_URL}/teams/${teamId}/players/${playerId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    jersey_number: data.number !== undefined ? data.number : undefined,
+                    position: data.position !== undefined ? data.position : undefined,
+                    photo_url: data.photo_url !== undefined ? data.photo_url : undefined,
+                    date_of_birth: data.birth_date !== undefined ? data.birth_date : undefined,
+                    tel: data.tel !== undefined ? data.tel : undefined,
+                }),
+            });
+            if (res.ok) {
+                updateSuccess = true;
+            } else {
+                const errBody = await res.json().catch(() => ({}));
+                lastError = errBody.error || "Failed to update team player";
+            }
+        } catch (apiErr) {
+            console.warn("[updatePlayer] API PUT /teams failed:", apiErr);
+        }
+
+        // 2. Also try tournament player PUT API if applicable
+        try {
+            const res = await fetch(`${API_BASE_URL}/tournament-teams/${teamId}/players/${playerId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({
+                    shirt_number: data.number !== undefined && data.number !== null ? String(data.number) : null,
+                    position: data.position || null,
+                    first_name: firstName,
+                    last_name: lastName,
+                    name: data.name,
+                    photo_url: data.photo_url,
+                    tel: data.tel,
+                }),
+            });
+            if (res.ok) {
+                updateSuccess = true;
+            }
+        } catch {
+            // ignore
+        }
+
+        if (!updateSuccess && lastError) {
+            return { success: false, error: lastError };
+        }
+
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Error in updatePlayer:", err);
+        return { success: false, error: err instanceof Error ? err.message : "An unexpected error occurred" };
     }
-    if (data.tel !== undefined) {
-        playerUpdate.tel = data.tel;
-    }
-
-    const { error: playerErr } = await adminSupabase
-        .from("players")
-        .update(playerUpdate)
-        .eq("id", playerId);
-
-    if (playerErr) {
-        return { success: false, error: playerErr.message };
-    }
-
-    // 3. Update player_sports
-    const psUpdate: Record<string, unknown> = {};
-    if (data.position !== undefined) {
-        psUpdate.position = data.position;
-    }
-    if (data.number !== undefined) {
-        psUpdate.shirt_number = data.number !== null ? String(data.number) : null;
-    }
-
-    if (Object.keys(psUpdate).length > 0) {
-        await adminSupabase
-            .from("player_sports")
-            .update(psUpdate)
-            .eq("player_id", playerId);
-    }
-
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    await logActivity('UPDATE_PLAYER', 'player', playerId, { team_id: teamId, ...data });
-    return { success: true };
 }
 
 /**
  * Remove a player from a team roster.
  */
 export async function deletePlayer(playerId: string, teamId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    try {
+        const supabase = await createClient();
+        const session = await getServerSession().catch(() => null);
+        const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+        const currentUser = session?.user || user;
+        if (!currentUser) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+        const adminSupabase = createAdminClient();
 
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+        try {
+            await fetch(`${API_BASE_URL}/teams/${teamId}/players/${playerId}`, {
+                method: 'DELETE',
+                headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+            });
+        } catch {
+            // ignore
+        }
 
-    // 1. Try deleting from tournament_roster_submissions first
-    const { data: subDeleted, error: subErr } = await adminSupabase
-        .from("tournament_roster_submissions")
-        .delete()
-        .eq("id", playerId)
-        .select();
+        const now = new Date().toISOString();
 
-    if (!subErr && subDeleted && subDeleted.length > 0) {
-        revalidatePath(`/manager/my-teams/${teamId}`);
+        // 1. Soft delete in player_sports
+        await adminSupabase
+            .from("player_sports")
+            .update({ deleted_at: now })
+            .eq("player_id", playerId)
+            .eq("team_id", teamId);
+
+        // 2. Soft delete in players
+        await adminSupabase
+            .from("players")
+            .update({ deleted_at: now })
+            .eq("id", playerId);
+
+        // 3. Delete in tournament_players if exists
+        await adminSupabase
+            .from("tournament_players")
+            .delete()
+            .eq("id", playerId);
+
+        revalidatePath(`/dashboard/teams/${teamId}`);
         revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-        return { success: true };
-    }
-
-    // 2. Try deleting from tournament_players
-    const { data: tpDeleted, error: tpErr } = await adminSupabase
-        .from("tournament_players")
-        .delete()
-        .eq("id", playerId)
-        .select();
-
-    if (!tpErr && tpDeleted && tpDeleted.length > 0) {
         revalidatePath(`/manager/my-teams/${teamId}`);
-        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
         return { success: true };
+    } catch (err) {
+        console.error("Error in deletePlayer:", err);
+        return { success: false, error: err instanceof Error ? err.message : "An unexpected error occurred" };
     }
-
-    // 3. Fallback: Delete from global players
-    const { error } = await adminSupabase
-        .from("players")
-        .delete()
-        .eq("id", playerId);
-
-    if (error) return { success: false, error: error.message };
-
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    return { success: true };
 }
 
 /**
@@ -1913,33 +1630,74 @@ export async function hasSoftDeletedPlayers(teamId: string): Promise<ActionRespo
 }
 
 /**
- * Search global teams by contact email.
+ * Search global teams for management claim by name or contact email.
  */
-export async function getTeamsByEmail(email: string): Promise<ActionResponse<Array<{ id: string; name: string }>>> {
+export async function searchTeamsForClaim(query: string): Promise<ActionResponse<Array<{ id: string; name: string; contact_email?: string; logo_url?: string; sport?: string }>>> {
     try {
+        const session = await getServerSession();
+        const url = `${API_BASE_URL}/teams/search-claim?q=${encodeURIComponent(query.trim())}`;
+        const headers: Record<string, string> = {};
+        if (session?.token) {
+            headers['Authorization'] = `Bearer ${session.token}`;
+        }
+
+        const res = await fetch(url, {
+            headers,
+            cache: 'no-store'
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            return {
+                success: true,
+                data: (data || []).map((t: any) => ({
+                    id: t.id,
+                    name: t.name,
+                    contact_email: t.contact_email,
+                    logo_url: t.logo_url || t.logo_img,
+                    sport: t.sport || 'football'
+                }))
+            };
+        }
+
+        // Fallback to Supabase
         const adminSupabase = createAdminClient();
         const { data, error } = await adminSupabase
             .from("teams")
-            .select("id, name")
-            .eq("contact_email", email.trim().toLowerCase())
-            .is("deleted_at", null);
+            .select("id, name, contact_email, logo_url, logo_img")
+            .or(`name.ilike.%${query.trim()}%,contact_email.ilike.%${query.trim()}%`)
+            .is("deleted_at", null)
+            .limit(20);
 
         if (error) {
-            console.error("Error fetching teams by email:", error);
             return { success: false, error: error.message };
         }
 
-        return { success: true, data: data || [] };
+        return {
+            success: true,
+            data: (data || []).map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                contact_email: t.contact_email,
+                logo_url: t.logo_url || t.logo_img
+            }))
+        };
     } catch (error) {
-        console.error("Unexpected error in getTeamsByEmail:", error);
+        console.error("Unexpected error in searchTeamsForClaim:", error);
         return { success: false, error: "An unexpected error occurred" };
     }
 }
 
 /**
+ * Search global teams by contact email.
+ */
+export async function getTeamsByEmail(email: string): Promise<ActionResponse<Array<{ id: string; name: string }>>> {
+    return searchTeamsForClaim(email);
+}
+
+/**
  * Submit a team management request.
- * Inserts a row into team_management_requests with status='pending'.
- * When approved by the organizer, the team's user_id will be changed to the requester.
+ * Inserts or updates a row in team_management_requests with status='pending'.
  */
 export async function submitTeamManagementRequest(
     teamId: string,
@@ -1947,45 +1705,85 @@ export async function submitTeamManagementRequest(
     message?: string
 ): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
-        const adminSupabase = createAdminClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
+
+        const res = await fetch(`${API_BASE_URL}/team-management-requests`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                team_id: teamId,
+                contact_phone: contactPhone.trim(),
+                message: message?.trim() || null,
+            }),
+        });
+
+        if (res.ok) {
+            revalidatePath("/dashboard/teams");
+            return { success: true };
+        }
+
+        const errData = await res.json().catch(() => ({}));
+
+        // Fallback to Direct Supabase if Go API failed
+        const adminSupabase = createAdminClient();
 
         // Check if a pending request already exists for this user + team
         const { data: existing } = await adminSupabase
             .from("team_management_requests")
-            .select("id")
+            .select("id, status")
             .eq("team_id", teamId)
-            .eq("requester_id", user.id)
-            .eq("status", "pending")
+            .eq("requester_id", session.user.id)
             .maybeSingle();
 
         if (existing) {
-            return { success: false, error: "คุณมีคำขอที่รอดำเนินการอยู่แล้วสำหรับทีมนี้" };
+            if (existing.status === 'pending') {
+                return { success: false, error: "คุณมีคำขอที่รอดำเนินการอยู่แล้วสำหรับทีมนี้" };
+            }
+            // Update existing non-pending request back to pending
+            const { error: updateError } = await adminSupabase
+                .from("team_management_requests")
+                .update({
+                    contact_phone: contactPhone.trim(),
+                    message: message?.trim() || null,
+                    status: 'pending',
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", existing.id);
+
+            if (updateError) {
+                return { success: false, error: updateError.message };
+            }
+            revalidatePath("/dashboard/teams");
+            return { success: true };
         }
 
         const { error } = await adminSupabase
             .from("team_management_requests")
             .insert({
                 team_id: teamId,
-                requester_id: user.id,
-                contact_phone: contactPhone,
-                message: message || null,
+                requester_id: session.user.id,
+                contact_phone: contactPhone.trim(),
+                message: message?.trim() || null,
+                status: 'pending',
             });
 
         if (error) {
-            console.error("Error submitting team management request:", error);
-            return { success: false, error: error.message };
+            console.error("Error submitting team management request via fallback:", error);
+            return { success: false, error: errData.error || error.message };
         }
 
+        revalidatePath("/dashboard/teams");
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in submitTeamManagementRequest:", error);
         return { success: false, error: "An unexpected error occurred" };
     }
 }
+
 

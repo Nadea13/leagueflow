@@ -12,13 +12,18 @@ import { th, enUS } from "date-fns/locale";
  */
 export function formatDate(
     date: Date | string | number | null | undefined,
-    formatStr: string = "d MMMM yyyy",
-    locale: string = "en"
+    formatStrOrLocale: string = "d MMMM yyyy",
+    localeArg: string = "en"
 ): string {
     if (!date) return "";
 
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return "";
+
+    // Support both signatures: formatDate(date, formatStr, locale) and formatDate(date, locale)
+    const isSecondArgLocale = formatStrOrLocale === "th" || formatStrOrLocale === "en" || formatStrOrLocale.length === 2;
+    const formatStr = isSecondArgLocale ? "d MMMM yyyy" : formatStrOrLocale;
+    const locale = isSecondArgLocale ? formatStrOrLocale : localeArg;
 
     // If Thai locale, use Intl.DateTimeFormat for Buddhist Year support
     // date-fns doesn't natively support Buddhist calendar types easily without plugins

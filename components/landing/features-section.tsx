@@ -96,7 +96,7 @@ export function FeaturesSection() {
                   <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary rounded-sm p-2 shadow-xs flex flex-col gap-1 relative">
                     <div className="flex items-center justify-between text-[8px] font-black uppercase text-primary tracking-wider">
                       <span className="flex items-center gap-1">
-                        <Trophy className="w-2.5 h-2.5" /> Finals
+                        <Trophy className="h-4 w-4" /> Finals
                       </span>
                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
                     </div>
@@ -126,7 +126,7 @@ export function FeaturesSection() {
 
             {/* Visual Demo 2: PromptPay Checkout Widget */}
             <div className="h-44 w-full border border-border rounded-sm bg-background/80 p-3.5 flex items-center gap-4 select-none relative overflow-hidden mb-6">
-              <div className="relative w-20 h-20 bg-white rounded-lg p-1.5 flex items-center justify-center shrink-0 border border-border shadow-2xs">
+              <div className="relative w-20 h-20 bg-white rounded-sm p-1.5 flex items-center justify-center shrink-0 border border-border shadow-2xs">
                 <QrCode className="w-full h-full text-slate-900" />
                 <motion.div
                   animate={{ y: [0, 56, 0] }}
@@ -311,8 +311,8 @@ export function FeaturesSection() {
             <div className="h-44 w-full border border-border rounded-sm bg-background/80 p-3 flex flex-col justify-between select-none overflow-hidden mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-sm bg-amber-500/20 text-amber-500 flex items-center justify-center text-[10px] font-black">
-                    <Flame className="w-3 h-3" />
+                  <div className="h-4 w-4 rounded-sm bg-amber-500/20 text-amber-500 flex items-center justify-center text-[10px] font-black">
+                    <Flame className="h-4 w-4" />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-foreground">Top Scorer Leader</span>

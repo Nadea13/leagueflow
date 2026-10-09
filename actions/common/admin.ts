@@ -201,16 +201,23 @@ export async function updateUserFields(
 export interface AdminMasterPlayer {
     id: string
     user_id: string | null
-    first_name_th: string | null
-    middle_name_th: string | null
-    last_name_th: string | null
-    first_name_en: string | null
-    middle_name_en: string | null
-    last_name_en: string | null
+    first_name_local?: string | null
+    middle_name_local?: string | null
+    last_name_local?: string | null
+    first_name_intl?: string | null
+    middle_name_intl?: string | null
+    last_name_intl?: string | null
+    first_name_th?: string | null
+    middle_name_th?: string | null
+    last_name_th?: string | null
+    first_name_en?: string | null
+    middle_name_en?: string | null
+    last_name_en?: string | null
     gender: string
     birthday: string
     tel: string | null
-    profile_img: string | null
+    photo_url?: string | null
+    profile_img?: string | null
     status: string
     verified: boolean
     created_at: string
@@ -472,10 +479,10 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
         // Fetch auth users using Admin Supabase client to get actual last_sign_in_at timestamps
         const adminSupabase = createAdminClient()
         const { data: authUsersData } = await adminSupabase.auth.admin.listUsers({ page: 1, perPage: 20 })
-        const authUsersMap = new Map((authUsersData?.users || []).map(u => [u.id, u]))
+        const authUsersMap = new Map((authUsersData?.users || []).map((u: any) => [u.id, u]))
 
         const activeUsersList: ActiveUserInfo[] = (recentUsers || []).map(u => {
-            const authUser = authUsersMap.get(u.id)
+            const authUser = authUsersMap.get(u.id) as any
             const lastSignIn = authUser?.last_sign_in_at || u.updated_at || u.created_at
             return {
                 id: u.id,
