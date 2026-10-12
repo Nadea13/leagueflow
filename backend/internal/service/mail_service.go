@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/smtp"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -18,15 +19,23 @@ import (
 	"leagueflow-backend/internal/config"
 )
 
+type otpItem struct {
+	code      string
+	expiresAt time.Time
+}
+
 type MailService struct {
-	redis *redis.Client
-	cfg   *config.Config
+	redis     *redis.Client
+	cfg       *config.Config
+	memCache  map[string]otpItem
+	cacheLock sync.RWMutex
 }
 
 func NewMailService(redis *redis.Client, cfg *config.Config) *MailService {
 	return &MailService{
-		redis: redis,
-		cfg:   cfg,
+		redis:    redis,
+		cfg:      cfg,
+		memCache: make(map[string]otpItem),
 	}
 }
 
@@ -43,11 +52,25 @@ func (s *MailService) GenerateOTP() string {
 func (s *MailService) SendVerificationOTP(ctx context.Context, email string) error {
 	otp := s.GenerateOTP()
 
-	// 1. Save to Redis with 5 minutes TTL
-	redisKey := fmt.Sprintf("otp:verify:%s", email)
-	err := s.redis.Set(ctx, redisKey, otp, 5*time.Minute).Err()
-	if err != nil {
-		return fmt.Errorf("failed to store OTP in cache: %w", err)
+	// 1. Try Redis with in-memory fallback
+	savedInRedis := false
+	if s.redis != nil {
+		redisKey := fmt.Sprintf("otp:verify:%s", email)
+		err := s.redis.Set(ctx, redisKey, otp, 5*time.Minute).Err()
+		if err == nil {
+			savedInRedis = true
+		} else {
+			log.Printf("⚠️ Redis unreachable (%v), falling back to in-memory OTP cache", err)
+		}
+	}
+
+	if !savedInRedis {
+		s.cacheLock.Lock()
+		s.memCache[email] = otpItem{
+			code:      otp,
+			expiresAt: time.Now().Add(5 * time.Minute),
+		}
+		s.cacheLock.Unlock()
 	}
 
 	htmlContent := fmt.Sprintf(`
@@ -74,7 +97,7 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 
 func (s *MailService) sendSMTPEmail(to, subject, htmlContent string) error {
 	addr := fmt.Sprintf("%s:%s", s.cfg.SMTPHost, s.cfg.SMTPPort)
-	
+
 	msg := []byte(fmt.Sprintf("From: %s\r\n"+
 		"To: %s\r\n"+
 		"Subject: %s\r\n"+
@@ -92,36 +115,60 @@ func (s *MailService) sendSMTPEmail(to, subject, htmlContent string) error {
 	return nil
 }
 
-// VerifyOTP checks if the provided OTP matches what is stored in Redis
+// VerifyOTP checks if the provided OTP matches what is stored in Redis or in-memory
 func (s *MailService) VerifyOTP(ctx context.Context, email, otp string) (bool, error) {
-	redisKey := fmt.Sprintf("otp:verify:%s", email)
-	storedOTP, err := s.redis.Get(ctx, redisKey).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return false, errors.New("OTP has expired or is invalid")
+	// 1. Try Redis first if available
+	if s.redis != nil {
+		redisKey := fmt.Sprintf("otp:verify:%s", email)
+		storedOTP, err := s.redis.Get(ctx, redisKey).Result()
+		if err == nil {
+			if storedOTP != otp {
+				return false, errors.New("incorrect OTP code")
+			}
+			_ = s.redis.Del(ctx, redisKey).Err()
+			verifiedKey := fmt.Sprintf("email:verified:%s", email)
+			_ = s.redis.Set(ctx, verifiedKey, "true", 15*time.Minute).Err()
+			return true, nil
 		}
-		return false, fmt.Errorf("failed to retrieve OTP: %w", err)
 	}
 
-	if storedOTP != otp {
+	// 2. Fallback to in-memory cache
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	item, exists := s.memCache[email]
+	if !exists || time.Now().After(item.expiresAt) {
+		delete(s.memCache, email)
+		return false, errors.New("OTP has expired or is invalid")
+	}
+
+	if item.code != otp {
 		return false, errors.New("incorrect OTP code")
 	}
 
-	// Delete OTP after successful verification
-	_ = s.redis.Del(ctx, redisKey).Err()
-
-	// Mark email as verified in Redis for 15 minutes
-	verifiedKey := fmt.Sprintf("email:verified:%s", email)
-	_ = s.redis.Set(ctx, verifiedKey, "true", 15*time.Minute).Err()
-
+	delete(s.memCache, email)
+	// Mark email as verified in-memory for 15 minutes
+	s.memCache["verified:"+email] = otpItem{
+		code:      "true",
+		expiresAt: time.Now().Add(15 * time.Minute),
+	}
 	return true, nil
 }
 
-// IsEmailVerified checks if an email was recently verified via OTP
+// IsEmailVerified checks whether email was successfully verified by OTP recently
 func (s *MailService) IsEmailVerified(ctx context.Context, email string) bool {
-	verifiedKey := fmt.Sprintf("email:verified:%s", email)
-	val, err := s.redis.Get(ctx, verifiedKey).Result()
-	return err == nil && val == "true"
+	if s.redis != nil {
+		verifiedKey := fmt.Sprintf("email:verified:%s", email)
+		val, err := s.redis.Get(ctx, verifiedKey).Result()
+		if err == nil && val == "true" {
+			return true
+		}
+	}
+
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+	item, exists := s.memCache["verified:"+email]
+	return exists && time.Now().Before(item.expiresAt)
 }
 
 func (s *MailService) sendResendEmail(to, subject, htmlContent string) error {
@@ -132,30 +179,32 @@ func (s *MailService) sendResendEmail(to, subject, htmlContent string) error {
 		"html":    htmlContent,
 	}
 
-	bodyBytes, err := json.Marshal(payload)
+	jsonBytes, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.ResendAPIKey))
+	req.Header.Set("Authorization", "Bearer "+s.cfg.ResendAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("resend request failed: %w", err)
+		return fmt.Errorf("failed to send email via Resend: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("resend returned status code: %d", resp.StatusCode)
+		var errResp map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&errResp)
+		return fmt.Errorf("resend API error: %v", errResp)
 	}
 
-	log.Printf("📧 Resend email sent successfully to %s", to)
+	log.Printf("📧 Email delivered via Resend API to %s", to)
 	return nil
 }
