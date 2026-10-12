@@ -29,8 +29,8 @@ func main() {
 	defer dbPool.Close()
 
 	// 1.1 Run Database Migrations Automatically
-	if err := database.RunMigrations(dbPool, "./migrations"); err != nil {
-		log.Printf("⚠️ Auto-migration warning: %v", err)
+	if err := database.RunMigrations(dbPool); err != nil {
+		log.Printf("⚠️ Auto-migration error: %v", err)
 	}
 
 	// 2. Initialize Redis

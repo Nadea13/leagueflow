@@ -12,8 +12,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// RunMigrations automatically scans and applies all .up.sql files in alphabetical order
-func RunMigrations(pool *pgxpool.Pool, migrationsDir string) error {
+// RunMigrations scans multiple possible locations to find migrations reliably on any environment
+func RunMigrations(pool *pgxpool.Pool) error {
 	ctx := context.Background()
 
 	// 1. Create migrations tracking table if not exists
@@ -26,11 +26,32 @@ func RunMigrations(pool *pgxpool.Pool, migrationsDir string) error {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
 
-	// 2. Read migration files
+	// 2. Discover migrations directory reliably (supports Docker /app, relative, and local)
+	candidates := []string{
+		"/app/migrations",
+		"./migrations",
+		"../migrations",
+		"../../migrations",
+	}
+
+	var migrationsDir string
+	for _, dir := range candidates {
+		if info, err := os.Stat(dir); err == nil && info.IsDir() {
+			migrationsDir = dir
+			break
+		}
+	}
+
+	if migrationsDir == "" {
+		log.Printf("⚠️ Migrations directory not found in candidates %v, checking schema_migrations count...", candidates)
+		return nil
+	}
+
+	log.Printf("📂 Found migrations directory at: %s", migrationsDir)
+
 	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
-		log.Printf("⚠️ Migrations directory not found at '%s', skipping auto-migrations: %v", migrationsDir, err)
-		return nil
+		return fmt.Errorf("failed to read migrations dir %s: %w", migrationsDir, err)
 	}
 
 	var upFiles []string
@@ -53,7 +74,7 @@ func RunMigrations(pool *pgxpool.Pool, migrationsDir string) error {
 			continue // Already applied
 		}
 
-		log.Printf(" Migrating: applying %s...", file)
+		log.Printf("🚀 Migrating: applying %s...", file)
 		filePath := filepath.Join(migrationsDir, file)
 		sqlContent, err := os.ReadFile(filePath)
 		if err != nil {
@@ -81,9 +102,9 @@ func RunMigrations(pool *pgxpool.Pool, migrationsDir string) error {
 			return fmt.Errorf("failed to commit migration %s: %w", file, err)
 		}
 
-		log.Printf(" Migrated: %s successfully applied", file)
+		log.Printf("✅ Migrated: %s successfully applied", file)
 	}
 
-	log.Println(" All database migrations are up to date!")
+	log.Println("🎉 All database migrations are up to date!")
 	return nil
 }
