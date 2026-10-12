@@ -1,14 +1,11 @@
--- 1. Sports table migration
-ALTER TABLE IF EXISTS tournaments DROP CONSTRAINT IF EXISTS tournaments_sport_id_fkey;
-ALTER TABLE IF EXISTS teams DROP CONSTRAINT IF EXISTS fk_teams_sport_id;
-ALTER TABLE IF EXISTS master_players DROP CONSTRAINT IF EXISTS master_players_favorite_sport_id_fkey;
-ALTER TABLE IF EXISTS player_sports DROP CONSTRAINT IF EXISTS player_sports_sport_id_fkey;
+-- 1. Sports table migration (Fail-safe)
+DO $$ BEGIN
+    CREATE TYPE sport_type_enum AS ENUM ('team', 'racket', 'individual', 'dual', 'combat', 'esports');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-DROP TABLE IF EXISTS sports CASCADE;
-DROP TYPE IF EXISTS sport_type_enum CASCADE;
-CREATE TYPE sport_type_enum AS ENUM ('team', 'racket', 'individual', 'dual', 'combat', 'esports');
-
-CREATE TABLE sports (
+CREATE TABLE IF NOT EXISTS sports (
     id SERIAL PRIMARY KEY,
     sport_name VARCHAR(100) NOT NULL,
     sport_type sport_type_enum NOT NULL DEFAULT 'team',
@@ -25,30 +22,58 @@ INSERT INTO sports (id, sport_name, sport_type) VALUES
 (5, 'Badminton', 'racket'),
 (6, 'Tennis', 'racket'),
 (7, 'Sepak Takraw', 'team'),
-(8, 'Cricket', 'team');
+(8, 'Cricket', 'team')
+ON CONFLICT (id) DO NOTHING;
 
-SELECT setval('sports_id_seq', (SELECT MAX(id) FROM sports));
+SELECT setval('sports_id_seq', (SELECT COALESCE(MAX(id), 1) FROM sports));
 
-ALTER TABLE tournaments ALTER COLUMN sport_id TYPE integer USING NULL;
-ALTER TABLE tournaments ADD CONSTRAINT tournaments_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE SET NULL;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS sport_id INTEGER;
+DO $$ BEGIN
+    ALTER TABLE tournaments ADD CONSTRAINT tournaments_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-ALTER TABLE teams ALTER COLUMN sport_id TYPE integer USING NULL;
-ALTER TABLE teams ADD CONSTRAINT fk_teams_sport_id FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE SET NULL;
-
-ALTER TABLE master_players ALTER COLUMN favorite_sport_id TYPE integer USING NULL;
-ALTER TABLE master_players ADD CONSTRAINT master_players_favorite_sport_id_fkey FOREIGN KEY (favorite_sport_id) REFERENCES sports(id) ON DELETE SET NULL;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS sport_id INTEGER;
+DO $$ BEGIN
+    ALTER TABLE teams ADD CONSTRAINT fk_teams_sport_id FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 UPDATE tournaments SET sport_id = CASE WHEN LOWER(name) LIKE '%volleyball%' OR LOWER(name) LIKE '%วอลเลย์บอล%' THEN 2 ELSE 1 END WHERE sport_id IS NULL;
 UPDATE teams SET sport_id = 1 WHERE sport_id IS NULL;
 
--- 2. Age categories table migration
-UPDATE tournament_categories SET age_category_id = NULL;
-TRUNCATE TABLE age_categories RESTART IDENTITY CASCADE;
-ALTER TABLE age_categories DROP COLUMN IF EXISTS gender;
-ALTER TABLE age_categories DROP CONSTRAINT IF EXISTS age_categories_category_name_unique;
-ALTER TABLE age_categories ADD CONSTRAINT age_categories_category_name_unique UNIQUE (category_name);
+-- 2. Age categories table migration (Fail-safe)
+CREATE TABLE IF NOT EXISTS age_categories (
+    id SERIAL PRIMARY KEY,
+    category_name VARCHAR(255) UNIQUE NOT NULL,
+    min_age INT NOT NULL DEFAULT 0,
+    max_age INT NOT NULL DEFAULT 99,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+INSERT INTO age_categories (id, category_name, min_age, max_age) VALUES
+(1, 'Open / ประชาชนทั่วไป', 0, 99),
+(2, 'U-12', 0, 12),
+(3, 'U-14', 0, 14),
+(4, 'U-16', 0, 16),
+(5, 'U-18', 0, 18),
+(6, 'Senior / ผู้สูงอายุ', 40, 99)
+ON CONFLICT (category_name) DO NOTHING;
+
+SELECT setval('age_categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM age_categories));
 
 -- 3. Tournament categories table migration
+ALTER TABLE tournament_categories ADD COLUMN IF NOT EXISTS age_category_id INTEGER;
+DO $$ BEGIN
+    ALTER TABLE tournament_categories ADD CONSTRAINT fk_tc_age_category_id FOREIGN KEY (age_category_id) REFERENCES age_categories(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 ALTER TABLE tournament_categories DROP COLUMN IF EXISTS age_min;
 ALTER TABLE tournament_categories DROP COLUMN IF EXISTS age_max;
 ALTER TABLE tournament_categories DROP COLUMN IF EXISTS settings;
