@@ -1,0 +1,34 @@
+name: CD - Database Migration
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'backend/migrations/**'
+      - 'database_schema.sql'
+      - 'render_clean_schema.sql'
+  workflow_dispatch:
+
+jobs:
+  migrate-database:
+    name: Run Migrations on Render DB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL Client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply Clean Schema & Migrations to Render DB
+        env:
+          DATABASE_URL: ${{ secrets.RENDER_EXTERNAL_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "⚠️ RENDER_EXTERNAL_DB_URL secret is not set yet in GitHub Secrets."
+            echo "Skipping direct runner. Fallback to in-app migrations."
+            exit 0
+          fi
+          echo "🚀 Executing automated migration on Render PostgreSQL..."
+          psql "$DATABASE_URL" -f render_clean_schema.sql
+          echo "✅ All tables and schemas applied successfully!"
