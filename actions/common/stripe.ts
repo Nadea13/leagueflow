@@ -1,11 +1,13 @@
 'use server';
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
 import { stripe } from "@/lib/stripe";
 import type Stripe from "stripe";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types";
 import { headers } from "next/headers";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://leagueflow-v80x.onrender.com/api/v1';
 
 export async function createStripeCheckoutSession({
     planId,
@@ -21,12 +23,11 @@ export async function createStripeCheckoutSession({
     tournamentId?: string | null;
 }): Promise<ActionResponse<{ sessionId: string; url: string | null }>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
+        const user = session.user;
 
         const headersList = await headers();
         const origin = headersList.get("origin") || headersList.get("referer") || "http://localhost:3000";
@@ -150,13 +151,13 @@ export async function createStripeCheckoutSession({
         };
 
 
-        const session = await stripe.checkout.sessions.create(checkoutOptions);
+        const checkoutSession = await stripe.checkout.sessions.create(checkoutOptions);
 
         return {
             success: true,
             data: {
-                sessionId: session.id,
-                url: session.url
+                sessionId: checkoutSession.id,
+                url: checkoutSession.url
             }
         };
     } catch (error) {
@@ -171,12 +172,11 @@ export async function createStripeCheckoutSession({
 
 export async function createStripeCustomerPortalSession(): Promise<ActionResponse<{ url: string }>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user || !user.email) {
+        const session = await getServerSession();
+        if (!session?.user || !session.user.email) {
             return { success: false, error: "Authentication required" };
         }
+        const user = session.user;
 
         const headersList = await headers();
         const origin = headersList.get("origin") || headersList.get("referer") || "http://localhost:3000";
@@ -232,12 +232,11 @@ export async function createStripeCustomerPortalSession(): Promise<ActionRespons
 
 export async function verifyStripeCheckoutSession(sessionId: string): Promise<ActionResponse<{ paid: boolean }>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
+        const user = session.user;
 
         let isPaid = false;
         let planId = "pro";
@@ -251,69 +250,42 @@ export async function verifyStripeCheckoutSession(sessionId: string): Promise<Ac
             planId = "pro";
             amount = 145;
         } else if (process.env.STRIPE_SECRET_KEY) {
-            const session = await stripe.checkout.sessions.retrieve(sessionId);
-            if (session.payment_status === "paid" || session.status === "complete") {
+            const stripeSession = await stripe.checkout.sessions.retrieve(sessionId);
+            if (stripeSession.payment_status === "paid" || stripeSession.status === "complete") {
                 isPaid = true;
-                planId = session.metadata?.planId || "pro";
-                amount = (session.amount_total || 0) / 100;
-                tournamentId = session.metadata?.tournamentId || null;
-                transactionId = (session.subscription as string) || (session.payment_intent as string) || session.id;
+                planId = stripeSession.metadata?.planId || "pro";
+                amount = (stripeSession.amount_total || 0) / 100;
+                tournamentId = stripeSession.metadata?.tournamentId || null;
+                transactionId = (stripeSession.subscription as string) || (stripeSession.payment_intent as string) || stripeSession.id;
             }
         }
-
 
         if (!isPaid) {
             return { success: false, error: "Payment not completed" };
         }
 
-        const adminSupabase = createAdminClient();
-
-        // Check if payment transaction already exists
-        const { data: existingPayment } = await adminSupabase
-            .from("payments")
-            .select("id")
-            .eq("transaction_id", transactionId)
-            .maybeSingle();
-
-        if (existingPayment) {
-            return { success: true, data: { paid: true } };
-        }
-
-        // 1. Record payment in DB
-        const { data: paymentData, error: paymentError } = await adminSupabase
-            .from("payments")
-            .insert({
+        // Record payment in Go Backend database
+        const res = await fetch(`${API_BASE_URL}/payments`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
                 user_id: user.id,
                 tournament_id: tournamentId || null,
                 amount,
-                payment_status: "success",
+                payment_status: "completed",
                 payment_method: "stripe",
                 plan_name: planId,
                 transaction_id: transactionId,
-                paid_at: new Date().toISOString(),
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            }),
+        });
 
-        if (paymentError) {
-            console.error("Error saving Stripe payment record:", paymentError);
-            return { success: false, error: paymentError.message };
-        }
-
-        // 2. Upgrade tournament if applicable
-        if (tournamentId && paymentData) {
-            await adminSupabase
-                .from("tournaments")
-                .update({
-                    plan: "tournament",
-                    payment_status: "paid",
-                    payment_id: paymentData.id,
-                    payment_method: "stripe",
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", tournamentId)
-                .eq("user_id", user.id);
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error("Error saving Stripe payment record:", errText);
+            return { success: false, error: "Failed to record payment: " + errText };
         }
 
         revalidatePath("/", "layout");

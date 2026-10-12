@@ -1,43 +1,34 @@
 'use server'
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Payment, Tournament } from "@/types";
 import { uploadToR2 } from "@/lib/r2";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://leagueflow-v80x.onrender.com/api/v1';
 
 export async function getUserPayments(): Promise<ActionResponse<Payment[]>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
-        const adminSupabase = createAdminClient();
-        const { data, error } = await adminSupabase
-            .from("payments")
-            .select(`
-                id,
-                amount,
-                payment_status,
-                payment_method,
-                plan_name,
-                created_at,
-                tournament_id,
-                transaction_id,
-                raw_gateway_response
-            `)
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
+        const res = await fetch(`${API_BASE_URL}/payments?user_id=${session.user.id}`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
 
-        if (error) {
-            console.error("Error fetching user payments:", error);
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            return { success: false, error: "Failed to fetch payments" };
         }
 
-        const mappedData: Payment[] = (data || []).map(item => {
+        const data = await res.json();
+        const paymentsList: any[] = Array.isArray(data) ? data : (data.data || []);
+
+        const mappedData: Payment[] = paymentsList.map(item => {
             const createdAt = new Date(item.created_at);
             let subscriptionExpiresAt = null;
             if (item.plan_name === "monthly" || item.plan_name === "pro" || item.plan_name === "manager_pro" || item.plan_name === "cup" || item.plan_name === "event") {
@@ -75,26 +66,24 @@ export async function getUserPayments(): Promise<ActionResponse<Payment[]>> {
 
 export async function getUserTournaments(): Promise<ActionResponse<Tournament[]>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
-        const { data, error } = await supabase
-            .from("tournaments")
-            .select("*")
-            .eq("user_id", user.id)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false });
+        const res = await fetch(`${API_BASE_URL}/tournaments?organizer_id=${session.user.id}`, {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+            cache: 'no-store',
+        });
 
-        if (error) {
-            console.error("Error fetching user tournaments:", error);
-            return { success: false, error: error.message };
+        if (!res.ok) {
+            return { success: false, error: "Failed to fetch tournaments" };
         }
 
-        return { success: true, data: data || [] };
+        const data = await res.json();
+        return { success: true, data: Array.isArray(data) ? data : (data.data || []) };
     } catch (e) {
         return {
             success: false,
@@ -110,10 +99,8 @@ export async function createPaymentRecord(
     tournamentId?: string | null
 ): Promise<ActionResponse<Payment>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
 
@@ -121,49 +108,30 @@ export async function createPaymentRecord(
             ? `LF_FREE_${Math.random().toString(36).substring(2, 10).toUpperCase()}`
             : `LF_TXN_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-        const adminSupabase = createAdminClient();
-
-        // 1. Insert global payment record
-        const { data: paymentData, error: paymentError } = await adminSupabase
-            .from("payments")
-            .insert({
-                user_id: user.id,
+        const res = await fetch(`${API_BASE_URL}/payments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                user_id: session.user.id,
                 tournament_id: tournamentId || null,
                 amount,
-                payment_status: "success",
+                payment_status: amount === 0 ? "completed" : "pending",
                 payment_method: paymentMethod,
                 plan_name: planId,
                 transaction_id: providerId,
-                paid_at: amount === 0 ? new Date().toISOString() : null,
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            }),
+        });
 
-        if (paymentError) {
-            console.error("Error inserting payment record:", paymentError);
-            return { success: false, error: paymentError.message };
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error("Error creating payment in backend:", errText);
+            return { success: false, error: "Failed to record payment: " + errText };
         }
 
-        // 2. If upgrading a tournament, update tournament plan in DB
-        if (tournamentId) {
-            const { error: tournamentError } = await adminSupabase
-                .from("tournaments")
-                .update({
-                    plan: "tournament",
-                    payment_status: "paid",
-                    payment_id: paymentData.id,
-                    payment_method: paymentMethod,
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", tournamentId)
-                .eq("user_id", user.id);
-
-            if (tournamentError) {
-                console.error("Error updating tournament plan:", tournamentError);
-                return { success: false, error: "Payment recorded, but failed to upgrade tournament: " + tournamentError.message };
-            }
-        }
+        const paymentData = await res.json();
 
         // Revalidate layout and settings paths
         revalidatePath("/", "layout");
@@ -211,12 +179,11 @@ export async function createPaymentRecord(
 
 export async function createPaymentRecordWithSlip(formData: FormData): Promise<ActionResponse<Payment>> {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const session = await getServerSession();
+        if (!session?.user) {
             return { success: false, error: "Authentication required" };
         }
+        const user = session.user;
 
         const planId = formData.get("planId") as string;
         const amount = Number(formData.get("amount"));
@@ -246,31 +213,33 @@ export async function createPaymentRecordWithSlip(formData: FormData): Promise<A
             slipUrl = uploadRes.url;
         }
 
-
         const providerId = `LF_TXN_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-        const adminSupabase = createAdminClient();
 
-        // 1. Insert global payment record
-        const { data: paymentData, error: paymentError } = await adminSupabase
-            .from("payments")
-            .insert({
+        const res = await fetch(`${API_BASE_URL}/payments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
                 user_id: user.id,
                 tournament_id: tournamentId || null,
                 amount,
-                payment_status: "pending", // Pending approval from Admin
+                payment_status: "pending",
                 payment_method: paymentMethod,
                 plan_name: planId,
                 transaction_id: providerId,
                 raw_gateway_response: slipUrl ? { slip_url: slipUrl } : {},
-                created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            }),
+        });
 
-        if (paymentError) {
-            console.error("Error inserting payment record:", paymentError);
-            return { success: false, error: paymentError.message };
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error("Error creating slip payment in backend:", errText);
+            return { success: false, error: "Failed to record payment: " + errText };
         }
+
+        const paymentData = await res.json();
 
         // Map database model to expected Payment interface
         const subscriptionExpiresAt = null;

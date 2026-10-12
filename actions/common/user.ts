@@ -25,18 +25,8 @@ async function getAuthUser() {
 }
 
 export async function getUserSubscriptionPlan(): Promise<string> {
-    try {
-        const session = await getServerSession();
-        if (!session?.user) return 'free';
-
-        if (session.user.role === 'super_admin' || session.user.role === 'organizer') {
-            return 'yearly';
-        }
-
-        return 'free';
-    } catch {
-        return 'free';
-    }
+    const details = await getUserSubscriptionDetails();
+    return details.plan;
 }
 
 export async function getUserSubscriptionDetails() {
@@ -44,7 +34,29 @@ export async function getUserSubscriptionDetails() {
         const session = await getServerSession();
         if (!session?.user) return { plan: 'free', expiresAt: null };
 
-        if (session.user.role === 'super_admin' || session.user.role === 'organizer') {
+        if (session.user.role === 'super_admin') {
+            return { plan: 'yearly', expiresAt: null };
+        }
+
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://leagueflow-v80x.onrender.com/api/v1';
+        try {
+            const res = await fetch(`${API_BASE_URL}/payments?user_id=${session.user.id}`, {
+                headers: { Authorization: `Bearer ${session.token}` },
+                cache: 'no-store'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const list: any[] = Array.isArray(data) ? data : (data.data || []);
+                const paid = list.find((p: any) => p.payment_status === 'completed' || p.payment_status === 'success');
+                if (paid && paid.plan_name) {
+                    return { plan: paid.plan_name, expiresAt: null };
+                }
+            }
+        } catch {
+            // fallback to role
+        }
+
+        if (session.user.role === 'organizer') {
             return { plan: 'yearly', expiresAt: null };
         }
 

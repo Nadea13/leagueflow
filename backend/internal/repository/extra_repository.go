@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -365,15 +366,36 @@ func (r *ExtraRepository) ListPayments(ctx context.Context, userID *uuid.UUID, t
 }
 
 func (r *ExtraRepository) CreatePayment(ctx context.Context, p *model.Payment) error {
+	if p.TransactionID != nil && *p.TransactionID != "" {
+		var existingID uuid.UUID
+		var existingCreatedAt time.Time
+		err := r.db.QueryRow(ctx, `SELECT id, created_at FROM payments WHERE transaction_id = $1 LIMIT 1`, *p.TransactionID).Scan(&existingID, &existingCreatedAt)
+		if err == nil {
+			p.ID = existingID
+			p.CreatedAt = existingCreatedAt
+			return nil
+		}
+	}
+
 	query := `
 		INSERT INTO payments (user_id, tournament_id, team_id, amount, plan_name, payment_status,
 		                     payment_method, transaction_id, raw_gateway_response, paid_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10, NOW()))
 		RETURNING id, created_at
 	`
 	rawBytes, _ := json.Marshal(p.RawGatewayResponse)
-	return r.db.QueryRow(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		p.UserID, p.TournamentID, p.TeamID, p.Amount, p.PlanName, p.PaymentStatus,
 		p.PaymentMethod, p.TransactionID, rawBytes, p.PaidAt,
 	).Scan(&p.ID, &p.CreatedAt)
+	if err != nil {
+		return err
+	}
+
+	// Upgrade user role to organizer upon successful payment
+	if p.UserID != nil && (p.PaymentStatus == "completed" || p.PaymentStatus == "success") {
+		_, _ = r.db.Exec(ctx, `UPDATE users SET role = 'organizer', updated_at = NOW() WHERE id = $1 AND role = 'user'`, *p.UserID)
+	}
+
+	return nil
 }
