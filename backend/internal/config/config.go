@@ -13,8 +13,12 @@ type Config struct {
 	CORSOrigins      string
 	ResendAPIKey     string
 	ResendFromEmail  string
-	SMTPHost         string
-	SMTPPort         string
+	SMTPHost           string
+	SMTPPort           string
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
+	FrontendURL        string
 }
 
 func LoadConfig() *Config {
@@ -64,16 +68,32 @@ func LoadConfig() *Config {
 		smtpPort = "1025"
 	}
 
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	googleRedirectURL := os.Getenv("GOOGLE_REDIRECT_URL")
+	if googleRedirectURL == "" {
+		googleRedirectURL = "https://leagueflow-v80x.onrender.com/api/v1/auth/google/callback"
+	}
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "https://leagueflow.vercel.app"
+	}
+
 	return &Config{
-		Port:             port,
-		DatabaseURL:      dbURL,
-		RedisURL:         redisURL,
-		JWTSecret:        jwtSecret,
-		JWTRefreshSecret: jwtRefreshSecret,
-		CORSOrigins:      corsOrigins,
-		ResendAPIKey:     resendAPIKey,
-		ResendFromEmail:  resendFromEmail,
-		SMTPHost:         smtpHost,
-		SMTPPort:         smtpPort,
+		Port:               port,
+		DatabaseURL:        dbURL,
+		RedisURL:           redisURL,
+		JWTSecret:          jwtSecret,
+		JWTRefreshSecret:   jwtRefreshSecret,
+		CORSOrigins:        corsOrigins,
+		ResendAPIKey:       resendAPIKey,
+		ResendFromEmail:    resendFromEmail,
+		SMTPHost:           smtpHost,
+		SMTPPort:           smtpPort,
+		GoogleClientID:     googleClientID,
+		GoogleClientSecret: googleClientSecret,
+		GoogleRedirectURL:  googleRedirectURL,
+		FrontendURL:        frontendURL,
 	}
 }

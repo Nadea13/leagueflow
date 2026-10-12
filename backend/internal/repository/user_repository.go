@@ -21,11 +21,11 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	query := `
-		INSERT INTO users (email, password_hash, full_name, role)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (email, password_hash, full_name, avatar_url, role)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, is_active, created_at, updated_at
 	`
-	err := r.db.QueryRow(ctx, query, user.Email, user.PasswordHash, user.FullName, user.Role).
+	err := r.db.QueryRow(ctx, query, user.Email, user.PasswordHash, user.FullName, user.AvatarURL, user.Role).
 		Scan(&user.ID, &user.IsActive, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)

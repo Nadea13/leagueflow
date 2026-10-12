@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"fmt"
+	"net/url"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
+	"leagueflow-backend/internal/config"
 	"leagueflow-backend/internal/repository"
 	"leagueflow-backend/internal/service"
 )
@@ -12,13 +16,15 @@ type AuthHandler struct {
 	authService *service.AuthService
 	mailService *service.MailService
 	userRepo    *repository.UserRepository
+	cfg         *config.Config
 }
 
-func NewAuthHandler(authService *service.AuthService, mailService *service.MailService, userRepo *repository.UserRepository) *AuthHandler {
+func NewAuthHandler(authService *service.AuthService, mailService *service.MailService, userRepo *repository.UserRepository, cfg *config.Config) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
 		mailService: mailService,
 		userRepo:    userRepo,
+		cfg:         cfg,
 	}
 }
 
@@ -261,6 +267,27 @@ func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "Password changed successfully",
 	})
+}
+
+func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
+	state := c.Query("state", "")
+	authURL := h.authService.GetGoogleAuthURL(state)
+	return c.Redirect(authURL, fiber.StatusTemporaryRedirect)
+}
+
+func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
+	code := c.Query("code")
+	if code == "" {
+		errParam := c.Query("error", "missing_code")
+		return c.Redirect(fmt.Sprintf("%s/auth/callback?error=%s", h.cfg.FrontendURL, url.QueryEscape(errParam)), fiber.StatusTemporaryRedirect)
+	}
+
+	resp, err := h.authService.HandleGoogleCallback(c.Context(), code)
+	if err != nil {
+		return c.Redirect(fmt.Sprintf("%s/auth/callback?error=%s", h.cfg.FrontendURL, url.QueryEscape(err.Error())), fiber.StatusTemporaryRedirect)
+	}
+
+	return c.Redirect(fmt.Sprintf("%s/auth/callback?token=%s", h.cfg.FrontendURL, resp.AccessToken), fiber.StatusTemporaryRedirect)
 }
 
 

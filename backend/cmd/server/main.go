@@ -64,7 +64,7 @@ func main() {
 	extraService := service.NewExtraService(extraRepo)
 
 	// 6. Initialize Handlers
-	authHandler := handler.NewAuthHandler(authService, mailService, userRepo)
+	authHandler := handler.NewAuthHandler(authService, mailService, userRepo, cfg)
 	tournamentHandler := handler.NewTournamentHandler(tournamentService)
 	matchHandler := handler.NewMatchHandler(matchService)
 	standingsHandler := handler.NewStandingsHandler(standingsService)
@@ -106,7 +106,7 @@ func main() {
 		})
 	})
 
-	// Auth routes (Email OTP & Login/Register/ResetPassword)
+	// Auth routes (Email OTP & Login/Register/ResetPassword & Google OAuth)
 	auth := api.Group("/auth")
 	auth.Post("/send-otp", authHandler.SendOTP)
 	auth.Post("/verify-otp", authHandler.VerifyOTP)
@@ -114,6 +114,8 @@ func main() {
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/refresh", authHandler.Refresh)
+	auth.Get("/google", authHandler.GoogleLogin)
+	auth.Get("/google/callback", authHandler.GoogleCallback)
 	auth.Get("/me", middleware.Protected(cfg), authHandler.Me)
 	auth.Put("/me", middleware.Protected(cfg), authHandler.UpdateProfile)
 	auth.Patch("/me", middleware.Protected(cfg), authHandler.UpdateProfile)
