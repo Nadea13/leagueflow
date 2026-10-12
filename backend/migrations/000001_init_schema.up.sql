@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS tournaments (
     logo_url TEXT,
     rules TEXT,
     settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+    document_deadline DATE,
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

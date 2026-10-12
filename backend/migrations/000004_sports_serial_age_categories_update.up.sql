@@ -28,6 +28,8 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('sports_id_seq', (SELECT COALESCE(MAX(id), 1) FROM sports));
 
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS sport_id INTEGER;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS document_deadline DATE;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
 DO $$ BEGIN
     ALTER TABLE tournaments ADD CONSTRAINT tournaments_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE SET NULL;
 EXCEPTION
