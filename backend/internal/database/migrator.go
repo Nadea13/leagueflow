@@ -68,6 +68,7 @@ func RunMigrations(pool *pgxpool.Pool, migrationsDir string) error {
 
 		if _, err := tx.Exec(ctx, string(sqlContent)); err != nil {
 			_ = tx.Rollback(ctx)
+			log.Printf("❌ Migration failed on %s: %v", file, err)
 			return fmt.Errorf("failed to execute migration %s: %w", file, err)
 		}
 
