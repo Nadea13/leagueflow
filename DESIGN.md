@@ -28,6 +28,10 @@ spacing:
   sm: "8px"
   md: "16px"
   lg: "24px"
+icons:
+  micro: "size-4" # 16px (inputs, buttons, dropdowns, table rows, badges)
+  medium: "size-6" # 24px (empty states, feature highlights, stat cards)
+  large: "size-8" # 32px (brand logo, modal illustrations, prominent hero/auth icons)
 components:
   card:
     backgroundColor: "bg-card"
@@ -165,11 +169,27 @@ League Flow uses a flat-by-default visual strategy with a consistent, compact bo
 - **Primary:** Athletic Teal background with white text.
 - **Hover:** Darkened teal background transition (`#00a380`).
 - **Button Icon Standard & Usage:**
-  - **Primary CTA / Creation Buttons (With Leading Icon):** Buttons that create, add, or initiate major new workflows should include a leading icon (e.g. `<Plus className="h-4 w-4" />` for adding tournaments, teams, athletes, or announcements).
+  - **Primary CTA / Creation Buttons (With Leading Icon):** Buttons that create, add, or initiate major new workflows should include a leading icon (e.g. `<Plus className="size-4" />` for adding tournaments, teams, athletes, or announcements).
   - **Special Utility / Navigation / Export / Danger (With Leading Icon):** Actions like downloading/exporting (`Download`), viewing public pages (`ExternalLink` / `Eye`), sharing (`Share2`), or standalone destructive actions (`Trash2`) should include a leading icon.
   - **Dialog Action & Form Submit Buttons (Text Only / No Icon):** Standard dialog footer and form submission buttons (e.g. `Save`, `Submit`, `Confirm`, `Cancel`, `Close`) must be **text-only without leading icons** to avoid visual noise. *(Exception: An animated loading spinner `<Loader2 className="animate-spin" />` is shown during async processing).*
   - **Alert Dialog Buttons (Size SM Standard):** Action and Cancel buttons inside `<AlertDialog>` (`<AlertDialogAction>` and `<AlertDialogCancel>`) must strictly use `size="sm"` (`h-8 text-xs font-semibold` / 32px height) to maintain a compact, clean confirmation footprint.
   - **Row / In-line Actions (Icon Only):** Secondary actions within list rows or table cells (such as `...` More Options, Quick Edit, Delete) must be icon-only buttons using `size="icon-sm"`.
+
+### Icons & Sizing System (Strict 3-Tier Standard)
+All icons across the application must strictly adhere to the following 3 standardized tiers:
+- **Micro (`size-4` / `h-4 w-4` / 16px):**
+  - **Inputs:** Leading & trailing icons inside fields (`Mail`, `Lock`, `Eye`, `EyeOff`, `Search`).
+  - **Buttons:** Action and CTA button icons (`Plus`, `Download`, `Share2`, `Trash2`, `Loader2`).
+  - **Navigation & Menus:** Dropdown/ActionMenu items, Sidebar items, Tabs, Breadcrumbs.
+  - **Inline Status:** Table row actions, list indicators, Badges, and tooltips.
+- **Medium (`size-6` / `h-6 w-6` / 24px):**
+  - **Empty States:** Empty illustration icons and center placeholders.
+  - **Feature Cards:** Feature highlight badges and sport category emblems.
+  - **Dashboard Cards:** Stat card indicators, overview icons, and status alert icons.
+- **Large (`size-8` / `h-8 w-8` / 32px):**
+  - **Brand & Logo:** Application brand mark (`Logo className="size-8"`).
+  - **Dialog Hero Illustrations:** Authentication and verification icons (e.g. `MailCheck`, `KeyRound` in OTP / Sign-Up).
+  - **Full-Screen States:** Major page header icons and full-screen loading indicators.
 
 ### Inputs / Fields
 - **Style:** Clean 1px border with `rounded-sm`.
@@ -201,6 +221,9 @@ League Flow uses a flat-by-default visual strategy with a consistent, compact bo
 - **Do** display headers strictly in the active language without English in parentheses.
 - **Do** keep card headers clean without underlines (`border-b`), separated from content by `space-y-2`.
 - **Do** use default `rounded-sm` consistently across cards, dialogs, buttons, inputs, and tables.
+- **Do** use `size-4` (`h-4 w-4`) for micro/standard icons (inputs, buttons, dropdowns, table cells, badges).
+- **Do** use `size-6` (`h-6 w-6`) for medium icons (empty states, feature cards, stat cards).
+- **Do** use `size-8` (`h-8 w-8`) for large icons (brand logo, modal illustrations, hero OTP icons).
 - **Do** format dialog headers with clean text-only titles (no icons) and `p-4` padding.
 - **Do** apply `p-4` padding and `space-y-4` spacing between sub-sections in dialog content/body.
 - **Do** keep spacing between `<Header level={4}>` and its content to strictly 2 (`space-y-2` or `mb-2`).
@@ -218,6 +241,7 @@ League Flow uses a flat-by-default visual strategy with a consistent, compact bo
 - **Do** use Athletic Teal strictly for interactive highlights and primary call-to-actions.
 
 ### Don't:
+- **Don't** use arbitrary icon sizes (e.g. `size-3.5`, `size-5`, `size-7`, `size-10`); strictly adhere to the 3-tier standard: micro (`size-4`), medium (`size-6`), and large (`size-8`).
 - **Don't** render multiple card items as separate disconnected floating boxes; always group them into a single card with divider lines (`divide-y divide-border`).
 - **Don't** use arbitrary padding for card items; maintain strictly `p-4` padding for each item.
 - **Don't** add decorative icons to standard dialog footer buttons like Save / Cancel / Close (keep them text-only).

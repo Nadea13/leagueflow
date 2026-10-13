@@ -1,17 +1,24 @@
 import { OAuthButtons } from "@/features/auth/oauth-buttons";
 import { EmailLoginForm } from "@/features/auth/email-login-form";
 import { PublicNavbar } from "@/components/layout/public-navbar";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
 import { HeroDotBackground } from "@/components/landing/hero-dot-background";
+import { Header } from "@/components/ui/header";
+import { Label } from "@/components/ui/label";
 
-export default function SignInPage() {
-    const t = useTranslations('Login');
+interface SignInPageProps {
+    searchParams?: Promise<{ error?: string }>;
+}
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+    const t = await getTranslations('Login');
+    const resolvedParams = searchParams ? await searchParams : undefined;
+    const authError = resolvedParams?.error;
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4 pt-24 md:pt-20">
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4 py-16 md:py-20">
             <PublicNavbar />
 
             {/* Interactive Canvas Dot Background */}
@@ -20,71 +27,68 @@ export default function SignInPage() {
             {/* Ambient Fade overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/50 pointer-events-none z-[1]" />
 
-            <Card className="w-full py-2 md:py-4 max-w-sm bg-card/50 backdrop-blur-md rounded-sm shadow-xl border relative z-10">
-                <CardHeader className="text-center mb-1 md:mb-2 px-4">
+            <div className="w-full max-w-[480px] bg-card backdrop-blur-xl rounded-sm shadow-2xl relative z-10 p-4 space-y-4">
+                <div className="text-center space-y-4">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
-                        <Logo className="w-8 h-8" color="#00C49A" />
-                        <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
+                    <Link href="/" className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105">
+                        <Logo className="w-9 h-9" color="#00C49A" />
+                        <span className="font-black text-foreground text-2xl tracking-tighter">League Flow</span>
                     </Link>
 
-                    <div className="space-y-1 md:space-y-2">
-                        <CardTitle className="text-2xl font-semibold tracking-tight">
-                            {t('title')}
-                        </CardTitle>
-                        <CardDescription>
+                    <div className="space-y-2">
+                        <Header level={2}>{t('title')}</Header>
+                        <p className="text-muted-foreground text-sm">
                             {t('subtitle')}
-                        </CardDescription>
+                        </p>
                     </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="space-y-1 md:space-y-2 px-4">
+                <div className="space-y-4">
                     <OAuthButtons />
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
                             <span className="w-full border-t" />
                         </div>
-                        <div className="relative flex justify-center text-xs">
-                            <span className="bg-card px-2 text-muted-foreground">
+                        <div className="relative flex justify-center uppercase">
+                            <Label className="bg-card px-4">
                                 {t('or')}
-                            </span>
+                            </Label>
                         </div>
                     </div>
 
-                    <EmailLoginForm />
+                    <EmailLoginForm authError={authError} />
 
                     <div className="text-center text-sm text-muted-foreground">
                         {t('no_account')}{" "}
                         <Link
                             href="/sign-up"
-                            className="underline underline-offset-4 hover:text-primary transition-colors font-medium"
+                            className="font-semibold text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
                         >
                             {t('create_account')}
                         </Link>
                     </div>
-                </CardContent>
+                </div>
 
-                <CardFooter className="px-4">
-                    <p className="text-center text-xs text-muted-foreground w-full mt-2 lg:mt-4">
+                <div>
+                    <p className="text-center text-xs text-muted-foreground w-full leading-relaxed">
                         {t('agreement')}{" "}
                         <Link
                             href="/terms-of-service"
-                            className="underline underline-offset-4 hover:text-primary transition-colors"
+                            className="underline underline-offset-4 hover:text-foreground transition-colors"
                         >
                             {t('terms')}
                         </Link>{" "}
                         {t('and')}{" "}
                         <Link
                             href="/privacy-policy"
-                            className="underline underline-offset-4 hover:text-primary transition-colors"
+                            className="underline underline-offset-4 hover:text-foreground transition-colors"
                         >
                             {t('privacy')}
                         </Link>
-                        .
                     </p>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

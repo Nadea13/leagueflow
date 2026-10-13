@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ApiClient } from "@/lib/api-client";
 
-export function EmailLoginForm() {
+interface EmailLoginFormProps {
+    authError?: string;
+}
+
+export function EmailLoginForm({ authError }: EmailLoginFormProps = {}) {
     const t = useTranslations('Login');
-    const _tCommon = useTranslations('Common');
+    const tCommon = useTranslations('Common');
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
@@ -22,12 +26,22 @@ export function EmailLoginForm() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (authError) {
+            toast({
+                variant: "destructive",
+                title: tCommon('error') || "เกิดข้อผิดพลาด",
+                description: authError === 'authentication_failed'
+                    ? (t('invalid_credentials') || "การเข้าสู่ระบบล้มเหลว กรุณาลองใหม่อีกครั้ง")
+                    : decodeURIComponent(authError),
+            });
+        }
+    }, [authError, t, tCommon, toast]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setError(null);
 
         try {
             const resp = await ApiClient.fetch<{
@@ -53,30 +67,34 @@ export function EmailLoginForm() {
                 router.refresh();
             }
         } catch (err: any) {
-            setError(err.message || t('invalid_credentials') || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+            toast({
+                variant: "destructive",
+                title: tCommon('error') || "เกิดข้อผิดพลาด",
+                description: err.message || t('invalid_credentials') || "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-3 w-full">
-            {error && (
-                <div className="text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
-                    {error}
-                </div>
-            )}
+        <form onSubmit={handleSubmit} className="space-y-4 w-full">
             <div className="space-y-1">
                 <Label htmlFor="email">{t('email')}</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder={t('email_placeholder')}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                />
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                        id="email"
+                        type="email"
+                        size="sm"
+                        placeholder={t('email_placeholder')}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-9.5"
+                        required
+                        disabled={isLoading}
+                    />
+                </div>
             </div>
             <div className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -89,19 +107,22 @@ export function EmailLoginForm() {
                     </Link>
                 </div>
                 <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
+                        size="sm"
                         placeholder={t('password_placeholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        className="pl-9.5 pr-10"
                         required
                         disabled={isLoading}
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground transition-colors p-0.5 rounded-sm"
                         tabIndex={-1}
                     >
                         {showPassword ? (
@@ -115,16 +136,17 @@ export function EmailLoginForm() {
 
             <Button
                 type="submit"
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                size="sm"
+                className="w-full"
                 disabled={isLoading}
             >
                 {isLoading ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {t('signing_in') || "กำลังเข้าสู่ระบบ..."}
+                        <span>{t('signing_in') || "กำลังเข้าสู่ระบบ..."}</span>
                     </>
                 ) : (
-                    t('sign_in') || "เข้าสู่ระบบ"
+                    <span>{t('sign_in') || "เข้าสู่ระบบ"}</span>
                 )}
             </Button>
         </form>

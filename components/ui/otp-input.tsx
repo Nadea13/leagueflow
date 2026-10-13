@@ -137,7 +137,7 @@ export function OtpInput({
                     onPaste={handlePaste}
                     onFocus={(e) => e.target.select()}
                     className={cn(
-                        "w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold font-mono rounded-sm border border-input text-foreground shadow-sm transition-all outline-none",
+                        "w-11 h-12 sm:w-12 sm:h-14 text-center text-3xl font-semibold rounded-sm border shadow-sm transition-all outline-none",
                         "focus:border-primary focus:ring-2 focus:ring-primary/20",
                         "disabled:cursor-not-allowed disabled:opacity-50",
                         digits[idx] ? "border-primary/50 bg-primary/10" : ""

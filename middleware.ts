@@ -28,6 +28,16 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(dashboardUrl);
     }
 
+    // Protect Dashboard routes: redirect to sign-in if no token
+    const isDashboardPage = path.includes('/dashboard');
+    if (!token && isDashboardPage) {
+        const matchLocale = path.match(/^\/(th|en)/);
+        const locale = matchLocale ? matchLocale[1] : 'th';
+        
+        const signInUrl = new URL(`/${locale}/sign-in`, request.url);
+        return NextResponse.redirect(signInUrl);
+    }
+
     // 3. Run next-intl middleware
     const response = handleI18nRouting(request);
     return response;

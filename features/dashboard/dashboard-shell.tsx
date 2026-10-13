@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "@/i18n/routing";
 import { ApiClient } from "@/lib/api-client";
 import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar";
 import { DashboardNavbar } from "@/features/dashboard/dashboard-navbar";
@@ -14,6 +15,7 @@ interface UserProfile {
 }
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +25,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 const token = ApiClient.getToken();
                 if (!token) {
                     setIsLoading(false);
+                    router.push('/sign-in');
                     return;
                 }
 
@@ -30,18 +33,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 setUser(profile);
             } catch (err) {
                 console.error("Failed to fetch user profile:", err);
+                ApiClient.setToken(null);
+                router.push('/sign-in');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchUserProfile();
-    }, []);
+    }, [router]);
 
     const userRole = user?.role || 'organizer';
     const isOrganizer = user?.role === 'organizer' || user?.role === 'super_admin';
     const isTeamManager = true;
-    const userName = user?.full_name || (isLoading ? "กำลังโหลด..." : "ผู้ใช้งาน");
+    const userName = user?.full_name || (user?.email ? user.email.split('@')[0] : "");
     const userEmail = user?.email || "";
     const userAvatar = user?.avatar_url;
 

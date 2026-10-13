@@ -133,8 +133,8 @@ export async function changePassword(formData: FormData): Promise<ActionResponse
         return { success: false, error: "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่" };
     }
 
-    if (newPassword.length < 6) {
-        return { success: false, error: "รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร" };
+    if (newPassword.length < 8) {
+        return { success: false, error: "รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร" };
     }
 
     if (newPassword !== confirmPassword) {

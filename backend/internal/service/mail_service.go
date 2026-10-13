@@ -56,7 +56,7 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 	savedInRedis := false
 	if s.redis != nil {
 		redisKey := fmt.Sprintf("otp:verify:%s", email)
-		err := s.redis.Set(ctx, redisKey, otp, 5*time.Minute).Err()
+		err := s.redis.Set(ctx, redisKey, otp, 3*time.Minute).Err()
 		if err == nil {
 			savedInRedis = true
 		} else {
@@ -68,7 +68,7 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 		s.cacheLock.Lock()
 		s.memCache[email] = otpItem{
 			code:      otp,
-			expiresAt: time.Now().Add(5 * time.Minute),
+			expiresAt: time.Now().Add(3 * time.Minute),
 		}
 		s.cacheLock.Unlock()
 	}
@@ -81,7 +81,7 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 			<div style="background-color: #f4f6f8; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #111; border-radius: 6px; margin: 20px 0;">
 				%s
 			</div>
-			<p style="font-size: 13px; color: #888;">รหัสนี้มีอายุการใช้งาน 5 นาที หากคุณไม่ได้ทำรายการ โปรดเพิกเฉยต่ออีเมลนี้</p>
+			<p style="font-size: 13px; color: #888;">รหัสนี้มีอายุการใช้งาน 3 นาที หากคุณไม่ได้ทำรายการ โปรดเพิกเฉยต่ออีเมลนี้</p>
 		</div>
 	`, otp)
 

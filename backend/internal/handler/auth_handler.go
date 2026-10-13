@@ -86,6 +86,12 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		})
 	}
 
+	if len(req.NewPassword) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Password must be at least 8 characters long",
+		})
+	}
+
 	// Verify that email was OTP verified recently
 	if !h.mailService.IsEmailVerified(c.Context(), req.Email) {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
@@ -115,6 +121,12 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	if input.Email == "" || input.Password == "" || input.FullName == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Email, password, and full name are required",
+		})
+	}
+
+	if len(input.Password) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Password must be at least 8 characters long",
 		})
 	}
 

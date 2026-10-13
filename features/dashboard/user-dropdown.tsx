@@ -53,7 +53,7 @@ export function UserDropdown({
     const tSettings = useTranslations("DashboardSettings")
 
     const profileHref = '/dashboard/settings'
-    const displayName = name || email;
+    const displayName = name || (email ? email.split('@')[0] : "");
 
     return (
         <ActionMenu>
@@ -68,13 +68,15 @@ export function UserDropdown({
                                 height={36}
                                 className="h-full w-full object-cover rounded-full"
                             />
+                        ) : displayName ? (
+                            <span className="text-xs font-bold">{displayName.slice(0, 2).toUpperCase()}</span>
                         ) : (
-                            <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
+                            <User className="h-4 w-4" />
                         )}
                     </div>
                     {!hideText && (
                         <div className="flex flex-col min-w-0 transition-all duration-300 ease-in-out opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto md:group-hover/sidebar:ml-2 overflow-hidden">
-                            <span className="text-xs font-bold text-foreground truncate">{name || displayName}</span>
+                            <span className="text-xs font-bold text-foreground truncate">{displayName || "..."}</span>
                             {email && <span className="text-[10px] text-muted-foreground truncate">{email}</span>}
                         </div>
                     )}
@@ -89,11 +91,15 @@ export function UserDropdown({
             >
                 <ActionMenuLabel className="mb-2">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-xs font-bold tracking-widest text-primary">{tCommon("user")}</p>
+                        {role && (
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                                {role}
+                            </p>
+                        )}
                         <p className="text-sm font-medium leading-none text-foreground truncate">
-                            {displayName}
+                            {displayName || email}
                         </p>
-                        {name && email && (
+                        {email && displayName !== email && (
                             <p className="text-xs text-muted-foreground truncate">{email}</p>
                         )}
                     </div>

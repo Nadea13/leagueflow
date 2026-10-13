@@ -221,7 +221,7 @@ export function SecurityForm({ className }: SecurityFormProps) {
                                     setNewPassword(e.target.value);
                                     setLastModifiedField('newPassword');
                                 }}
-                                placeholder={isThai ? "อย่างน้อย 6 ตัวอักษร" : "At least 6 characters"}
+                                placeholder={isThai ? "อย่างน้อย 8 ตัวอักษร" : "At least 6 characters"}
                                 className="pr-10 w-full"
                                 disabled={isLoading}
                                 required
@@ -300,7 +300,7 @@ export function SecurityForm({ className }: SecurityFormProps) {
                     </div>
                     <div className="sm:w-2/3">
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-muted-foreground">
-                            <li>{isThai ? "ความยาวอย่างน้อย 6 ตัวอักษร" : "At least 6 characters in length"}</li>
+                            <li>{isThai ? "ความยาวอย่างน้อย 8 ตัวอักษร" : "At least 6 characters in length"}</li>
                             <li>{isThai ? "ควรผสมตัวอักษรพิมพ์เล็ก พิมพ์ใหญ่ และตัวเลข" : "Mix uppercase, lowercase, and numbers"}</li>
                         </ul>
                     </div>
