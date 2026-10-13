@@ -1,0 +1,33 @@
+name: Keep-Alive 24/7 (Render Backend)
+
+on:
+  schedule:
+    # Runs every 12 minutes (Render free tier sleeps after 15 minutes of inactivity)
+    - cron: '*/12 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI anytime
+
+jobs:
+  keep-alive:
+    name: Ping Render Health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Backend Health Endpoint
+        run: |
+          echo "Pinging LeagueFlow Render Backend..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://leagueflow-v80x.onrender.com/health)
+          echo "Backend HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::warning ::Backend returned HTTP $HTTP_STATUS, retrying in 5s..."
+            sleep 5
+            RETRY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://leagueflow-v80x.onrender.com/health)
+            echo "Retry HTTP Status: $RETRY_STATUS"
+          else
+            echo "Backend is alive and healthy! 🚀"
+          fi
+
+      - name: Ping Frontend Vercel
+        run: |
+          echo "Pinging LeagueFlow Vercel Frontend..."
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://leagueflow.vercel.app)
+          echo "Frontend HTTP Status: $FRONTEND_STATUS"
