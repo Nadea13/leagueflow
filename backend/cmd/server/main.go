@@ -1,11 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
@@ -82,6 +87,7 @@ func main() {
 	})
 
 	app.Use(recover.New())
+	app.Use(helmet.New())
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: cfg.CORSOrigins,
@@ -89,7 +95,52 @@ func main() {
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 	}))
 
-	// Health check route
+	// Cloudflare & Reverse Proxy Aware Client IP Resolver
+	getClientIP := func(c *fiber.Ctx) string {
+		if cfIP := c.Get("CF-Connecting-IP"); cfIP != "" {
+			return cfIP
+		}
+		if xff := c.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			return strings.TrimSpace(parts[0])
+		}
+		return c.IP()
+	}
+
+	// 1. General API Rate Limiter (150 requests per minute per IP)
+	generalLimiter := limiter.New(limiter.Config{
+		Max:        150,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: getClientIP,
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Too many requests. Please slow down.",
+			})
+		},
+	})
+	app.Use(generalLimiter)
+
+	// 2. Strict Auth Rate Limiter for Brute-Force & OTP spam prevention (15 requests per minute)
+	authLimiter := limiter.New(limiter.Config{
+		Max:        15,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: getClientIP,
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Too many authentication attempts. Please wait 1 minute before trying again.",
+			})
+		},
+	})
+
+	// 3. Edge Caching Helper (Instructs Cloudflare Edge & Browser to cache public GET responses)
+	edgeCache := func(maxAgeSeconds int) fiber.Handler {
+		return func(c *fiber.Ctx) error {
+			c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d, s-maxage=%d, stale-while-revalidate=%d", maxAgeSeconds, maxAgeSeconds*2, maxAgeSeconds*4))
+			return c.Next()
+		}
+	}
+
+	// Health check route (unlimited)
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
@@ -108,12 +159,12 @@ func main() {
 
 	// Auth routes (Email OTP & Login/Register/ResetPassword & Google OAuth)
 	auth := api.Group("/auth")
-	auth.Post("/send-otp", authHandler.SendOTP)
-	auth.Post("/verify-otp", authHandler.VerifyOTP)
-	auth.Post("/reset-password", authHandler.ResetPassword)
-	auth.Post("/register", authHandler.Register)
-	auth.Post("/login", authHandler.Login)
-	auth.Post("/refresh", authHandler.Refresh)
+	auth.Post("/send-otp", authLimiter, authHandler.SendOTP)
+	auth.Post("/verify-otp", authLimiter, authHandler.VerifyOTP)
+	auth.Post("/reset-password", authLimiter, authHandler.ResetPassword)
+	auth.Post("/register", authLimiter, authHandler.Register)
+	auth.Post("/login", authLimiter, authHandler.Login)
+	auth.Post("/refresh", authLimiter, authHandler.Refresh)
 	auth.Get("/google", authHandler.GoogleLogin)
 	auth.Get("/google/callback", authHandler.GoogleCallback)
 	auth.Get("/me", middleware.Protected(cfg), authHandler.Me)
@@ -121,9 +172,9 @@ func main() {
 	auth.Patch("/me", middleware.Protected(cfg), authHandler.UpdateProfile)
 	auth.Post("/change-password", middleware.Protected(cfg), authHandler.ChangePassword)
 
-	// Sports & Age Categories
-	api.Get("/sports", extraHandler.ListSports)
-	api.Get("/age-categories", extraHandler.ListAgeCategories)
+	// Sports & Age Categories (Edge Cached for 60 seconds)
+	api.Get("/sports", edgeCache(60), extraHandler.ListSports)
+	api.Get("/age-categories", edgeCache(60), extraHandler.ListAgeCategories)
 	api.Post("/age-categories", extraHandler.CreateAgeCategory)
 
 	// Teams routes
@@ -157,27 +208,27 @@ func main() {
 
 	// Tournament routes
 	tournaments := api.Group("/tournaments")
-	tournaments.Get("/", tournamentHandler.List)
-	tournaments.Get("/:id", tournamentHandler.GetByID)
+	tournaments.Get("/", edgeCache(15), tournamentHandler.List)
+	tournaments.Get("/:id", edgeCache(15), tournamentHandler.GetByID)
 	tournaments.Post("/", middleware.Protected(cfg), tournamentHandler.Create)
 	tournaments.Put("/:id", middleware.Protected(cfg), tournamentHandler.Update)
 	tournaments.Delete("/:id", middleware.Protected(cfg), tournamentHandler.Delete)
 
 	// Tournament Categories
-	tournaments.Get("/:id/categories", tournamentHandler.GetCategories)
+	tournaments.Get("/:id/categories", edgeCache(15), tournamentHandler.GetCategories)
 	tournaments.Post("/:id/categories", middleware.Protected(cfg), tournamentHandler.CreateCategory)
 	tournaments.Put("/:id/categories/:categoryId", tournamentHandler.UpdateCategory)
 	tournaments.Patch("/:id/categories/:categoryId", tournamentHandler.UpdateCategory)
 	tournaments.Patch("/:id/categories/:categoryId/canvas", tournamentHandler.UpdateCategoryCanvas)
 	tournaments.Put("/:id/categories/:categoryId/canvas", tournamentHandler.UpdateCategoryCanvas)
 	tournaments.Delete("/:id/categories/:categoryId", middleware.Protected(cfg), tournamentHandler.DeleteCategory)
-	tournaments.Get("/:id/categories/:categoryId/standings", standingsHandler.GetByCategory)
+	tournaments.Get("/:id/categories/:categoryId/standings", edgeCache(15), standingsHandler.GetByCategory)
 	tournaments.Post("/:id/categories/:categoryId/standings/recalculate", standingsHandler.Recalculate)
-	tournaments.Get("/:id/categories/:categoryId/matches", matchHandler.GetByCategory)
+	tournaments.Get("/:id/categories/:categoryId/matches", edgeCache(10), matchHandler.GetByCategory)
 	tournaments.Post("/:id/categories/:categoryId/sync-matches", matchHandler.SyncCategoryMatches)
 
 	// Tournament Matches
-	tournaments.Get("/:id/matches", matchHandler.GetByTournament)
+	tournaments.Get("/:id/matches", edgeCache(10), matchHandler.GetByTournament)
 
 	// Tournament Registrations & Teams
 	tournaments.Get("/actions/incoming", middleware.Protected(cfg), registrationHandler.ListIncomingTournamentActions)
