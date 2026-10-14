@@ -1,4 +1,24 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:8080/api/v1';
+  }
+  return 'https://leagueflow-v80x.onrender.com/api/v1';
+};
+
+export class ApiError extends Error {
+  status: number;
+  data: any;
+
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
 
 interface RequestOptions extends RequestInit {
   token?: string;
@@ -10,13 +30,15 @@ export class ApiClient {
   public static setToken(token: string | null) {
     this.token = token;
     if (typeof window !== 'undefined') {
+      const isHttps = window.location.protocol === 'https:';
+      const secureFlag = isHttps ? '; Secure' : '';
       if (token) {
         localStorage.setItem('leagueflow_access_token', token);
         // Set cookie so Next.js Middleware can read auth state
-        document.cookie = `leagueflow_access_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `leagueflow_access_token=${token}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
       } else {
         localStorage.removeItem('leagueflow_access_token');
-        document.cookie = `leagueflow_access_token=; path=/; max-age=0; SameSite=Lax`;
+        document.cookie = `leagueflow_access_token=; path=/; max-age=0; SameSite=Lax${secureFlag}`;
       }
     }
   }
@@ -26,8 +48,10 @@ export class ApiClient {
       const stored = localStorage.getItem('leagueflow_access_token');
       if (stored) {
         this.token = stored;
+        const isHttps = window.location.protocol === 'https:';
+        const secureFlag = isHttps ? '; Secure' : '';
         // Keep cookie active and synchronized for Server Actions
-        document.cookie = `leagueflow_access_token=${stored}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `leagueflow_access_token=${stored}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
         return stored;
       }
       // Fallback check cookie
@@ -42,7 +66,8 @@ export class ApiClient {
   }
 
   public static async fetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const token = options.token || this.getToken();
 
     const headers = new Headers(options.headers || {});
@@ -52,14 +77,19 @@ export class ApiClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const res = await fetch(url, {
-      ...options,
-      headers,
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        ...options,
+        headers,
+      });
+    } catch (networkErr: any) {
+      throw new ApiError(networkErr?.message || 'Network error', 0);
+    }
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP Error ${res.status}`);
+      throw new ApiError(errorData.error || `HTTP Error ${res.status}`, res.status, errorData);
     }
 
     return res.json();

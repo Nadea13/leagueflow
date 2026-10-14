@@ -805,14 +805,14 @@ export default function InboxesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                 {/* Left Column: Inbox Navigation Menu */}
-                <aside className="lg:col-span-4 xl:col-span-3">
-                    <div className="rounded-sm border bg-card p-4 space-y-1 lg:sticky lg:top-4">
+                <aside className="lg:col-span-4 xl:col-span-3 sticky top-0 z-20 lg:top-4 self-start">
+                    <div className="rounded-sm border bg-card p-2.5 sm:p-4 space-y-1 shadow-xs">
                         <div className="pb-4 hidden lg:block">
                             <Header level={6}>
                                 {isTh ? "หมวดหมู่ข้อความ" : "Inbox Categories"}
                             </Header>
                         </div>
-                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible">
+                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1 lg:gap-0 pb-1 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {tabOptions.map((opt) => {
                                 const Icon = opt.icon;
                                 const isActive = activeTab === opt.value;

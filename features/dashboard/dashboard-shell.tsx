@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/routing";
-import { ApiClient } from "@/lib/api-client";
+import { ApiClient, ApiError } from "@/lib/api-client";
 import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar";
 import { DashboardNavbar } from "@/features/dashboard/dashboard-navbar";
 
@@ -12,6 +12,23 @@ interface UserProfile {
     full_name: string;
     role: string;
     avatar_url?: string;
+}
+
+function parseJwt(token: string): { user_id?: string; email?: string; role?: string; exp?: number } | null {
+    try {
+        const base64Url = token.split('.')[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    } catch {
+        return null;
+    }
 }
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -29,12 +46,43 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     return;
                 }
 
+                // Check client-side JWT expiration (7 days)
+                const claims = parseJwt(token);
+                if (claims?.exp && claims.exp * 1000 < Date.now()) {
+                    console.warn("Access token expired");
+                    ApiClient.setToken(null);
+                    router.push('/sign-in');
+                    return;
+                }
+
+                // Populate fast fallback profile from JWT claims while /auth/me loads
+                if (claims && claims.email) {
+                    const email = claims.email;
+                    setUser((prev) => prev || {
+                        id: claims.user_id || '',
+                        email: email,
+                        full_name: email.split('@')[0],
+                        role: claims.role || 'organizer',
+                    });
+                }
+
                 const profile = await ApiClient.fetch<UserProfile>('/auth/me');
                 setUser(profile);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Failed to fetch user profile:", err);
-                ApiClient.setToken(null);
-                router.push('/sign-in');
+                const isAuthError =
+                    err instanceof ApiError
+                        ? err.status === 401 || err.status === 403
+                        : err?.status === 401 || err?.status === 403;
+
+                // Only wipe session and kick out if server explicitly returned 401/403
+                if (isAuthError) {
+                    ApiClient.setToken(null);
+                    router.push('/sign-in');
+                } else {
+                    // For temporary network glitches, 502 Bad Gateway (Render cold start), do NOT destroy user session
+                    console.warn("Backend unavailable or spinning up; preserving current session.");
+                }
             } finally {
                 setIsLoading(false);
             }

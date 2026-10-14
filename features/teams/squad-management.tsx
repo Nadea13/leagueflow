@@ -504,7 +504,7 @@ export function SquadManagement({ team, initialPlayers, backHref }: SquadManagem
                 </div>
 
                 <div className={cn(
-                    "lg:col-span-1 w-full min-w-0 space-y-4 lg:sticky lg:top-0",
+                    "lg:col-span-1 w-full min-w-0 space-y-4 lg:sticky lg:top-4",
                     mobileTab !== 'team' && "hidden lg:block"
                 )}>
                     {team.isParticipation ? (
