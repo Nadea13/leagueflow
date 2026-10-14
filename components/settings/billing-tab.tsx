@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { Tab } from "@/components/ui/tab";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const getPlanPrice = (plan: Plan, isEn: boolean = false) => {
@@ -36,6 +37,9 @@ export function BillingTab() {
     const locale = useLocale();
     const isEn = locale === "en";
     const router = useRouter();
+
+    const { toast } = useToast();
+    const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
 
     const [activePlan, setActivePlan] = useState<string>("free");
     const [expiryDate, setExpiryDate] = useState<string | null>(null);
@@ -85,11 +89,26 @@ export function BillingTab() {
         const price = getPlanPrice(plan, isEn);
 
         if (price === 0) {
+            setSubscribingPlanId(plan.id);
             startTransition(async () => {
-                const res = await createPaymentRecord(plan.id, 0, "free");
-                if (res.success) {
-                    await loadData();
-                    router.refresh();
+                try {
+                    const res = await createPaymentRecord(plan.id, 0, "free");
+                    if (res.success) {
+                        toast({
+                            title: "เปิดใช้งานสำเร็จ",
+                            description: `คุณกำลังใช้งานแพ็กเกจ ${getPlanName(plan.id)}`,
+                        });
+                        await loadData();
+                        router.refresh();
+                    } else {
+                        toast({
+                            variant: "destructive",
+                            title: "เกิดข้อผิดพลาด",
+                            description: res.error || "ไม่สามารถเปิดใช้งานแพ็กเกจได้",
+                        });
+                    }
+                } finally {
+                    setSubscribingPlanId(null);
                 }
             });
             return;
@@ -99,22 +118,36 @@ export function BillingTab() {
         const tourId = isTournamentPlan && tournaments.length > 0 ? tournaments[0].id : null;
 
         // Direct 1-click redirect straight to Stripe Checkout
+        setSubscribingPlanId(plan.id);
         startTransition(async () => {
-            const res = await createStripeCheckoutSession({
-                planId: plan.id,
-                planName: plan.name.replace(/^สมัครใช้\s*/i, '').trim(),
-                amount: price,
-                currency: isEn ? 'usd' : 'thb',
-                tournamentId: tourId,
-            });
+            try {
+                const res = await createStripeCheckoutSession({
+                    planId: plan.id,
+                    planName: plan.name.replace(/^สมัครใช้\s*/i, '').trim(),
+                    amount: price,
+                    currency: isEn ? 'usd' : 'thb',
+                    tournamentId: tourId,
+                });
 
-            if (res.success && res.data?.url) {
-                window.location.href = res.data.url;
-            } else {
-                alert("Stripe error: " + (res.error || "Failed to initiate Stripe payment"));
+                if (res.success && res.data?.url) {
+                    window.location.href = res.data.url;
+                } else {
+                    setSubscribingPlanId(null);
+                    toast({
+                        variant: "destructive",
+                        title: "ไม่สามารถเปิดหน้าชำระเงินได้",
+                        description: res.error || "เกิดข้อผิดพลาดในการเชื่อมต่อกับ Stripe",
+                    });
+                }
+            } catch (err: any) {
+                setSubscribingPlanId(null);
+                toast({
+                    variant: "destructive",
+                    title: "เกิดข้อผิดพลาด",
+                    description: err.message || "ไม่สามารถเปิดหน้าชำระเงินได้",
+                });
             }
         });
-
     };
 
     const searchParams = useSearchParams();
@@ -404,23 +437,29 @@ export function BillingTab() {
                                                         ? "bg-primary text-primary-foreground hover:bg-primary/95"
                                                         : ""
                                                     }`}
-                                                disabled={isCurrent || plan.price === 0}
+                                                disabled={isCurrent || plan.price === 0 || isPending}
                                                 onClick={() => handleSelectPlan(plan)}
                                             >
-                                                {isCurrent
-                                                    ? t("currentPlan")
-                                                    : (plan.id === "pro" || plan.id === "event")
-                                                        ? t("subscribePro") || "สมัคร Event"
-                                                        : plan.id === "pro_yearly"
-                                                            ? t("subscribeProYearly")
-                                                            : plan.id === "cup"
-                                                                ? t("subscribeCup") || "สมัคร Cup"
-                                                                : plan.id === "cup_yearly"
-                                                                    ? t("subscribeCupYearly") || "สมัคร Cup รายปี"
-                                                                    : plan.id === "manager_pro"
-                                                                        ? t("manager_pro.title") || "Subscribe Manager Pro"
-                                                                        : t("getStartedFree")
-                                                 }
+                                                {isPending && subscribingPlanId === plan.id ? (
+                                                    <>
+                                                        <Loader2 className="size-3.5 animate-spin mr-1 inline-block" />
+                                                        <span>กำลังไปหน้าชำระเงิน...</span>
+                                                    </>
+                                                ) : isCurrent ? (
+                                                    t("currentPlan")
+                                                ) : (plan.id === "pro" || plan.id === "event") ? (
+                                                    t("subscribePro") || "สมัคร Event"
+                                                ) : plan.id === "pro_yearly" ? (
+                                                    t("subscribeProYearly")
+                                                ) : plan.id === "cup" ? (
+                                                    t("subscribeCup") || "สมัคร Cup"
+                                                ) : plan.id === "cup_yearly" ? (
+                                                    t("subscribeCupYearly") || "สมัคร Cup รายปี"
+                                                ) : plan.id === "manager_pro" ? (
+                                                    t("manager_pro.title") || "Subscribe Manager Pro"
+                                                ) : (
+                                                    t("getStartedFree")
+                                                )}
                                             </Button>
                                         )}
                                     </div>

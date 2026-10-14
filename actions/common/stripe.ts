@@ -30,10 +30,30 @@ export async function createStripeCheckoutSession({
         const user = session.user;
 
         const headersList = await headers();
-        const origin = headersList.get("origin") || headersList.get("referer") || "http://localhost:3000";
+        const originHeader = headersList.get("origin");
+        const refererHeader = headersList.get("referer");
+        let origin = originHeader;
+        if (!origin && refererHeader) {
+            try {
+                origin = new URL(refererHeader).origin;
+            } catch {
+                origin = null;
+            }
+        }
+        if (!origin) {
+            origin = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+        }
 
         // Check if Stripe key is configured
         if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes("dummy")) {
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+                console.error("STRIPE_SECRET_KEY is not configured in production environment variables");
+                return {
+                    success: false,
+                    error: "ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY ใน Vercel Environment Variables กรุณาใส่คีย์ใน Vercel Dashboard"
+                };
+            }
+
             // Simulated Stripe session mode for local development without actual Stripe keys
             const dummySessionId = `cs_test_${Math.random().toString(36).substring(2, 12)}`;
             const redirectUrl = `${origin}/dashboard/settings?tab=billing&session_id=${dummySessionId}&success=true`;
@@ -179,9 +199,27 @@ export async function createStripeCustomerPortalSession(): Promise<ActionRespons
         const user = session.user;
 
         const headersList = await headers();
-        const origin = headersList.get("origin") || headersList.get("referer") || "http://localhost:3000";
+        const originHeader = headersList.get("origin");
+        const refererHeader = headersList.get("referer");
+        let origin = originHeader;
+        if (!origin && refererHeader) {
+            try {
+                origin = new URL(refererHeader).origin;
+            } catch {
+                origin = null;
+            }
+        }
+        if (!origin) {
+            origin = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+        }
 
         if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes("dummy")) {
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+                return {
+                    success: false,
+                    error: "ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY ใน Vercel"
+                };
+            }
             return {
                 success: true,
                 data: {

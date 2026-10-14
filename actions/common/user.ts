@@ -56,10 +56,7 @@ export async function getUserSubscriptionDetails() {
             // fallback to role
         }
 
-        if (session.user.role === 'organizer') {
-            return { plan: 'yearly', expiresAt: null };
-        }
-
+        // Non-paid users default to 'free'
         return { plan: 'free', expiresAt: null };
     } catch {
         return { plan: 'free', expiresAt: null };
