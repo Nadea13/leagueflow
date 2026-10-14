@@ -1,31 +1,38 @@
-export * from "./become-organizer-dialog";
-export * from "./become-team-manager-dialog";
-export * from "./feedback-dialog";
-export * from "./verify-player-dialog";
+// User & System
+export * from "./user/become-organizer-dialog";
+export * from "./user/become-team-manager-dialog";
+export * from "./user/feedback-dialog";
 
-export * from "./create-team-dialog";
-export * from "./verify-team-dialog";
-export * from "./add-players-dialog";
+// Teams & Players
+export * from "./teams/create-team-dialog";
+export * from "./teams/verify-team-dialog";
+export * from "./teams/add-players-dialog";
+export * from "./teams/verify-player-dialog";
+export * from "./teams/player-details-dialog";
+export * from "./teams/team-roster-details-dialog";
 
-export * from "./tournament-template-dialog";
-export * from "./create-category-dialog";
-export * from "./create-tournament-dialog";
+// Tournaments
+export * from "./tournaments/create-tournament-dialog";
+export * from "./tournaments/create-category-dialog";
+export * from "./tournaments/tournament-template-dialog";
+export * from "./tournaments/add-tournament-team-dialog";
+export * from "./tournaments/add-announcement-dialog";
+export * from "./tournaments/add-sponsor-dialog";
 
-export * from "./football-event-dialog";
-export * from "./football-penalty-shootout-dialog";
-export * from "./football-roster-selection-dialog";
-export * from "./football-time-dialogs";
-export * from "./football-walkover-dialog";
-export * from "./football-settings-dialog";
-export * from "./football-statistics-dialog";
-export * from "./volleyball-event-dialog";
-export * from "./volleyball-team-info-dialog";
-export * from "./volleyball-settings-dialog";
-export * from "./volleyball-statistics-dialog";
+// Sports - General
+export * from "./sports/broadcast-dialog";
 
-export * from "./broadcast-dialog";
-export * from "./team-roster-details-dialog";
-export * from "./add-tournament-team-dialog";
-export * from "./add-announcement-dialog";
-export * from "./add-sponsor-dialog";
-export * from "./player-details-dialog";
+// Sports - Football
+export * from "./sports/football/football-event-dialog";
+export * from "./sports/football/football-penalty-shootout-dialog";
+export * from "./sports/football/football-roster-selection-dialog";
+export * from "./sports/football/football-time-dialogs";
+export * from "./sports/football/football-walkover-dialog";
+export * from "./sports/football/football-settings-dialog";
+export * from "./sports/football/football-statistics-dialog";
+
+// Sports - Volleyball
+export * from "./sports/volleyball/volleyball-event-dialog";
+export * from "./sports/volleyball/volleyball-team-info-dialog";
+export * from "./sports/volleyball/volleyball-settings-dialog";
+export * from "./sports/volleyball/volleyball-statistics-dialog";
