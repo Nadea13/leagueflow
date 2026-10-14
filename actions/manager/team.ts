@@ -175,7 +175,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
 
         const name = formData.get("name") as string;
         const logoFile = formData.get("logo") as File;
-        let rawSportId = formData.get("sport_id") as string;
+        const rawSportId = formData.get("sport_id") as string;
         const description = formData.get("description") as string;
         const contact_name = formData.get("contact_name") as string;
         const contact_phone = formData.get("contact_phone") as string;

@@ -34,7 +34,7 @@ function parseJwt(token: string): { user_id?: string; email?: string; role?: str
 export function DashboardShell({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const [user, setUser] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [_isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
