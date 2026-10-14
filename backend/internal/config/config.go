@@ -19,6 +19,9 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 	FrontendURL        string
+	LokiURL            string
+	LokiUser           string
+	LokiToken          string
 }
 
 func LoadConfig() *Config {
@@ -95,5 +98,8 @@ func LoadConfig() *Config {
 		GoogleClientSecret: googleClientSecret,
 		GoogleRedirectURL:  googleRedirectURL,
 		FrontendURL:        frontendURL,
+		LokiURL:            os.Getenv("LOKI_URL"),
+		LokiUser:           os.Getenv("LOKI_USER"),
+		LokiToken:          os.Getenv("LOKI_TOKEN"),
 	}
 }

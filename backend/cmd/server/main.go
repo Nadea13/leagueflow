@@ -11,12 +11,13 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	"leagueflow-backend/internal/config"
 	"leagueflow-backend/internal/database"
 	"leagueflow-backend/internal/handler"
+	appLogger "leagueflow-backend/internal/logger"
 	"leagueflow-backend/internal/middleware"
 	"leagueflow-backend/internal/repository"
 	"leagueflow-backend/internal/service"
@@ -79,7 +80,10 @@ func main() {
 	extraHandler := handler.NewExtraHandler(extraService)
 	teamManagementHandler := handler.NewTeamManagementHandler(teamManagementRepo)
 
-	// 7. Initialize Fiber App with expanded buffer sizes
+	// 7. Initialize Grafana Loki Centralized Logger (0฿ Free Tier)
+	lokiClient := appLogger.InitLoki(cfg.LokiURL, cfg.LokiUser, cfg.LokiToken)
+
+	// 8. Initialize Fiber App with expanded buffer sizes
 	app := fiber.New(fiber.Config{
 		AppName:         "LeagueFlow API v1",
 		ReadBufferSize:  16 * 1024, // 16KB to prevent 431 Request Header Fields Too Large from browser cookies
@@ -88,7 +92,10 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(helmet.New())
-	app.Use(logger.New())
+	app.Use(fiberLogger.New())
+	if lokiClient != nil {
+		app.Use(appLogger.FiberMiddleware(lokiClient))
+	}
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: cfg.CORSOrigins,
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
