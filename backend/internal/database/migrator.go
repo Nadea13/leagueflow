@@ -26,6 +26,25 @@ func RunMigrations(pool *pgxpool.Pool) error {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
 
+	// 1.1 Self-healing schema: Ensure core columns exist on teams table
+	ensureTeamsSQL := `
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS description TEXT;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS logo_img TEXT;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255);
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50);
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS contact_email TEXT;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_roster_locked BOOLEAN DEFAULT FALSE;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+	ALTER TABLE teams ADD COLUMN IF NOT EXISTS sport_id INTEGER;
+	UPDATE teams SET user_id = created_by WHERE user_id IS NULL AND created_by IS NOT NULL;
+	UPDATE teams SET created_by = user_id WHERE created_by IS NULL AND user_id IS NOT NULL;
+	`
+	if _, err := pool.Exec(ctx, ensureTeamsSQL); err != nil {
+		log.Printf("⚠️ Self-healing teams schema: %v", err)
+	}
+
 	// 2. Discover migrations directory reliably (supports Docker /app, relative, and local)
 	candidates := []string{
 		"/app/migrations",

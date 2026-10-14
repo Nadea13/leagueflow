@@ -98,10 +98,16 @@ func (r *TeamRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.Team
 }
 
 func (r *TeamRepository) Create(ctx context.Context, team *model.Team) error {
+	if team.UserID != nil && team.CreatedBy == nil {
+		team.CreatedBy = team.UserID
+	} else if team.CreatedBy != nil && team.UserID == nil {
+		team.UserID = team.CreatedBy
+	}
+
 	query := `
-		INSERT INTO teams (user_id, sport_id, name, short_name, description, logo_url, logo_img,
+		INSERT INTO teams (user_id, created_by, sport_id, name, short_name, description, logo_url, logo_img,
 		                   contact_name, contact_phone, contact_email, is_roster_locked, contact_info)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at, updated_at
 	`
 	if team.ContactInfo == nil {
@@ -109,7 +115,7 @@ func (r *TeamRepository) Create(ctx context.Context, team *model.Team) error {
 	}
 	contactBytes, _ := json.Marshal(team.ContactInfo)
 	return r.db.QueryRow(ctx, query,
-		team.UserID, team.SportID, team.Name, team.ShortName, team.Description, team.LogoURL, team.LogoImg,
+		team.UserID, team.CreatedBy, team.SportID, team.Name, team.ShortName, team.Description, team.LogoURL, team.LogoImg,
 		team.ContactName, team.ContactPhone, team.ContactEmail, team.IsRosterLocked, contactBytes,
 	).Scan(&team.ID, &team.CreatedAt, &team.UpdatedAt)
 }
