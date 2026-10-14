@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
@@ -14,6 +17,73 @@ type TeamHandler struct {
 
 func NewTeamHandler(teamService *service.TeamService) *TeamHandler {
 	return &TeamHandler{teamService: teamService}
+}
+
+type teamPayload struct {
+	Name           string                 `json:"name"`
+	ShortName      *string                `json:"short_name,omitempty"`
+	Description    *string                `json:"description,omitempty"`
+	LogoURL        *string                `json:"logo_url,omitempty"`
+	LogoImg        *string                `json:"logo_img,omitempty"`
+	ContactName    *string                `json:"contact_name,omitempty"`
+	ContactPhone   *string                `json:"contact_phone,omitempty"`
+	ContactEmail   *string                `json:"contact_email,omitempty"`
+	IsRosterLocked bool                   `json:"is_roster_locked"`
+	SportID        interface{}            `json:"sport_id,omitempty"`
+	Sport          string                 `json:"sport,omitempty"`
+	ContactInfo    map[string]interface{} `json:"contact_info,omitempty"`
+}
+
+func parseSportID(raw interface{}) *int {
+	if raw == nil {
+		defaultID := 1
+		return &defaultID
+	}
+	switch v := raw.(type) {
+	case float64:
+		i := int(v)
+		if i <= 0 {
+			i = 1
+		}
+		return &i
+	case int:
+		if v <= 0 {
+			v = 1
+		}
+		return &v
+	case string:
+		str := strings.TrimSpace(v)
+		if str == "" {
+			defaultID := 1
+			return &defaultID
+		}
+		if i, err := strconv.Atoi(str); err == nil && i > 0 {
+			return &i
+		}
+		lower := strings.ToLower(str)
+		var id int
+		if strings.Contains(lower, "volley") || strings.Contains(lower, "วอลเลย์") || strings.Contains(lower, "e193797b") {
+			id = 2
+		} else if strings.Contains(lower, "basket") || strings.Contains(lower, "บาส") || strings.Contains(lower, "ed6d32f4") {
+			id = 3
+		} else if strings.Contains(lower, "futsal") || strings.Contains(lower, "ฟุตซอล") || strings.Contains(lower, "f193797b") {
+			id = 4
+		} else if strings.Contains(lower, "badminton") || strings.Contains(lower, "แบดมินตัน") || strings.Contains(lower, "b193797b") {
+			id = 5
+		} else if strings.Contains(lower, "tennis") || strings.Contains(lower, "เทนนิส") || strings.Contains(lower, "t193797b") {
+			id = 6
+		} else if strings.Contains(lower, "takraw") || strings.Contains(lower, "ตะกร้อ") || strings.Contains(lower, "s193797b") {
+			id = 7
+		} else if strings.Contains(lower, "cricket") || strings.Contains(lower, "คริกเก็ต") || strings.Contains(lower, "c193797b") {
+			id = 8
+		} else {
+			id = 1 // default Football
+		}
+		return &id
+	default:
+		defaultID := 1
+		return &defaultID
+	}
 }
 
 func (h *TeamHandler) List(c *fiber.Ctx) error {
@@ -51,15 +121,48 @@ func (h *TeamHandler) GetByID(c *fiber.Ctx) error {
 }
 
 func (h *TeamHandler) Create(c *fiber.Ctx) error {
-	var team model.Team
-	if err := c.BodyParser(&team); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
+	var input teamPayload
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload: " + err.Error()})
+	}
+
+	if strings.TrimSpace(input.Name) == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Team name is required"})
+	}
+
+	team := model.Team{
+		Name:           strings.TrimSpace(input.Name),
+		ShortName:      input.ShortName,
+		Description:    input.Description,
+		LogoURL:        input.LogoURL,
+		LogoImg:        input.LogoImg,
+		ContactName:    input.ContactName,
+		ContactPhone:   input.ContactPhone,
+		ContactEmail:   input.ContactEmail,
+		IsRosterLocked: input.IsRosterLocked,
+		SportID:        parseSportID(input.SportID),
+		Sport:          input.Sport,
+		ContactInfo:    input.ContactInfo,
+	}
+
+	if team.ContactInfo == nil {
+		team.ContactInfo = make(map[string]interface{})
+	}
+	if team.ContactName != nil && *team.ContactName != "" {
+		team.ContactInfo["contact_name"] = *team.ContactName
+	}
+	if team.ContactPhone != nil && *team.ContactPhone != "" {
+		team.ContactInfo["contact_phone"] = *team.ContactPhone
+	}
+	if team.ContactEmail != nil && *team.ContactEmail != "" {
+		team.ContactInfo["contact_email"] = *team.ContactEmail
 	}
 
 	// Set user_id from auth token if present
 	if userIDVal := c.Locals("user_id"); userIDVal != nil {
 		if uID, ok := userIDVal.(uuid.UUID); ok && team.UserID == nil {
 			team.UserID = &uID
+			team.CreatedBy = &uID
 		}
 	}
 
@@ -75,11 +178,30 @@ func (h *TeamHandler) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid team ID"})
 	}
 
-	var team model.Team
-	if err := c.BodyParser(&team); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
+	var input teamPayload
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload: " + err.Error()})
 	}
-	team.ID = id
+
+	team := model.Team{
+		ID:             id,
+		Name:           strings.TrimSpace(input.Name),
+		ShortName:      input.ShortName,
+		Description:    input.Description,
+		LogoURL:        input.LogoURL,
+		LogoImg:        input.LogoImg,
+		ContactName:    input.ContactName,
+		ContactPhone:   input.ContactPhone,
+		ContactEmail:   input.ContactEmail,
+		IsRosterLocked: input.IsRosterLocked,
+		SportID:        parseSportID(input.SportID),
+		Sport:          input.Sport,
+		ContactInfo:    input.ContactInfo,
+	}
+
+	if team.ContactInfo == nil {
+		team.ContactInfo = make(map[string]interface{})
+	}
 
 	if err := h.teamService.UpdateTeam(c.Context(), &team); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

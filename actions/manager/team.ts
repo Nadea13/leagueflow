@@ -106,9 +106,17 @@ async function isAuthorizedForTeam(teamId: string, userId: string) {
    TEAM MANAGEMENT
    ============================================================================ */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://leagueflow-v80x.onrender.com/api/v1';
 
 const SPORT_ID_MAP: Record<string, string> = {
+    "1": "Football",
+    "2": "Volleyball",
+    "3": "Basketball",
+    "4": "Futsal",
+    "5": "Badminton",
+    "6": "Tennis",
+    "7": "Sepak Takraw",
+    "8": "Cricket",
     "7cf8611f-99a1-44f6-a218-9345ca2cfa06": "Football",
     "f193797b-8454-4870-b669-715f45d43543": "Futsal",
     "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1": "Basketball",
@@ -125,23 +133,26 @@ const SPORT_ID_MAP: Record<string, string> = {
 export async function getSports(): Promise<ActionResponse<Sport[]>> {
     try {
         const defaultSports: Sport[] = [
-            { id: "7cf8611f-99a1-44f6-a218-9345ca2cfa06", sport_name: "Football", created_at: new Date().toISOString() },
-            { id: "f193797b-8454-4870-b669-715f45d43543", sport_name: "Futsal", created_at: new Date().toISOString() },
-            { id: "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1", sport_name: "Basketball", created_at: new Date().toISOString() },
-            { id: "e193797b-8454-4870-b669-715f45d43542", sport_name: "Volleyball", created_at: new Date().toISOString() },
-            { id: "b193797b-8454-4870-b669-715f45d43544", sport_name: "Badminton", created_at: new Date().toISOString() },
-            { id: "t193797b-8454-4870-b669-715f45d43545", sport_name: "Tennis", created_at: new Date().toISOString() },
-            { id: "s193797b-8454-4870-b669-715f45d43546", sport_name: "Sepak Takraw", created_at: new Date().toISOString() },
-            { id: "c193797b-8454-4870-b669-715f45d43547", sport_name: "Cricket", created_at: new Date().toISOString() },
+            { id: 1, sport_name: "Football", created_at: new Date().toISOString() },
+            { id: 2, sport_name: "Volleyball", created_at: new Date().toISOString() },
+            { id: 3, sport_name: "Basketball", created_at: new Date().toISOString() },
+            { id: 4, sport_name: "Futsal", created_at: new Date().toISOString() },
+            { id: 5, sport_name: "Badminton", created_at: new Date().toISOString() },
+            { id: 6, sport_name: "Tennis", created_at: new Date().toISOString() },
+            { id: 7, sport_name: "Sepak Takraw", created_at: new Date().toISOString() },
+            { id: 8, sport_name: "Cricket", created_at: new Date().toISOString() },
         ];
 
-        const supabase = await createClient();
-        const { data, error } = await supabase.from("sports").select("*").order("sport_name");
-        
-        if (!error && data && data.length > 0) {
-            const existingNames = new Set(data.map(s => (s.sport_name || '').toLowerCase()));
-            const missing = defaultSports.filter(ds => !existingNames.has(ds.sport_name.toLowerCase()));
-            return { success: true, data: [...data, ...missing] as Sport[] };
+        try {
+            const res = await fetch(`${API_BASE_URL}/sports`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    return { success: true, data };
+                }
+            }
+        } catch (fetchErr) {
+            console.warn("Failed to fetch sports from backend API, using defaults:", fetchErr);
         }
 
         return { success: true, data: defaultSports };
@@ -164,7 +175,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
 
         const name = formData.get("name") as string;
         const logoFile = formData.get("logo") as File;
-        let sportId = formData.get("sport_id") as string;
+        let rawSportId = formData.get("sport_id") as string;
         const description = formData.get("description") as string;
         const contact_name = formData.get("contact_name") as string;
         const contact_phone = formData.get("contact_phone") as string;
@@ -180,23 +191,31 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             return { success: false, error: "Contact phone is required" };
         }
 
-        const lowerSport = (sportId || "").toLowerCase().trim();
-        if (!sportId || lowerSport === "football" || lowerSport.includes("foot") || lowerSport.includes("ฟุตบอล")) {
-            sportId = "7cf8611f-99a1-44f6-a218-9345ca2cfa06";
-        } else if (lowerSport === "volleyball" || lowerSport.includes("volley") || lowerSport.includes("วอลเลย์")) {
-            sportId = "e193797b-8454-4870-b669-715f45d43542";
-        } else if (lowerSport === "basketball" || lowerSport.includes("basket") || lowerSport.includes("บาส")) {
-            sportId = "ed6d32f4-4fe3-4694-81d6-7f29f8f163b1";
-        } else if (lowerSport === "futsal" || lowerSport.includes("futsal") || lowerSport.includes("ฟุตซอล")) {
-            sportId = "f193797b-8454-4870-b669-715f45d43543";
-        } else if (lowerSport === "badminton" || lowerSport.includes("badminton") || lowerSport.includes("แบดมินตัน")) {
-            sportId = "b193797b-8454-4870-b669-715f45d43544";
-        } else if (lowerSport === "tennis" || lowerSport.includes("tennis") || lowerSport.includes("เทนนิส")) {
-            sportId = "t193797b-8454-4870-b669-715f45d43545";
-        } else if (lowerSport === "sepak takraw" || lowerSport.includes("takraw") || lowerSport.includes("ตะกร้อ")) {
-            sportId = "s193797b-8454-4870-b669-715f45d43546";
-        } else if (lowerSport === "cricket" || lowerSport.includes("cricket") || lowerSport.includes("คริกเก็ต")) {
-            sportId = "c193797b-8454-4870-b669-715f45d43547";
+        let sportIdInt = 1;
+        if (rawSportId) {
+            const parsed = parseInt(String(rawSportId), 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                sportIdInt = parsed;
+            } else {
+                const lowerSport = String(rawSportId).toLowerCase().trim();
+                if (lowerSport.includes("volley") || lowerSport.includes("วอลเลย์") || lowerSport.includes("e193797b")) {
+                    sportIdInt = 2;
+                } else if (lowerSport.includes("basket") || lowerSport.includes("บาส") || lowerSport.includes("ed6d32f4")) {
+                    sportIdInt = 3;
+                } else if (lowerSport.includes("futsal") || lowerSport.includes("ฟุตซอล") || lowerSport.includes("f193797b")) {
+                    sportIdInt = 4;
+                } else if (lowerSport.includes("badminton") || lowerSport.includes("แบดมินตัน") || lowerSport.includes("b193797b")) {
+                    sportIdInt = 5;
+                } else if (lowerSport.includes("tennis") || lowerSport.includes("เทนนิส") || lowerSport.includes("t193797b")) {
+                    sportIdInt = 6;
+                } else if (lowerSport.includes("takraw") || lowerSport.includes("ตะกร้อ") || lowerSport.includes("s193797b")) {
+                    sportIdInt = 7;
+                } else if (lowerSport.includes("cricket") || lowerSport.includes("คริกเก็ต") || lowerSport.includes("c193797b")) {
+                    sportIdInt = 8;
+                } else {
+                    sportIdInt = 1;
+                }
+            }
         }
 
         const teamId = crypto.randomUUID();
@@ -235,7 +254,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
                 contact_email: contact_email?.trim() || session.user.email || '',
                 logo_url: logoUrl || null,
                 logo_img: logoUrl || null,
-                sport_id: sportId,
+                sport_id: sportIdInt,
             }),
         });
 
@@ -245,7 +264,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
         }
 
         const createdTeam = await createRes.json();
-        await logActivity('CREATE_TEAM', 'team', createdTeam?.id || teamId, { name, sport_id: sportId });
+        await logActivity('CREATE_TEAM', 'team', createdTeam?.id || teamId, { name, sport_id: sportIdInt });
 
         revalidatePath("/manager/my-teams");
         revalidatePath("/manager/dashboard");

@@ -104,6 +104,9 @@ func (r *TeamRepository) Create(ctx context.Context, team *model.Team) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id, created_at, updated_at
 	`
+	if team.ContactInfo == nil {
+		team.ContactInfo = make(map[string]interface{})
+	}
 	contactBytes, _ := json.Marshal(team.ContactInfo)
 	return r.db.QueryRow(ctx, query,
 		team.UserID, team.SportID, team.Name, team.ShortName, team.Description, team.LogoURL, team.LogoImg,

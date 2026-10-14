@@ -40,7 +40,7 @@ export async function addTeam(
     const session = await getServerSession();
     if (!session?.token) return { success: false, error: "Authentication required" };
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://leagueflow-v80x.onrender.com/api/v1';
 
     // 1. Fetch tournament to resolve sport_id and category_id
     let tournamentSportId: string | null = null;
@@ -95,6 +95,7 @@ export async function addTeam(
     // 2. Create global team via Go REST API
     let createdTeam: any = null;
     try {
+        const parsedSportId = tournamentSportId ? parseInt(String(tournamentSportId), 10) || 1 : 1;
         const createTeamRes = await fetch(`${apiUrl}/teams`, {
             method: 'POST',
             headers: {
@@ -109,7 +110,7 @@ export async function addTeam(
                 contact_email: contact_email || '',
                 logo_url: logo_url || null,
                 logo_img: logo_url || null,
-                sport_id: tournamentSportId || undefined,
+                sport_id: parsedSportId,
             }),
         });
 
