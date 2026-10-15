@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { addTeam } from "@/actions/tournaments/general";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
@@ -18,7 +18,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { ActionResponse } from "@/types/index";
-import { Plus } from "lucide-react";
+import { Plus, Camera, Shield, User, Phone, Mail } from "lucide-react";
 
 const initialState: ActionResponse = {
     success: false,
@@ -99,17 +99,19 @@ export function AddTournamentTeamDialog({
                     </Button>
                 </DialogTrigger>
             )}
-            <DialogContent className="sm:max-w-[540px]">
+            <DialogContent className="sm:max-w-[760px] sm:max-h-[88vh] p-0 flex flex-col overflow-hidden">
                 <form
                     ref={formRef}
                     action={formAction}
                     className="flex flex-col h-full overflow-hidden"
                 >
-                    <DialogHeader>
-                        <DialogTitle>
-                            {t("add_team") || (isThai ? "เพิ่มทีมใหม่" : "Add New Team")}
+                    <DialogHeader className="p-4 border-b shrink-0 bg-card">
+                        <DialogTitle asChild>
+                            <Header level={4}>
+                                {t("add_team") || (isThai ? "เพิ่มทีมใหม่" : "Add New Team")}
+                            </Header>
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                             {isThai
                                 ? "กรอกข้อมูลรายละเอียดของทีมที่ต้องการเพิ่มเข้าสู่การแข่งขัน"
                                 : "Enter the team details to add to this tournament."}
@@ -122,24 +124,49 @@ export function AddTournamentTeamDialog({
 
                     <div
                         ref={scrollContainerRef}
-                        className="p-4 space-y-4 flex-1 overflow-y-auto min-h-0"
+                        className="flex-1 min-h-0 overflow-y-auto p-4"
                     >
-                        {/* Logo Upload */}
-                        <div className="flex flex-col items-center justify-center">
-                            <LogoUploader
-                                id="tournament-team-logo-upload"
-                                name="logo"
-                                disabled={isLimitReached}
-                                onFileChange={(file) => setLogoFile(file)}
-                            />
+                        {/* 1. Team Logo */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Camera className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("upload_logo") || (isThai ? "รูปตราสัญลักษณ์" : "Team Crest / Logo")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "รูปภาพตราสัญลักษณ์ประจำทีมของคุณ" : "Official crest or logo image for your team"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 flex flex-col items-start gap-1">
+                                <LogoUploader
+                                    id="tournament-team-logo-upload"
+                                    name="logo"
+                                    disabled={isLimitReached}
+                                    onFileChange={(file) => setLogoFile(file)}
+                                />
+                            </div>
                         </div>
 
-                        {/* Team Details */}
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <Label>
-                                    {t("team_name")} <span className="text-destructive">*</span>
-                                </Label>
+                        {/* 2. Team Name */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Shield className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("team_name")} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ชื่อที่จะแสดงผลในตารางแข่งขันและสถิติต่างๆ" : "Display name in fixtures, brackets, and standings"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
                                 <Input
                                     type="text"
                                     name="name"
@@ -147,70 +174,108 @@ export function AddTournamentTeamDialog({
                                     placeholder={t("team_name_placeholder")}
                                     required
                                     disabled={isLimitReached}
-                                    className="bg-transparent"
+                                    className="w-full"
                                 />
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label>
-                                        {t("contact_name") || (isThai ? "ชื่อผู้ติดต่อ" : "Contact Name")}
-                                    </Label>
-                                    <Input
-                                        type="text"
-                                        name="contact_name"
-                                        size="sm"
-                                        placeholder={t("contact_name_placeholder")}
-                                        disabled={isLimitReached}
-                                        className="bg-transparent"
-                                    />
+                        {/* 3. Contact Name */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <User className="size-4 text-muted-foreground" />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>
-                                        {t("contact_phone") || (isThai ? "เบอร์โทรศัพท์" : "Phone Number")}
-                                    </Label>
-                                    <Input
-                                        type="text"
-                                        name="contact_phone"
-                                        size="sm"
-                                        placeholder={t("contact_phone_placeholder")}
-                                        disabled={isLimitReached}
-                                        className="bg-transparent"
-                                    />
+                                    <Header level={6}>
+                                        {t("contact_name") || (isThai ? "ชื่อผู้ติดต่อ" : "Contact Name")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ชื่อผู้จัดการทีมหรือตัวแทนผู้ประสานงาน" : "Team manager or coordinator name"}
+                                    </p>
                                 </div>
                             </div>
+                            <div className="sm:w-1/2 w-full">
+                                <Input
+                                    type="text"
+                                    name="contact_name"
+                                    size="sm"
+                                    placeholder={t("contact_name_placeholder")}
+                                    disabled={isLimitReached}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
 
-                            <div className="space-y-1">
-                                <Label>
-                                    {t("contact_email") || (isThai ? "อีเมล" : "Email Address")}
-                                </Label>
+                        {/* 4. Contact Phone */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Phone className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("contact_phone") || (isThai ? "เบอร์โทรศัพท์" : "Phone Number")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "เบอร์โทรศัพท์สำหรับติดต่อประสานงาน" : "Primary contact phone number"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <Input
+                                    type="text"
+                                    name="contact_phone"
+                                    size="sm"
+                                    placeholder={t("contact_phone_placeholder")}
+                                    disabled={isLimitReached}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        {/* 5. Contact Email */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Mail className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("contact_email") || (isThai ? "อีเมล" : "Email Address")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "อีเมลสำหรับรับเอกสารและการแจ้งเตือน" : "Contact email for notifications and documents"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
                                 <Input
                                     type="email"
                                     name="contact_email"
                                     size="sm"
                                     placeholder={t("contact_email_placeholder")}
                                     disabled={isLimitReached}
-                                    className="bg-transparent"
+                                    className="w-full"
                                 />
                             </div>
-
-                            {state.error && (
-                                <p className="text-xs font-bold text-destructive">
-                                    {state.error}
-                                </p>
-                            )}
-
-                            {isLimitReached && (
-                                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-sm">
-                                    <p className="text-xs font-semibold text-destructive">
-                                        {t("limit_reached_desc")}
-                                    </p>
-                                </div>
-                            )}
                         </div>
+
+                        {state.error && (
+                            <div className="mx-4 text-xs font-medium text-destructive bg-destructive/10 rounded-sm border border-destructive/20 p-2.5">
+                                {state.error}
+                            </div>
+                        )}
+
+                        {isLimitReached && (
+                            <div className="mx-4 p-3 bg-destructive/10 border border-destructive/20 rounded-sm">
+                                <p className="text-xs font-semibold text-destructive">
+                                    {t("limit_reached_desc")}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                         <Button
                             type="button"
                             variant="outline"
@@ -219,7 +284,7 @@ export function AddTournamentTeamDialog({
                         >
                             {isThai ? "ยกเลิก" : "Cancel"}
                         </Button>
-                        <SubmitButton disabled={isLimitReached}>
+                        <SubmitButton disabled={isLimitReached} className="h-8 px-3 text-xs">
                             {t("add_team_button") || (isThai ? "เพิ่มทีม" : "Add Team")}
                         </SubmitButton>
                     </DialogFooter>

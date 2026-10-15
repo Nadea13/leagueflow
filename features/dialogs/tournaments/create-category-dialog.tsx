@@ -8,14 +8,29 @@ import { createTournamentCategory, getOrCreateAgeCategory } from "@/actions/tour
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Layers } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Header } from "@/components/ui/header";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/dropdown";
+import {
+    Loader2,
+    Users,
+    UsersRound,
+    Shield,
+    CreditCard,
+    Layers,
+} from "lucide-react";
 
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -30,10 +45,21 @@ interface CreateCategoryFormProps {
     sport?: string;
 }
 
+const defaultAgeCategories = [
+    { id: 1, category_name: "Open" },
+    { id: 2, category_name: "U12" },
+    { id: 3, category_name: "U14" },
+    { id: 4, category_name: "U16" },
+    { id: 5, category_name: "U18" },
+    { id: 6, category_name: "35+" },
+    { id: 7, category_name: "40+" },
+];
+
 export function CreateCategoryForm({
     open,
     onOpenChange,
     tournamentId,
+    ageCategories,
     onSuccess,
     sport: initialSport
 }: CreateCategoryFormProps) {
@@ -42,10 +68,12 @@ export function CreateCategoryForm({
     const { toast } = useToast();
     const storeSport = useBracketStore((state) => state.sport);
 
-    // Age Category Type & Input States
-    const [ageType, setAgeType] = useState<"under" | "over" | "open">("under");
-    const [ageValue, setAgeValue] = useState<string>("");
+    const availableCategories = ageCategories && ageCategories.length > 0 ? ageCategories : defaultAgeCategories;
 
+    const [selectedAge, setSelectedAge] = useState<string>(
+        availableCategories[0]?.category_name || "Open"
+    );
+    const [customAge, setCustomAge] = useState<string>("");
     const [genderType, setGenderType] = useState<string>("male");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [registrationFee, setRegistrationFee] = useState<string>("0");
@@ -94,38 +122,35 @@ export function CreateCategoryForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        let formattedCategoryName = "Open";
+        let targetCategoryName = selectedAge;
         let minAge = 0;
         let maxAge = 99;
 
-        if (ageType === "under") {
-            if (!ageValue.trim()) {
+        if (selectedAge === "custom") {
+            if (!customAge.trim()) {
                 toast({
                     title: isThai ? "ข้อมูลไม่ครบถ้วน" : "Required Fields Missing",
-                    description: isThai ? "กรุณากรอกตัวเลขอายุสำหรับรุ่น Under" : "Please enter an age number for Under.",
+                    description: isThai ? "กรุณาระบุชื่อรุ่นอายุที่กำหนดเอง" : "Please enter custom age category name.",
                     variant: "destructive"
                 });
                 return;
             }
-            const parsedAge = parseInt(ageValue, 10);
-            formattedCategoryName = `U${parsedAge}`;
-            minAge = 0;
-            maxAge = parsedAge;
-        } else if (ageType === "over") {
-            if (!ageValue.trim()) {
-                toast({
-                    title: isThai ? "ข้อมูลไม่ครบถ้วน" : "Required Fields Missing",
-                    description: isThai ? "กรุณากรอกตัวเลขอายุสำหรับรุ่น Over" : "Please enter an age number for Over.",
-                    variant: "destructive"
-                });
-                return;
+            targetCategoryName = customAge.trim();
+        }
+
+        if (targetCategoryName.toUpperCase().startsWith("U")) {
+            const parsed = parseInt(targetCategoryName.substring(1), 10);
+            if (!isNaN(parsed)) {
+                minAge = 0;
+                maxAge = parsed;
             }
-            const parsedAge = parseInt(ageValue, 10);
-            formattedCategoryName = `${parsedAge}+`;
-            minAge = parsedAge;
-            maxAge = 99;
-        } else { // open
-            formattedCategoryName = "Open";
+        } else if (targetCategoryName.endsWith("+")) {
+            const parsed = parseInt(targetCategoryName.replace("+", ""), 10);
+            if (!isNaN(parsed)) {
+                minAge = parsed;
+                maxAge = 99;
+            }
+        } else if (targetCategoryName.toLowerCase() === "open") {
             minAge = 0;
             maxAge = 99;
         }
@@ -142,7 +167,7 @@ export function CreateCategoryForm({
         setIsPending(true);
         try {
             // Get or create Age Category ID
-            const ageCatRes = await getOrCreateAgeCategory(formattedCategoryName, minAge, maxAge);
+            const ageCatRes = await getOrCreateAgeCategory(targetCategoryName, minAge, maxAge);
             if (!ageCatRes.success || !ageCatRes.id) {
                 toast({
                     title: isThai ? "เกิดข้อผิดพลาด" : "Error",
@@ -272,125 +297,119 @@ export function CreateCategoryForm({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[760px] sm:max-h-[88vh] p-0 flex flex-col overflow-hidden">
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-                    <DialogHeader className="shrink-0">
-                        <DialogTitle>
-                            {isThai ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
+                    <DialogHeader className="p-4 border-b shrink-0">
+                        <DialogTitle asChild>
+                            <Header level={4}>
+                                {isThai ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
+                            </Header>
                         </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                            {isThai
+                                ? "กำหนดรุ่นอายุ ประเภทเพศ และรายละเอียดการรับสมัครสำหรับรุ่นนี้"
+                                : "Define age category, gender, and registration limits for this category."}
+                        </DialogDescription>
                     </DialogHeader>
 
-                    <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
-                        {/* Age Category Type & Input */}
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold">
-                                {isThai ? "รุ่นอายุ" : "Age Category"} <span className="text-destructive">*</span>
-                            </Label>
-                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
-                                {[
-                                    { id: "under", label: "Under (U)", icon: <ArrowDownCircle className="h-4 w-4" /> },
-                                    { id: "over", label: "Over (+)", icon: <PlusCircle className="h-4 w-4" /> },
-                                    { id: "open", label: "Open (ทั่วไป)", icon: <Globe className="h-4 w-4" /> },
-                                ].map((typeItem) => {
-                                    const isSelected = ageType === typeItem.id;
-                                    return (
-                                        <button
-                                            key={typeItem.id}
-                                            type="button"
-                                            disabled={isPending}
-                                            onClick={() => {
-                                                setAgeType(typeItem.id as "under" | "over" | "open");
-                                                if (typeItem.id === "open") setAgeValue("");
-                                            }}
-                                            className={cn(
-                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
-                                                isSelected
-                                                    ? "bg-primary/10 text-primary font-bold"
-                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "p-1.5 rounded-full transition-colors",
-                                                isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                            )}>
-                                                {typeItem.icon}
-                                            </div>
-                                            <span className="text-xs font-bold truncate w-full transition-colors">
-                                                {typeItem.label}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {ageType !== "open" && (
-                                <div className="space-y-1 pt-1">
-                                    <Label className="text-xs font-bold">
-                                        {isThai ? "อายุ" : "Age"} <span className="text-destructive">*</span>
-                                    </Label>
-                                    <Input
-                                        type="text"
-                                        size="sm"
-                                        value={ageValue}
-                                        disabled={isPending}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/[^0-9]/g, "");
-                                            setAgeValue(val);
-                                        }}
-                                        placeholder={
-                                            ageType === "under"
-                                                ? (isThai ? "เช่น 13 (สำหรับ U13)" : "e.g. 13 (for U13)")
-                                                : (isThai ? "เช่น 35 (สำหรับ 35+)" : "e.g. 35 (for 35+)")
-                                        }
-                                    />
+                    <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4">
+                        {/* 1. Age Category Selector */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Users className="size-4 text-muted-foreground" />
                                 </div>
-                            )}
-                        </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "รุ่นอายุ" : "Age Category"} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "เลือกรุ่นอายุสำหรับการแข่งขัน" : "Select age group"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full space-y-2">
+                                <Select value={selectedAge} onValueChange={setSelectedAge} disabled={isPending}>
+                                    <SelectTrigger size="sm" className="w-full">
+                                        <SelectValue placeholder={isThai ? "เลือกรุ่นอายุ" : "Select age"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableCategories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.category_name}>
+                                                {cat.category_name}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="custom">
+                                            {isThai ? "กำหนดเอง..." : "Custom..."}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                        <div className="space-y-1">
-                            <Label className="text-xs font-bold">
-                                {isThai ? "ประเภทเพศ" : "Gender Group"} <span className="text-destructive">*</span>
-                            </Label>
-                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
-                                {[
-                                    { id: "male", label: isThai ? "ชาย" : "Male", icon: <Mars className="h-4 w-4" /> },
-                                    { id: "female", label: isThai ? "หญิง" : "Female", icon: <Venus className="h-4 w-4" /> },
-                                    { id: "mixed", label: isThai ? "คู่ผสม / ผสม" : "Mixed", icon: <UsersRound className="h-4 w-4" /> },
-                                ].map((genderItem) => {
-                                    const isSelected = genderType === genderItem.id;
-                                    return (
-                                        <button
-                                            key={genderItem.id}
-                                            type="button"
+                                {selectedAge === "custom" && (
+                                    <div className="space-y-1 pt-1">
+                                        <Label className="text-xs font-semibold text-muted-foreground">
+                                            {isThai ? "ระบุชื่อรุ่นอายุ (เช่น U13, 30+, Open)" : "Enter age (e.g. U13, 30+, Open)"} <span className="text-destructive">*</span>
+                                        </Label>
+                                        <Input
+                                            type="text"
+                                            size="sm"
+                                            value={customAge}
                                             disabled={isPending}
-                                            onClick={() => setGenderType(genderItem.id)}
-                                            className={cn(
-                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
-                                                isSelected
-                                                    ? "bg-primary/10 text-primary font-bold"
-                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "p-1.5 rounded-full transition-colors",
-                                                isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                            )}>
-                                                {genderItem.icon}
-                                            </div>
-                                            <span className="text-xs font-bold truncate w-full transition-colors">
-                                                {genderItem.label}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                                            onChange={(e) => setCustomAge(e.target.value)}
+                                            placeholder={isThai ? "เช่น U13 หรือ 30+" : "e.g. U13 or 30+"}
+                                            className="w-full"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <Label className="text-xs font-bold">
-                                    {isThai ? "จำนวนทีมสูงสุด" : "Team Limit"} <span className="text-destructive">*</span>
-                                </Label>
+                        {/* 2. Gender Group Selector */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <UsersRound className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "ประเภทเพศ" : "Gender Group"} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "กำหนดเพศของผู้เข้าแข่งขันในรุ่นนี้" : "Target gender category for participants"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <Select value={genderType} onValueChange={setGenderType} disabled={isPending}>
+                                    <SelectTrigger size="sm" className="w-full">
+                                        <SelectValue placeholder={isThai ? "เลือกกลุ่มเพศ" : "Select gender"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="open">{isThai ? "ทั่วไป (ทุกเพศ)" : "Open (All Genders)"}</SelectItem>
+                                        <SelectItem value="male">{isThai ? "ชาย (ผู้ชายเท่านั้น)" : "Male (Men only)"}</SelectItem>
+                                        <SelectItem value="female">{isThai ? "หญิง (ผู้หญิงเท่านั้น)" : "Female (Women only)"}</SelectItem>
+                                        <SelectItem value="mixed">{isThai ? "ผสม (ชาย-หญิง)" : "Mixed (Men & Women)"}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* 3. Team Limit */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Shield className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "จำนวนทีมสูงสุด" : "Team Limit"} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "จำนวนทีมที่เปิดรับสมัครสูงสุดในรุ่นนี้" : "Maximum number of teams allowed to register"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
                                 <Input
                                     type="text"
                                     size="sm"
@@ -401,13 +420,27 @@ export function CreateCategoryForm({
                                         setMaxTeams(val);
                                     }}
                                     placeholder={isThai ? "เช่น 8, 16, 32" : "e.g. 8, 16, 32"}
+                                    className="w-full"
                                 />
                             </div>
+                        </div>
 
-                            <div className="space-y-1">
-                                <Label className="text-xs font-bold">
-                                    {isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
-                                </Label>
+                        {/* 4. Registration Fee */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <CreditCard className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ระบุ 0 หากสมัครฟรี" : "Set 0 for free registration"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
                                 <Input
                                     type="text"
                                     size="sm"
@@ -420,52 +453,43 @@ export function CreateCategoryForm({
                                         }
                                     }}
                                     placeholder={isThai ? "เช่น 500 (หรือ 0 สำหรับฟรี)" : "e.g. 500 (or 0 for free)"}
+                                    className="w-full"
                                 />
                             </div>
                         </div>
 
+                        {/* 5. Match Sets (Volleyball only) */}
                         {(sport === "volleyball" || sport.includes("volleyball") || sport.includes("วอลเลย์บอล")) && (
-                            <div className="space-y-1">
-                                <Label className="text-xs font-bold">
-                                    {isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
-                                </Label>
-                                <div className="grid grid-cols-2 border bg-card rounded-sm divide-x overflow-hidden">
-                                    {[
-                                        { id: "3", label: isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets", icon: <Layers className="h-4 w-4" /> },
-                                        { id: "5", label: isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets", icon: <Layers className="h-4 w-4" /> },
-                                    ].map((setItem) => {
-                                        const isSelected = maxSets === setItem.id;
-                                        return (
-                                            <button
-                                                key={setItem.id}
-                                                type="button"
-                                                disabled={isPending}
-                                                onClick={() => setMaxSets(setItem.id)}
-                                                className={cn(
-                                                    "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
-                                                    isSelected
-                                                        ? "bg-primary/10 text-primary font-bold"
-                                                        : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "p-1.5 rounded-full transition-colors",
-                                                    isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                                )}>
-                                                    {setItem.icon}
-                                                </div>
-                                                <span className="text-xs font-bold truncate w-full transition-colors">
-                                                    {setItem.label}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                                <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                    <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                        <Layers className="size-4 text-muted-foreground" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Header level={6}>
+                                            {isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
+                                        </Header>
+                                        <p className="text-xs text-muted-foreground">
+                                            {isThai ? "รูปแบบการตัดสินจำนวนเซ็ตของกีฬาวอลเลย์บอล" : "Set format for volleyball matches"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="sm:w-1/2 w-full">
+                                    <Select value={maxSets} onValueChange={setMaxSets} disabled={isPending}>
+                                        <SelectTrigger size="sm" className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="3">{isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
+                                            <SelectItem value="5">{isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                         <Button
                             size="sm"
                             type="button"
@@ -478,7 +502,7 @@ export function CreateCategoryForm({
                         <Button size="sm" type="submit" disabled={isPending}>
                             {isPending ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                                     {isThai ? "กำลังสร้าง..." : "Creating..."}
                                 </>
                             ) : (
@@ -491,4 +515,3 @@ export function CreateCategoryForm({
         </Dialog>
     );
 }
-

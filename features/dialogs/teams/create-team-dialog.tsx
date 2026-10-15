@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Camera, Shield, Trophy, FileText, User, Phone, Mail } from "lucide-react";
 import { createTeam, getSports } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +16,12 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionResponse, Sport } from "@/types/index";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 import { RadioBtn } from "@/components/ui/radio-btn";
 import { useToast } from "@/hooks/use-toast";
+import { Header } from "@/components/ui/header";
 
 interface CreateTeamFormProps {
     iconOnlyMobile?: boolean;
@@ -139,83 +139,166 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[700px] sm:max-h-[88vh] p-0 flex flex-col overflow-hidden">
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {t("add_team")}
+                    <DialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0">
+                        <DialogTitle asChild>
+                            <Header level={4}>
+                                {t("add_team") || (isThai ? "สร้างทีมใหม่" : "Create New Team")}
+                            </Header>
                         </DialogTitle>
-                        <DialogDescription>
-                            {t("no_teams_desc")}
+                        <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                            {isThai
+                                ? "กรอกรายละเอียดและข้อมูลการติดต่อเพื่อสร้างทีมสำหรับการลงแข่งขัน"
+                                : "Fill in team details and contact info to create your team."}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col space-y-4">
-                        <div className="flex flex-col items-center justify-center space-y-1">
-                            <LogoUploader
-                                id="logo"
-                                name="logo"
-                                initialUrl={previewUrl}
-                                onFileChange={(file) => {
-                                    setLogoFile(file);
-                                    if (file) {
-                                        setPreviewUrl(URL.createObjectURL(file));
-                                    } else {
+                    <div
+                        ref={scrollContainerRef}
+                        className="flex-1 min-h-0 overflow-y-auto p-4"
+                    >
+                        {/* 1. Logo */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2">
+                            <div className="flex items-center gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Camera className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("team_logo") || (isThai ? "โลโก้ทีม" : "Team Logo")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "รูปภาพตราสัญลักษณ์ประจำทีมของคุณ" : "Official crest or logo image for your team"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 flex flex-col items-start gap-1">
+                                <LogoUploader
+                                    id="logo"
+                                    name="logo"
+                                    initialUrl={previewUrl}
+                                    onFileChange={(file) => {
+                                        setLogoFile(file);
+                                        if (file) {
+                                            setPreviewUrl(URL.createObjectURL(file));
+                                        } else {
+                                            setPreviewUrl(null);
+                                        }
+                                    }}
+                                    onRemove={() => {
+                                        setLogoFile(null);
                                         setPreviewUrl(null);
-                                    }
-                                }}
-                                onRemove={() => {
-                                    setLogoFile(null);
-                                    setPreviewUrl(null);
-                                }}
-                                uploadLabel={t("upload_logo")}
-                                clickToUploadLabel={t("click_to_upload")}
-                                previewLabel={tCommon("preview")}
-                                imageFit="cover"
-                            />
+                                    }}
+                                    uploadLabel={t("upload_logo")}
+                                    clickToUploadLabel={t("click_to_upload")}
+                                    previewLabel={tCommon("preview")}
+                                    imageFit="cover"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>{t("team_name")} <span className="text-destructive">*</span></Label>
-                            <Input
-                                id="name"
-                                name="name"
-                                size="sm"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder={t("team_name_placeholder")}
-                                disabled={isPending}
-                                required
-                            />
+                        {/* 2. Team Name */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Shield className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("team_name")} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ชื่อที่จะแสดงผลในตารางแข่งขันและสถิติต่างๆ" : "Display name in fixtures, brackets, and standings"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 space-y-1">
+                                <Input
+                                    id="name"
+                                    name="name"
+                                    size="sm"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder={t("team_name_placeholder")}
+                                    disabled={isPending}
+                                    required
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
-                            <RadioBtn
-                                name="sport_id"
-                                value={selectedSport}
-                                onChange={setSelectedSport}
-                                sports={sportsList}
-                                disabled={isPending}
-                            />
+                        {/* 3. Sport Type */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Trophy className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {tCommon("sport")} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ประเภทกีฬาหลักที่ทีมนี้ลงทำการแข่งขัน" : "Primary sport category for team participation"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <RadioBtn
+                                    name="sport_id"
+                                    value={selectedSport}
+                                    onChange={setSelectedSport}
+                                    sports={sportsList}
+                                    disabled={isPending}
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>{t("team_description")}</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder={t("team_description_placeholder")}
-                                disabled={isPending}
-                                className="w-full text-xs focus-visible:ring-0 resize-none min-h-[60px]"
-                            />
+                        {/* 4. Team Description */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <FileText className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("team_description")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ประวัติสโมสร สโลแกน หรือคำอธิบายเพิ่มเติม" : "Club history, motto, or short biography"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 space-y-1">
+                                <Textarea
+                                    id="description"
+                                    name="description"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder={t("team_description_placeholder")}
+                                    disabled={isPending}
+                                    className="w-full text-xs focus-visible:ring-0 resize-none min-h-[70px]"
+                                />
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <Label>{t("contact_name")} <span className="text-destructive">*</span></Label>
+                        {/* 5. Contact Name */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <User className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("contact_name") || (isThai ? "ชื่อผู้ประสานงาน" : "Contact Person")} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ชื่อ-นามสกุลของผู้จัดการหรือตัวแทนทีม" : "Full name of team manager or coordinator"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 space-y-1">
                                 <Input
                                     id="contact_name"
                                     name="contact_name"
@@ -225,10 +308,27 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                     placeholder={t("contact_name_placeholder")}
                                     disabled={isPending}
                                     required
+                                    className="w-full"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label>{t("contact_phone")} <span className="text-destructive">*</span></Label>
+                        </div>
+
+                        {/* 6. Contact Phone */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Phone className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("contact_phone") || (isThai ? "เบอร์โทรศัพท์ติดต่อ" : "Contact Phone")} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "เบอร์โทรศัพท์สำหรับติดต่อประสานงานด่วน" : "Primary phone for urgent communication"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 space-y-1">
                                 <Input
                                     id="contact_phone"
                                     name="contact_phone"
@@ -238,32 +338,50 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                     placeholder={t("contact_phone_placeholder")}
                                     disabled={isPending}
                                     required
+                                    className="w-full"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>{t("contact_email") || "Email Address"}</Label>
-                            <Input
-                                id="contact_email"
-                                name="contact_email"
-                                type="email"
-                                size="sm"
-                                value={contactEmail}
-                                onChange={(e) => setContactEmail(e.target.value)}
-                                placeholder={t("contact_email_placeholder") || "e.g. contact@example.com"}
-                                disabled={isPending}
-                            />
+                        {/* 7. Contact Email */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Mail className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("contact_email") || (isThai ? "อีเมลติดต่อ" : "Contact Email")}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "อีเมลสำหรับรับเอกสารและการแจ้งเตือน (ถ้ามี)" : "Optional email for documents and notices"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 space-y-1">
+                                <Input
+                                    id="contact_email"
+                                    name="contact_email"
+                                    type="email"
+                                    size="sm"
+                                    value={contactEmail}
+                                    onChange={(e) => setContactEmail(e.target.value)}
+                                    placeholder={t("contact_email_placeholder") || "e.g. contact@example.com"}
+                                    disabled={isPending}
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                         <Button
                             size="sm"
                             type="button"
                             variant="outline"
                             disabled={isPending}
                             onClick={() => setOpen(false)}
+                            className="text-xs"
                         >
                             {isThai ? "ยกเลิก" : "Cancel"}
                         </Button>
@@ -271,14 +389,18 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             size="sm"
                             type="submit"
                             disabled={isPending}
+                            className="text-xs font-semibold gap-1.5"
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    {isThai ? "กำลังสร้าง..." : "Creating..."}
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <span>{isThai ? "กำลังสร้าง..." : "Creating..."}</span>
                                 </>
                             ) : (
-                                tCommon("create_btn")
+                                <>
+                                    <Plus className="h-3.5 w-3.5" />
+                                    <span>{tCommon("create_btn")}</span>
+                                </>
                             )}
                         </Button>
                     </DialogFooter>

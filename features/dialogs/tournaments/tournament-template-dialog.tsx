@@ -742,7 +742,6 @@ export function TournamentTemplateDialog({
                                 type="button"
                                 size="sm"
                                 onClick={handleApplyTemplate}
-                                className="font-black gap-1.5"
                             >
                                 <Sparkles className="h-4 w-4" />
                                 {isThai ? "นำเทมเพลตไปใช้" : "Add Template"}

@@ -9,7 +9,7 @@ import { EditTeamForm } from "@/features/teams/edit-team-form";
 import { AddPlayerForm } from "@/features/teams/add-player-form";
 import { SquadList } from "@/features/teams/squad-list";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -187,17 +187,19 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                 </div>
 
                 <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-                    <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none flex items-center gap-2">
-                                {tCommon("delete") || "Delete"}
+                    <AlertDialogContent className="sm:max-w-[760px] h-auto sm:h-auto max-h-[88vh] overflow-hidden flex flex-col bg-card border rounded-none sm:rounded-sm shadow-2xl p-0">
+                        <AlertDialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0 bg-card">
+                            <AlertDialogTitle asChild>
+                                <Header level={4} className="text-destructive">
+                                    {tCommon("delete") || "Delete"}
+                                </Header>
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
+                            <AlertDialogDescription className="text-xs text-muted-foreground mt-0.5">
                                 {t("delete_desc")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
-                            <AlertDialogCancel className="mt-0">
+                        <AlertDialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
+                            <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -205,7 +207,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                     e.preventDefault();
                                     confirmDeletePlayer();
                                 }}
-                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
+                                className={cn(buttonVariants({ size: "sm", variant: "destructive" }))}
                             >
                                 {tCommon("delete") || "Delete"}
                             </AlertDialogAction>

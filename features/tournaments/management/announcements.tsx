@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Announcement } from "@/types/index";
 import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnouncementPin } from "@/actions/tournaments/announcement";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -485,18 +486,20 @@ export function Announcements({
             )}
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                            {t("delete_announcement")}
+                <AlertDialogContent className="sm:max-w-[760px] h-auto sm:h-auto max-h-[88vh] overflow-hidden flex flex-col bg-card border rounded-none sm:rounded-sm shadow-2xl p-0">
+                    <AlertDialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0 bg-card">
+                        <AlertDialogTitle asChild>
+                            <Header level={4} className="text-destructive flex items-center gap-2">
+                                <Trash2 className="size-4" />
+                                {t("delete_announcement")}
+                            </Header>
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                        <AlertDialogDescription className="text-xs text-muted-foreground mt-0.5">
                             {t("delete_confirm")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all">
+                    <AlertDialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
+                        <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -504,7 +507,7 @@ export function Announcements({
                                 e.preventDefault();
                                 confirmDelete();
                             }}
-                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all"
+                            className={cn(buttonVariants({ size: "sm", variant: "destructive" }))}
                         >
                             {tCommon("delete")}
                         </AlertDialogAction>

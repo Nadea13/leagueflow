@@ -75,6 +75,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                                 onChange={(e) => setConfirmText(e.target.value)}
                                 placeholder={email}
                                 autoComplete="off"
+                                variant="destructive"
                             />
                         </div>
                     </div>

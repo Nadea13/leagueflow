@@ -485,6 +485,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                             </p>
                             <Input
                                 size="sm"
+                                variant="destructive"
                                 value={withdrawConfirmText}
                                 onChange={(e) => setWithdrawConfirmText(e.target.value)}
                                 autoComplete="off"

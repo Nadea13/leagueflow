@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import { Team, TournamentTeam, Sport } from "@/types/index";
-import { updateTeamGlobal, deleteTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers, getSports } from "@/actions/manager/team";
-import { updateTeam, deleteTeam } from "@/actions/tournaments/general";
+import { updateTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers, getSports } from "@/actions/manager/team";
+import { updateTeam } from "@/actions/tournaments/general";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Header } from "@/components/ui/header";
+import { DeleteTeamDialog } from "@/features/dialogs";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -27,6 +28,7 @@ import { Loader2, Lock, RotateCcw } from "lucide-react";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 import { RadioBtn } from "@/components/ui/radio-btn";
 import { resolveStorageUrl } from "@/lib/storage-utils";
+import { cn } from "@/lib/utils";
 
 interface EditTeamFormProps {
     team: (Team | TournamentTeam) & {
@@ -62,21 +64,8 @@ export function EditTeamForm({
     const [previewUrl, setPreviewUrl] = useState<string | null>(resolveStorageUrl((team as { logo_img?: string }).logo_img || team.logo_url) || null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
-    const [isDeletingTeam, setIsDeletingTeam] = useState(false);
     const [isResettingRoster, setIsResettingRoster] = useState(false);
-    const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
     const [resetRosterDialogOpen, setResetRosterDialogOpen] = useState(false);
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const deleteScrollRef = React.useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (deleteTeamDialogOpen) {
-            setDeleteConfirmText("");
-            if (deleteScrollRef.current) {
-                deleteScrollRef.current.scrollTop = 0;
-            }
-        }
-    }, [deleteTeamDialogOpen]);
 
     const [hasResetRoster, setHasResetRoster] = useState(false);
     const [isRestoringRoster, setIsRestoringRoster] = useState(false);
@@ -165,24 +154,6 @@ export function EditTeamForm({
             onSportChange?.(teamSport);
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
-        }
-    };
-
-    const handleDeleteTeam = async () => {
-        setIsDeletingTeam(true);
-        const result = context === 'organizer'
-            ? await deleteTeam(team.id, tournamentId)
-            : await deleteTeamGlobal(team.id, tournamentId);
-
-        if (result.success) {
-            toast({ title: tCommon("success"), description: tTeam("deleted_successfully") || "Team deleted successfully" });
-            setDeleteTeamDialogOpen(false);
-            if (context === 'manager') {
-                router.push("/dashboard/teams");
-            }
-        } else {
-            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
-            setIsDeletingTeam(false);
         }
     };
 
@@ -367,91 +338,40 @@ export function EditTeamForm({
                                         {t("reset_roster") || "Reset Roster"}
                                     </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle className="p-2 md:p-4 border-b">{t("reset_roster")}</AlertDialogTitle>
-                                        <AlertDialogDescription className="p-2 md:p-4">
+                                <AlertDialogContent className="sm:max-w-[760px] h-auto sm:h-auto max-h-[88vh] overflow-hidden flex flex-col bg-card border rounded-none sm:rounded-sm shadow-2xl p-0">
+                                    <AlertDialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0 bg-card">
+                                        <AlertDialogTitle asChild>
+                                            <Header level={4} className="text-destructive">
+                                                {t("reset_roster")}
+                                            </Header>
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription className="text-xs text-muted-foreground mt-0.5">
                                             {t("reset_roster_desc")}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
-                                    <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
-                                        <AlertDialogCancel className="mt-0">
+                                    <AlertDialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
+                                        <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                                             {tCommon("cancel")}
                                         </AlertDialogCancel>
                                         <AlertDialogAction
                                             onClick={handleResetRoster}
                                             disabled={isResettingRoster}
-                                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
+                                            className={cn(buttonVariants({ size: "sm", variant: "destructive" }))}
                                         >
+                                            {isResettingRoster && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
                                             {t("confirm_reset") || "Confirm Reset"}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
 
-                            <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
-                                        disabled={isDeletingTeam || isLocked}
-                                    >
-                                        {tTeam("delete_team")}
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-h-[90vh] flex flex-col p-0 gap-0">
-                                    <DialogHeader className="p-4 border-b shrink-0">
-                                        <DialogTitle>{tTeam("delete_team")}</DialogTitle>
-                                    </DialogHeader>
-                                    <form
-                                        onSubmit={(e) => {
-                                            e.preventDefault();
-                                            if (!isDeletingTeam && deleteConfirmText === team.name) {
-                                                handleDeleteTeam();
-                                            }
-                                        }}
-                                        className="flex flex-col flex-1 min-h-0"
-                                    >
-                                        <div ref={deleteScrollRef} className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
-                                            <div className="space-y-2">
-                                                <DialogDescription className="text-sm">{tTeam("delete_desc")}</DialogDescription>
-                                                <DialogDescription className="text-sm font-semibold text-foreground">
-                                                    {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
-                                                </DialogDescription>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Input
-                                                    id="confirm-team-delete"
-                                                    value={deleteConfirmText}
-                                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                                    placeholder={team.name}
-                                                    autoComplete="off"
-                                                />
-                                            </div>
-                                        </div>
-                                        <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => setDeleteTeamDialogOpen(false)}
-                                                disabled={isDeletingTeam}
-                                            >
-                                                {tCommon("cancel")}
-                                            </Button>
-                                            <Button
-                                                type="submit"
-                                                variant="destructive"
-                                                disabled={isDeletingTeam || deleteConfirmText !== team.name}
-                                            >
-                                                {isDeletingTeam && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                {tCommon("delete")}
-                                            </Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
+                            <DeleteTeamDialog
+                                teamId={team.id}
+                                teamName={team.name}
+                                tournamentId={tournamentId}
+                                context={context}
+                                disabled={isLocked}
+                            />
                         </div>
                     )}
                 </form>

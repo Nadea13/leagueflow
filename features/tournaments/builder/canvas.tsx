@@ -414,22 +414,24 @@ function CanvasInternal({
 
         // 1. Iterate through all matchNodes on the canvas
         const matchNodes = nodes.filter(n => n.type === 'matchNode');
-        
+
         matchNodes.forEach(node => {
-            const nodeMatches = (node.data as { matches?: Array<{
-                id?: string;
-                dbId?: string;
-                matchId?: string;
-                placeholderA?: string;
-                placeholderB?: string;
-                match_date?: string;
-                match_time?: string;
-            }> })?.matches || [];
+            const nodeMatches = (node.data as {
+                matches?: Array<{
+                    id?: string;
+                    dbId?: string;
+                    matchId?: string;
+                    placeholderA?: string;
+                    placeholderB?: string;
+                    match_date?: string;
+                    match_time?: string;
+                }>
+            })?.matches || [];
 
             nodeMatches.forEach((m, idx) => {
                 const matchIndex = idx + 1;
                 // Look for existing active match from DB
-                const dbMatch = activeMatches.find(am => 
+                const dbMatch = activeMatches.find(am =>
                     (m.dbId && am.id === m.dbId) ||
                     (m.matchId && am.id === m.matchId) ||
                     (am.node_id === node.id && (am.match_index === matchIndex || (am as any).match_number === matchIndex))
@@ -954,7 +956,7 @@ function CanvasInternal({
 
     useEffect(() => {
         loadCategories();
-         
+
     }, []);
 
     useEffect(() => {
@@ -1148,7 +1150,7 @@ function CanvasInternal({
     const handleCategorySwitch = useCallback(async (newCategoryId: string) => {
         const normalizedCategoryId = toCategoryId(newCategoryId);
         if (normalizedCategoryId === activeCategoryId) return;
-        
+
         setIsCategoryLoading(true);
         if (isDirty) {
             await handleSave(false);
@@ -1158,7 +1160,7 @@ function CanvasInternal({
         hydrate(cached?.canvas_data ?? null);
         setActiveCategoryId(normalizedCategoryId);
         setStoreCategoryId(normalizedCategoryId);
-        
+
         try {
             await Promise.all([
                 fetchTeams(normalizedCategoryId),
@@ -1169,7 +1171,7 @@ function CanvasInternal({
         } finally {
             setIsCategoryLoading(false);
         }
-        
+
         // Persist to URL without adding a history entry
         const params = new URLSearchParams(searchParams.toString());
         params.set("category", normalizedCategoryId);
@@ -1404,7 +1406,7 @@ function CanvasInternal({
                                                 title: "Error",
                                                 description: locale === 'th'
                                                     ? isEventPlan
-                                                         ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
+                                                        ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
                                                         : "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดแพ็คเกจ"
                                                     : isEventPlan
                                                         ? "Event plan allows up to 3 categories per tournament."
@@ -1617,240 +1619,240 @@ function CanvasInternal({
                                         </ActionMenu>
                                     </div>
 
-                                <Button
-                                    variant={activeNodeId === 'announcement-setting-node' ? "default" : "ghost"}
-                                    size="icon-sm"
-                                    onClick={handleOpenAnnouncementSettings}
-                                    title={locale === 'th' ? "ประกาศ" : "Announcements"}
-                                    className={cn(
-                                        "transition-all",
-                                        activeNodeId === 'announcement-setting-node'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <Megaphone className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                    variant={activeNodeId === 'registration-setting-node' ? "default" : "ghost"}
-                                    size="icon-sm"
-                                    onClick={handleOpenRegistrationSettings}
-                                    title={locale === 'th' ? "การลงทะเบียน" : "Registration"}
-                                    className={cn(
-                                        "relative transition-all",
-                                        activeNodeId === 'registration-setting-node'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <ClipboardEdit className="h-4 w-4" />
-                                    {hasPendingRegistration && (
-                                        <span className="absolute top-1.5 right-1.5 bg-destructive rounded-full h-2 w-2 ring-2 ring-card" />
-                                    )}
-                                </Button>
-
-                                <Button
-                                    variant={activeNodeId === 'sponsor-setting-node' ? "default" : "ghost"}
-                                    size="icon-sm"
-                                    onClick={handleOpenSponsorSettings}
-                                    title={locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}
-                                    className={cn(
-                                        "transition-all",
-                                        activeNodeId === 'sponsor-setting-node'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <Heart className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                    variant={activeSidebar === 'schedule' ? "default" : "ghost"}
-                                    size="icon-sm"
-                                    onClick={async () => {
-                                        if (activeSidebar === 'schedule') {
-                                            setActiveSidebar('teams');
-                                            updateUrlParams({ tab: null, subtab: null });
-                                        } else {
-                                            setActiveNodeId(null);
-                                            selectNode(null);
-                                            setActiveSidebar('schedule');
-                                            updateUrlParams({ tab: 'schedule', subtab: null });
-                                            if (isDirty) {
-                                                await handleSave(false);
-                                            }
-                                            if (activeCategoryId) {
-                                                fetchMatches(activeCategoryId);
-                                            }
-                                        }
-                                    }}
-                                    className={cn(
-                                        "transition-all",
-                                        activeSidebar === 'schedule'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <Calendar className="h-4 w-4" />
-                                </Button>
-
-                                {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
                                     <Button
-                                        variant={activeSidebar === 'settings' ? "default" : "ghost"}
+                                        variant={activeNodeId === 'announcement-setting-node' ? "default" : "ghost"}
                                         size="icon-sm"
-                                        onClick={() => {
-                                            if (activeSidebar === 'settings') {
+                                        onClick={handleOpenAnnouncementSettings}
+                                        title={locale === 'th' ? "ประกาศ" : "Announcements"}
+                                        className={cn(
+                                            "transition-all",
+                                            activeNodeId === 'announcement-setting-node'
+                                                ? "bg-primary"
+                                                : "text-foreground"
+                                        )}
+                                    >
+                                        <Megaphone className="h-4 w-4" />
+                                    </Button>
+
+                                    <Button
+                                        variant={activeNodeId === 'registration-setting-node' ? "default" : "ghost"}
+                                        size="icon-sm"
+                                        onClick={handleOpenRegistrationSettings}
+                                        title={locale === 'th' ? "การลงทะเบียน" : "Registration"}
+                                        className={cn(
+                                            "relative transition-all",
+                                            activeNodeId === 'registration-setting-node'
+                                                ? "bg-primary"
+                                                : "text-foreground"
+                                        )}
+                                    >
+                                        <ClipboardEdit className="h-4 w-4" />
+                                        {hasPendingRegistration && (
+                                            <span className="absolute top-0 right-0 bg-destructive rounded-full h-2 w-2 ring-2 ring-card" />
+                                        )}
+                                    </Button>
+
+                                    <Button
+                                        variant={activeNodeId === 'sponsor-setting-node' ? "default" : "ghost"}
+                                        size="icon-sm"
+                                        onClick={handleOpenSponsorSettings}
+                                        title={locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}
+                                        className={cn(
+                                            "transition-all",
+                                            activeNodeId === 'sponsor-setting-node'
+                                                ? "bg-primary"
+                                                : "text-foreground"
+                                        )}
+                                    >
+                                        <Heart className="h-4 w-4" />
+                                    </Button>
+
+                                    <Button
+                                        variant={activeSidebar === 'schedule' ? "default" : "ghost"}
+                                        size="icon-sm"
+                                        onClick={async () => {
+                                            if (activeSidebar === 'schedule') {
                                                 setActiveSidebar('teams');
                                                 updateUrlParams({ tab: null, subtab: null });
                                             } else {
                                                 setActiveNodeId(null);
                                                 selectNode(null);
-                                                setActiveSidebar('settings');
-                                                updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
+                                                setActiveSidebar('schedule');
+                                                updateUrlParams({ tab: 'schedule', subtab: null });
+                                                if (isDirty) {
+                                                    await handleSave(false);
+                                                }
+                                                if (activeCategoryId) {
+                                                    fetchMatches(activeCategoryId);
+                                                }
                                             }
                                         }}
                                         className={cn(
                                             "transition-all",
-                                            activeSidebar === 'settings'
+                                            activeSidebar === 'schedule'
                                                 ? "bg-primary"
                                                 : "text-foreground"
                                         )}
                                     >
-                                        <Settings className="h-4 w-4" />
+                                        <Calendar className="h-4 w-4" />
                                     </Button>
-                                )}
-                            </div>
 
-                            {/* Mobile Menu (...) Dropdown or Close (X) button */}
-                            <div className="flex md:hidden items-center" id="tour-console-mobile-menu">
-                                {(activeSidebar === 'schedule' || activeSidebar === 'settings' || Boolean(activeNodeId)) ? (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        onClick={() => {
-                                            setActiveSidebar('teams');
-                                            setActiveNodeId(null);
-                                            selectNode(null);
-                                            updateUrlParams({ tab: null, subtab: null });
-                                        }}
-                                        className="text-foreground transition-all"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                ) : (
-                                    <ActionMenu>
-                                        <ActionMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                className="relative text-foreground"
-                                            >
-                                                <MoreVertical className="h-4 w-4" />
-                                                {hasPendingRegistration && (
-                                                    <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2 ring-2 ring-background animate-pulse" />
-                                                )}
-                                            </Button>
-                                        </ActionMenuTrigger>
-                                        <ActionMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
-                                            <ActionMenuItem
-                                                onClick={handleOpenAnnouncementSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
-                                            >
-                                                <Megaphone className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
-                                            </ActionMenuItem>
-
-                                            <ActionMenuItem
-                                                onClick={handleOpenRegistrationSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <ClipboardEdit className="h-4 w-4" />
-                                                    <span>{locale === 'th' ? "การลงทะเบียน" : "Registration"}</span>
-                                                </div>
-                                                {hasPendingRegistration && (
-                                                    <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
-                                                )}
-                                            </ActionMenuItem>
-
-                                            <ActionMenuItem
-                                                onClick={handleOpenSponsorSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
-                                            >
-                                                <Heart className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}</span>
-                                            </ActionMenuItem>
-
-                                             <ActionMenuItem
-                                                onClick={async () => {
+                                    {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                        <Button
+                                            variant={activeSidebar === 'settings' ? "default" : "ghost"}
+                                            size="icon-sm"
+                                            onClick={() => {
+                                                if (activeSidebar === 'settings') {
+                                                    setActiveSidebar('teams');
+                                                    updateUrlParams({ tab: null, subtab: null });
+                                                } else {
                                                     setActiveNodeId(null);
                                                     selectNode(null);
-                                                    setActiveSidebar('schedule');
-                                                    updateUrlParams({ tab: 'schedule', subtab: null });
-                                                    if (isDirty) {
-                                                        await handleSave(false);
-                                                    }
-                                                    if (activeCategoryId) {
-                                                        fetchMatches(activeCategoryId);
-                                                    }
-                                                }}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
-                                            >
-                                                <Calendar className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "ตารางการแข่งขัน" : "Schedule"}</span>
-                                            </ActionMenuItem>
+                                                    setActiveSidebar('settings');
+                                                    updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
+                                                }
+                                            }}
+                                            className={cn(
+                                                "transition-all",
+                                                activeSidebar === 'settings'
+                                                    ? "bg-primary"
+                                                    : "text-foreground"
+                                            )}
+                                        >
+                                            <Settings className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
 
-                                            {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                {/* Mobile Menu (...) Dropdown or Close (X) button */}
+                                <div className="flex md:hidden items-center" id="tour-console-mobile-menu">
+                                    {(activeSidebar === 'schedule' || activeSidebar === 'settings' || Boolean(activeNodeId)) ? (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() => {
+                                                setActiveSidebar('teams');
+                                                setActiveNodeId(null);
+                                                selectNode(null);
+                                                updateUrlParams({ tab: null, subtab: null });
+                                            }}
+                                            className="text-foreground transition-all"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    ) : (
+                                        <ActionMenu>
+                                            <ActionMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    className="relative text-foreground"
+                                                >
+                                                    <MoreVertical className="h-4 w-4" />
+                                                    {hasPendingRegistration && (
+                                                        <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2 ring-2 ring-background animate-pulse" />
+                                                    )}
+                                                </Button>
+                                            </ActionMenuTrigger>
+                                            <ActionMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
                                                 <ActionMenuItem
-                                                    onClick={() => {
+                                                    onClick={handleOpenAnnouncementSettings}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                                >
+                                                    <Megaphone className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
+                                                </ActionMenuItem>
+
+                                                <ActionMenuItem
+                                                    onClick={handleOpenRegistrationSettings}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <ClipboardEdit className="h-4 w-4" />
+                                                        <span>{locale === 'th' ? "การลงทะเบียน" : "Registration"}</span>
+                                                    </div>
+                                                    {hasPendingRegistration && (
+                                                        <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
+                                                    )}
+                                                </ActionMenuItem>
+
+                                                <ActionMenuItem
+                                                    onClick={handleOpenSponsorSettings}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                                >
+                                                    <Heart className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}</span>
+                                                </ActionMenuItem>
+
+                                                <ActionMenuItem
+                                                    onClick={async () => {
                                                         setActiveNodeId(null);
                                                         selectNode(null);
-                                                        setActiveSidebar('settings');
-                                                        updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
+                                                        setActiveSidebar('schedule');
+                                                        updateUrlParams({ tab: 'schedule', subtab: null });
+                                                        if (isDirty) {
+                                                            await handleSave(false);
+                                                        }
+                                                        if (activeCategoryId) {
+                                                            fetchMatches(activeCategoryId);
+                                                        }
                                                     }}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                                 >
-                                                    <Settings className="h-4 w-4" />
-                                                    <span>{locale === 'th' ? "ตั้งค่าทัวร์นาเมนต์" : "Settings"}</span>
+                                                    <Calendar className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "ตารางการแข่งขัน" : "Schedule"}</span>
                                                 </ActionMenuItem>
-                                            )}
 
-                                            <div className="border-t my-1" />
+                                                {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                                    <ActionMenuItem
+                                                        onClick={() => {
+                                                            setActiveNodeId(null);
+                                                            selectNode(null);
+                                                            setActiveSidebar('settings');
+                                                            updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
+                                                        }}
+                                                        className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                                    >
+                                                        <Settings className="h-4 w-4" />
+                                                        <span>{locale === 'th' ? "ตั้งค่าทัวร์นาเมนต์" : "Settings"}</span>
+                                                    </ActionMenuItem>
+                                                )}
 
-                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
-                                                {locale === 'th' ? "ลิงก์และการแชร์" : "Links & Share"}
-                                            </div>
+                                                <div className="border-t my-1" />
 
-                                            <ActionMenuItem
-                                                onClick={handleOpenLink}
-                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
-                                            </ActionMenuItem>
+                                                <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
+                                                    {locale === 'th' ? "ลิงก์และการแชร์" : "Links & Share"}
+                                                </div>
 
-                                            <ActionMenuItem
-                                                onClick={handleOpenLinkRegister}
-                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
-                                            </ActionMenuItem>
+                                                <ActionMenuItem
+                                                    onClick={handleOpenLink}
+                                                    className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
+                                                </ActionMenuItem>
 
-                                            <ActionMenuItem
-                                                onClick={handleOpenLinkDocumentions}
-                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
-                                            </ActionMenuItem>
-                                        </ActionMenuContent>
-                                    </ActionMenu>
-                                )}
-                            </div>
-                        </>
-                    )}
+                                                <ActionMenuItem
+                                                    onClick={handleOpenLinkRegister}
+                                                    className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                                </ActionMenuItem>
+
+                                                <ActionMenuItem
+                                                    onClick={handleOpenLinkDocumentions}
+                                                    className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
+                                                </ActionMenuItem>
+                                            </ActionMenuContent>
+                                        </ActionMenu>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1862,7 +1864,7 @@ function CanvasInternal({
                         <div className="flex-1 relative flex items-center justify-center bg-muted/5 overflow-hidden animate-pulse">
                             {/* Grid Background Lines (Dot Pattern style representation) */}
                             <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-50" />
-                            
+
                             {/* Floating Nodes Skeletons */}
                             <div className="relative w-full h-full flex items-center justify-center gap-12 p-8">
                                 {/* Round 1 Column */}
@@ -2033,9 +2035,9 @@ function CanvasInternal({
                                                     .map(node => {
                                                         const label = (node.data as { label?: string })?.label || "Group";
                                                         return (
-                                                            <SelectItem 
-                                                                key={node.id} 
-                                                                value={label} 
+                                                            <SelectItem
+                                                                key={node.id}
+                                                                value={label}
                                                                 className="font-semibold text-xs pl-4"
                                                             >
                                                                 - {label}
@@ -2195,9 +2197,9 @@ function CanvasInternal({
                                                         .map(node => {
                                                             const label = (node.data as { label?: string })?.label || "Group";
                                                             return (
-                                                                <SelectItem 
-                                                                    key={node.id} 
-                                                                    value={label} 
+                                                                <SelectItem
+                                                                    key={node.id}
+                                                                    value={label}
                                                                     className="font-semibold text-xs pl-4"
                                                                 >
                                                                     - {label}
@@ -2243,13 +2245,13 @@ function CanvasInternal({
                                                     ? canvasMatches
                                                     : canvasMatches.filter(m => {
                                                         const selTeam = teams.find(t => t.id === filterTeam);
-                                                        const targetIds = selTeam 
+                                                        const targetIds = selTeam
                                                             ? [selTeam.id, selTeam.team_id].filter(Boolean) as string[]
                                                             : [filterTeam];
-                                                        return targetIds.includes(m.home_team_id || "") || 
-                                                               targetIds.includes(m.away_team_id || "") ||
-                                                               (m.home_team?.id && targetIds.includes(m.home_team.id)) ||
-                                                               (m.away_team?.id && targetIds.includes(m.away_team.id));
+                                                        return targetIds.includes(m.home_team_id || "") ||
+                                                            targetIds.includes(m.away_team_id || "") ||
+                                                            (m.home_team?.id && targetIds.includes(m.home_team.id)) ||
+                                                            (m.away_team?.id && targetIds.includes(m.away_team.id));
                                                     })
                                                 }
                                                 teams={teams as unknown as Team[]}
@@ -2300,18 +2302,16 @@ function CanvasInternal({
                                     </aside>
 
                                     {/* Settings Content Area */}
-                                    <main className="flex-1 overflow-y-auto custom-scrollbar p-2 lg:p-4 bg-muted/5">
-                                        <div className="max-w-3xl mx-auto">
-                                            <TournamentSettings
-                                                tournament={tournament}
-                                                hasFixtures={hasFixtures}
-                                                teams={initialTeamsData}
-                                                activeTab={activeSettingsTab}
-                                                activeCategoryId={activeCategoryId}
-                                                onCategoryUpdated={() => loadCategories()}
-                                                userRole={userInvitationRole}
-                                            />
-                                        </div>
+                                    <main className="flex-1 overflow-y-auto custom-scrollbar p-4">
+                                        <TournamentSettings
+                                            tournament={tournament}
+                                            hasFixtures={hasFixtures}
+                                            teams={initialTeamsData}
+                                            activeTab={activeSettingsTab}
+                                            activeCategoryId={activeCategoryId}
+                                            onCategoryUpdated={() => loadCategories()}
+                                            userRole={userInvitationRole}
+                                        />
                                     </main>
                                 </div>
                             </div>

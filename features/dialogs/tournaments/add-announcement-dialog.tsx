@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { addAnnouncement } from "@/actions/tournaments/announcement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import {
     Dialog,
     DialogContent,
@@ -16,7 +16,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Megaphone, FileText } from "lucide-react";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -130,13 +130,15 @@ export function AddAnnouncementDialog({
                     </Button>
                 </DialogTrigger>
             )}
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[760px] sm:max-h-[88vh] p-0 flex flex-col overflow-hidden">
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isThai ? "เพิ่มประกาศใหม่" : "New Announcement"}
+                    <DialogHeader className="p-4 border-b shrink-0 bg-card">
+                        <DialogTitle asChild>
+                            <Header level={4}>
+                                {isThai ? "เพิ่มประกาศใหม่" : "New Announcement"}
+                            </Header>
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                             {isThai
                                 ? "สร้างและเผยแพร่ข่าวสารหรือประกาศสำคัญสำหรับการแข่งขันนี้"
                                 : "Create and publish announcements or updates for this tournament."}
@@ -145,50 +147,76 @@ export function AddAnnouncementDialog({
 
                     <div
                         ref={scrollContainerRef}
-                        className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto"
+                        className="flex-1 min-h-0 overflow-y-auto p-4"
                     >
-                        <div className="space-y-1">
-                            <Label htmlFor="announcement-title">
-                                {isThai ? "หัวข้อประกาศ" : "Announcement Title"} <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="announcement-title"
-                                size="sm"
-                                value={title}
-                                disabled={isSaving}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder={t("title_placeholder") || (isThai ? "ระบุหัวข้อประกาศ..." : "Enter announcement title...")}
-                                required
-                                className="bg-transparent"
-                            />
+                        {/* 1. Announcement Title */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <Megaphone className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "หัวข้อประกาศ" : "Announcement Title"} <span className="text-destructive">*</span>
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "หัวข้อหลักของข่าวสารหรือการแจ้งเตือน" : "Title or headline of your announcement"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <Input
+                                    id="announcement-title"
+                                    size="sm"
+                                    value={title}
+                                    disabled={isSaving}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder={t("title_placeholder") || (isThai ? "ระบุหัวข้อประกาศ..." : "Enter announcement title...")}
+                                    required
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>
-                                {isThai ? "รายละเอียดประกาศ" : "Announcement Content"}
-                            </Label>
-                            <div className="pro-editor-wrapper relative border border-border rounded-sm overflow-hidden bg-transparent">
-                                <ReactQuill
-                                    theme="snow"
-                                    value={content}
-                                    onChange={setContent}
-                                    readOnly={isSaving}
-                                    className="pro-editor h-auto text-foreground"
-                                    placeholder={t("content_placeholder") || (isThai ? "เขียนรายละเอียดประกาศที่นี่..." : "Write announcement details here...")}
-                                    modules={{
-                                        toolbar: [
-                                            [{ header: [1, 2, false] }],
-                                            ["bold", "underline"],
-                                            [{ list: "ordered" }, { list: "bullet" }],
-                                            ["clean"],
-                                        ],
-                                    }}
-                                />
+                        {/* 2. Announcement Content */}
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                                    <FileText className="size-4 text-muted-foreground" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {isThai ? "รายละเอียดประกาศ" : "Announcement Content"}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isThai ? "ข้อความและรายละเอียดของประกาศอย่างละเอียด" : "Detailed message and formatting for your announcement"}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <div className="pro-editor-wrapper relative w-full border border-border rounded-sm overflow-hidden bg-transparent">
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={content}
+                                        onChange={setContent}
+                                        readOnly={isSaving}
+                                        className="pro-editor h-auto text-foreground"
+                                        placeholder={t("content_placeholder") || (isThai ? "เขียนรายละเอียดประกาศที่นี่..." : "Write announcement details here...")}
+                                        modules={{
+                                            toolbar: [
+                                                [{ header: [1, 2, false] }],
+                                                ["bold", "underline"],
+                                                [{ list: "ordered" }, { list: "bullet" }],
+                                                ["clean"],
+                                            ],
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                         <Button
                             size="sm"
                             type="button"
@@ -203,8 +231,14 @@ export function AddAnnouncementDialog({
                             type="submit"
                             disabled={isSaving || !title.trim()}
                         >
-                            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                            {isThai ? "โพสต์ประกาศ" : "Post Announcement"}
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                    {isThai ? "กำลังโพสต์..." : "Posting..."}
+                                </>
+                            ) : (
+                                isThai ? "โพสต์ประกาศ" : "Post Announcement"
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>
