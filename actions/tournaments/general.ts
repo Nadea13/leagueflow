@@ -455,7 +455,7 @@ export async function updateTournament(
             if (formData.has("bank_account_number")) currentSettings.bank_account_number = formData.get("bank_account_number") as string;
         }
 
-        if (formType === 'venue' || !formType) {
+        if (formType === 'general' || formType === 'venue' || !formType) {
             if (formData.has("location_name")) updateData.location = formData.get("location_name") as string || null;
             if (formData.has("google_map_url")) currentSettings.google_map_url = formData.get("google_map_url") as string || null;
         }
@@ -532,6 +532,61 @@ export async function deleteTournament(tournamentId: string) {
 
     await logActivity('DELETE_TOURNAMENT', 'tournament', tournamentId, {});
     redirect("/dashboard/tournaments");
+}
+
+export async function cancelTournament(tournamentId: string): Promise<ActionResponse> {
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
+
+        const access = await validateTournamentAccess(tournamentId, 'admin');
+        if (!access.success) return { success: false, error: access.error || "Permission denied" };
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+
+        // Fetch current tournament data to merge settings
+        let currentSettings: Record<string, unknown> = {};
+        const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            headers: {
+                'Authorization': `Bearer ${session.token}`,
+            },
+            cache: 'no-store'
+        });
+        if (tourRes.ok) {
+            const data = await tourRes.json();
+            currentSettings = (data.tournament?.settings as Record<string, unknown>) || {};
+        }
+
+        currentSettings.is_registration_open = false;
+
+        const updateData: Record<string, unknown> = {
+            id: tournamentId,
+            status: 'cancelled',
+            settings: currentSettings,
+        };
+
+        const updateRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify(updateData),
+        });
+
+        if (!updateRes.ok) {
+            const errData = await updateRes.json().catch(() => ({}));
+            return { success: false, error: errData.error || "Failed to cancel tournament" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        await logActivity('CANCEL_TOURNAMENT', 'tournament', tournamentId, updateData);
+        return { success: true };
+    } catch (error) {
+        console.error("Cancel tournament error:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
 }
 
 export async function createTournament(_prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {

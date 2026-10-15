@@ -59,7 +59,7 @@ export function TournamentSettings({
     };
 
     return (
-        <div className="space-y-6">
+        <div>
             {activeTab === 'general' &&
                 <GeneralSettings tournament={tournament} />
             }
@@ -79,6 +79,7 @@ export function TournamentSettings({
                     tournamentId={tournamentId}
                     tournamentName={tournament.name}
                     activeCategoryId={activeCategoryId}
+                    tournamentStatus={tournament.status}
                 />
             )}
         </div>
