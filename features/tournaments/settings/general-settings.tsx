@@ -4,10 +4,21 @@ import { useActionState, useState, useEffect, useRef } from "react";
 import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
+import {
+    Camera,
+    Trophy,
+    Activity,
+    Calendar,
+    CalendarCheck,
+    FileText,
+    MapPin,
+    Globe,
+    Loader2,
+    Upload
+} from "lucide-react";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -20,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/dropdown";
+import { cn } from "@/lib/utils";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -39,60 +51,84 @@ const initialState: ActionResponse = {
 
 interface GeneralSettingsProps {
     tournament: Tournament;
+    className?: string;
 }
 
-export function GeneralSettings({ tournament }: GeneralSettingsProps) {
+type ActionField = 'media' | 'name' | 'status' | 'period' | 'deadline' | 'description' | 'location' | 'map';
+
+export function GeneralSettings({ tournament, className }: GeneralSettingsProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
-    const tDialog = useTranslations("Dialog");
     const locale = useLocale();
     const isThai = locale === 'th';
     const { toast } = useToast();
 
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
     const [state, formAction, isPending] = useActionState(updateTournamentWithId, initialState);
-    const [locationName, setLocationName] = useState(tournament.location_name || "");
-    const [googleMapUrl, setGoogleMapUrl] = useState(tournament.google_map_url || "");
-    const [description, setDescription] = useState(tournament.description || "");
 
-    const [startDate, setStartDate] = useState<string>(
-        tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""
-    );
-    const [endDate, setEndDate] = useState<string>(
-        tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""
-    );
+    // Initial values
+    const initialName = tournament.name || "";
+    const initialStatus = tournament.status || "draft";
+    const initialLocationName = tournament.location_name || "";
+    const initialGoogleMapUrl = tournament.google_map_url || "";
+    const initialDescription = tournament.description || "";
+    const initialStartDate = tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : "";
+    const initialEndDate = tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : "";
+    const initialDocDeadline = tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : "";
+    const initialLogoUrl = tournament.logo_img || (tournament as any).logo_url || null;
+    const initialCoverUrl = tournament.cover_img || (tournament as any).banner_url || null;
 
-    const [docDeadline, setDocDeadline] = useState<string>(
-        tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""
-    );
+    // Form states
+    const [name, setName] = useState(initialName);
+    const [status, setStatus] = useState<string>(initialStatus);
+    const [locationName, setLocationName] = useState(initialLocationName);
+    const [googleMapUrl, setGoogleMapUrl] = useState(initialGoogleMapUrl);
+    const [description, setDescription] = useState(initialDescription);
+    const [startDate, setStartDate] = useState<string>(initialStartDate);
+    const [endDate, setEndDate] = useState<string>(initialEndDate);
+    const [docDeadline, setDocDeadline] = useState<string>(initialDocDeadline);
 
-    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(tournament.logo_img || (tournament as any).logo_url || null);
-    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(tournament.cover_img || (tournament as any).banner_url || null);
+    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(initialLogoUrl);
+    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(initialCoverUrl);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [coverFile, setCoverFile] = useState<File | null>(null);
     const [logoRemoved, setLogoRemoved] = useState(false);
     const [coverRemoved, setCoverRemoved] = useState(false);
     const coverInputRef = useRef<HTMLInputElement>(null);
 
-    const prevLogoRef = useRef(tournament.logo_img || (tournament as any).logo_url);
-    const prevCoverRef = useRef(tournament.cover_img || (tournament as any).banner_url);
+    // Track last modified field for profile-form style inline action buttons
+    const [lastModifiedField, setLastModifiedField] = useState<ActionField | null>(null);
+
+    // Sync when tournament changes
     useEffect(() => {
-        const currentLogo = tournament.logo_img || (tournament as any).logo_url;
-        const currentCover = tournament.cover_img || (tournament as any).banner_url;
-        if (prevLogoRef.current !== currentLogo) {
-            setLogoPreviewUrl(currentLogo || null);
-            prevLogoRef.current = currentLogo;
-        }
-        if (prevCoverRef.current !== currentCover) {
-            setCoverPreviewUrl(currentCover || null);
-            prevCoverRef.current = currentCover;
-        }
-    }, [tournament.logo_img, (tournament as any).logo_url, tournament.cover_img, (tournament as any).banner_url]);
+        setName(initialName);
+        setStatus(initialStatus);
+        setLocationName(initialLocationName);
+        setGoogleMapUrl(initialGoogleMapUrl);
+        setDescription(initialDescription);
+        setStartDate(initialStartDate);
+        setEndDate(initialEndDate);
+        setDocDeadline(initialDocDeadline);
+        setLogoPreviewUrl(initialLogoUrl);
+        setCoverPreviewUrl(initialCoverUrl);
+        setLogoFile(null);
+        setCoverFile(null);
+        setLogoRemoved(false);
+        setCoverRemoved(false);
+        setLastModifiedField(null);
+    }, [initialName, initialStatus, initialLocationName, initialGoogleMapUrl, initialDescription, initialStartDate, initialEndDate, initialDocDeadline, initialLogoUrl, initialCoverUrl]);
 
     useEffect(() => {
         if (state.success) {
             toast({
                 title: tCommon("success"),
-                description: t("update_success_desc") || "Tournament updated successfully",
+                description: t("update_success_desc") || (isThai ? "อัปเดตข้อมูลทัวร์นาเมนต์เรียบร้อยแล้ว" : "Tournament updated successfully"),
             });
+            setLastModifiedField(null);
+            setLogoFile(null);
+            setCoverFile(null);
+            setLogoRemoved(false);
+            setCoverRemoved(false);
         } else if (state.error) {
             toast({
                 title: tCommon("error"),
@@ -100,280 +136,516 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                 variant: "destructive",
             });
         }
-    }, [state, tCommon, t, toast]);
+    }, [state, tCommon, t, toast, isThai]);
+
+    // Check dirty states
+    const isMediaDirty = logoFile !== null || coverFile !== null || logoRemoved || coverRemoved || logoPreviewUrl !== initialLogoUrl || coverPreviewUrl !== initialCoverUrl;
+    const isNameDirty = name !== initialName;
+    const isStatusDirty = status !== initialStatus;
+    const isPeriodDirty = startDate !== initialStartDate || endDate !== initialEndDate;
+    const isDeadlineDirty = docDeadline !== initialDocDeadline;
+    const isDescriptionDirty = description !== initialDescription;
+    const isLocationDirty = locationName !== initialLocationName;
+    const isMapDirty = googleMapUrl !== initialGoogleMapUrl;
+
+    const isDirty = isMediaDirty || isNameDirty || isStatusDirty || isPeriodDirty || isDeadlineDirty || isDescriptionDirty || isLocationDirty || isMapDirty;
+
+    const activeActionField: ActionField | null = !isDirty
+        ? null
+        : lastModifiedField && (
+            (lastModifiedField === 'media' && isMediaDirty) ||
+            (lastModifiedField === 'name' && isNameDirty) ||
+            (lastModifiedField === 'status' && isStatusDirty) ||
+            (lastModifiedField === 'period' && isPeriodDirty) ||
+            (lastModifiedField === 'deadline' && isDeadlineDirty) ||
+            (lastModifiedField === 'description' && isDescriptionDirty) ||
+            (lastModifiedField === 'location' && isLocationDirty) ||
+            (lastModifiedField === 'map' && isMapDirty)
+        )
+        ? lastModifiedField
+        : isNameDirty
+        ? 'name'
+        : isStatusDirty
+        ? 'status'
+        : isPeriodDirty
+        ? 'period'
+        : isDeadlineDirty
+        ? 'deadline'
+        : isDescriptionDirty
+        ? 'description'
+        : isLocationDirty
+        ? 'location'
+        : isMapDirty
+        ? 'map'
+        : isMediaDirty
+        ? 'media'
+        : null;
+
+    const handleReset = () => {
+        setName(initialName);
+        setStatus(initialStatus);
+        setLocationName(initialLocationName);
+        setGoogleMapUrl(initialGoogleMapUrl);
+        setDescription(initialDescription);
+        setStartDate(initialStartDate);
+        setEndDate(initialEndDate);
+        setDocDeadline(initialDocDeadline);
+        setLogoPreviewUrl(initialLogoUrl);
+        setCoverPreviewUrl(initialCoverUrl);
+        setLogoFile(null);
+        setCoverFile(null);
+        setLogoRemoved(false);
+        setCoverRemoved(false);
+        if (coverInputRef.current) coverInputRef.current.value = "";
+        setLastModifiedField(null);
+    };
+
+    const renderActionButtons = () => (
+        <div className="flex items-center gap-2 pt-4 animate-in fade-in-50 duration-200">
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={handleReset}
+                className="text-xs"
+            >
+                {isThai ? "ยกเลิก" : "Cancel"}
+            </Button>
+            <Button
+                type="submit"
+                size="sm"
+                disabled={isPending}
+                variant="default"
+                className="text-xs font-semibold"
+            >
+                {isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                ) : null}
+                <span>{isThai ? "บันทึก" : "Save"}</span>
+            </Button>
+        </div>
+    );
 
     return (
-        <div className="space-y-1 md:space-y-2">
-            <div className="relative overflow-hidden">
-                <div className="relative z-10">
-                    <form action={formAction} className="space-y-1 md:space-y-2">
-                        <input type="hidden" name="form_type" value="general" />
-                        <input type="hidden" name="logo_img_remove" value={String(logoRemoved)} />
-                        <input type="hidden" name="cover_img_remove" value={String(coverRemoved)} />
-
-                        <div className="space-y-1 md:space-y-2 col-span-2 mb-1 md:mb-2">
-                            <div className="space-y-1">
-                                <div className="relative pb-10">
-                                    <div
-                                        onClick={() => coverInputRef.current?.click()}
-                                        className="relative aspect-[2/1] w-full border border-dashed border-2 hover:border-primary/50 transition-all rounded-sm overflow-hidden flex flex-col items-center justify-center cursor-pointer group"
-                                    >
-                                        {coverPreviewUrl ? (
-                                            <>
-                                                <Image
-                                                    src={coverPreviewUrl}
-                                                    alt="Cover Preview"
-                                                    fill
-                                                    className="object-cover p-1 rounded-sm transition-transform group-hover:scale-105"
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="font-bold text-xs"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            coverInputRef.current?.click();
-                                                        }}
-                                                    >
-                                                        {isThai ? "เปลี่ยนรูป" : "Change Image"}
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="font-bold text-xs"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCoverPreviewUrl(null);
-                                                            setCoverRemoved(true);
-                                                            if (coverInputRef.current) coverInputRef.current.value = "";
-                                                        }}
-                                                    >
-                                                        {isThai ? "ลบรูป" : "Remove"}
-                                                    </Button>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 pb-12">
-                                                <div className="group p-4 bg-muted rounded-full text-muted-foreground transition-transform group-hover:bg-primary/10 group-hover:text-primary">
-                                                    <Upload className="h-4 w-4" />
-                                                </div>
-                                                <p className="text-xs font-bold text-muted-foreground">
-                                                    {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    (1440x720)
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 bg-card rounded-full">
-                                        <LogoUploader
-                                            id="logo_img"
-                                            name="logo_img"
-                                            initialUrl={logoPreviewUrl}
-                                            onFileChange={(file) => {
-                                                if (file) {
-                                                    setLogoPreviewUrl(URL.createObjectURL(file));
-                                                    setLogoRemoved(false);
-                                                } else {
-                                                    setLogoPreviewUrl(null);
-                                                    setLogoRemoved(true);
-                                                }
-                                            }}
-                                            onRemove={() => {
-                                                setLogoPreviewUrl(null);
-                                                setLogoRemoved(true);
-                                            }}
-                                            uploadLabel={isThai ? "อัปโหลดโลโก้" : "Upload Logo"}
-                                            clickToUploadLabel={isThai ? "คลิกเพื่อเปลี่ยน" : "Click to Change"}
-                                            previewLabel={isThai ? "ตัวอย่าง" : "Preview"}
-                                            imageFit="contain"
-                                        />
-                                    </div>
-
-                                    <input
-                                        id="cover_img"
-                                        name="cover_img"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        ref={coverInputRef}
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                setCoverPreviewUrl(URL.createObjectURL(file));
-                                                setCoverRemoved(false);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <Label>{tDialog("name")} <span className="text-destructive">*</span></Label>
-                            <Input
-                                type="text"
-                                size="sm"
-                                id="name"
-                                name="name"
-                                defaultValue={tournament.name}
-                                placeholder={isThai ? "เช่น ฟุตบอลเยาวชน ชิงถ้วยนายก ครั้งที่ 1" : "e.g. Youth Champions League 2026"}
-                                className="bg-transparent text-foreground focus-visible:ring-0"
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-1">
-                            <Label>{isThai ? "สถานะการแข่งขัน" : "Tournament Status"}</Label>
-                            <Select
-                                name="status"
-                                defaultValue={tournament.status || "draft"}
-                            >
-                                <SelectTrigger size="sm" className="w-full bg-transparent text-foreground">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card">
-                                    <SelectItem value="draft" className="text-muted-foreground font-black text-xs cursor-pointer">
-                                        {isThai ? "แบบร่าง (Draft)" : "Draft"}
-                                    </SelectItem>
-                                    <SelectItem value="published" className="text-sky-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "เผยแพร่แล้ว (Published)" : "Published"}
-                                    </SelectItem>
-                                    <SelectItem value="registration_open" className="text-emerald-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "เปิดรับสมัคร (Registration Open)" : "Registration Open"}
-                                    </SelectItem>
-                                    <SelectItem value="registration_closed" className="text-amber-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "ปิดรับสมัคร (Registration Closed)" : "Registration Closed"}
-                                    </SelectItem>
-                                    <SelectItem value="upcoming" className="text-blue-500 font-black text-xs cursor-pointer">
-                                        {isThai ? "เร็วๆ นี้ (Upcoming)" : "Upcoming"}
-                                    </SelectItem>
-                                    <SelectItem value="ongoing" className="text-emerald-600 font-black text-xs cursor-pointer">
-                                        {isThai ? "กำลังแข่งขัน (Ongoing)" : "Ongoing"}
-                                    </SelectItem>
-                                    <SelectItem value="completed" className="text-primary font-black text-xs cursor-pointer">
-                                        {isThai ? "เสร็จสิ้นการแข่งขัน (Completed)" : "Completed"}
-                                    </SelectItem>
-                                    <SelectItem value="finished" className="text-primary font-black text-xs cursor-pointer">
-                                        {isThai ? "สิ้นสุด (Finished)" : "Finished"}
-                                    </SelectItem>
-                                    <SelectItem value="cancelled" className="text-destructive font-black text-xs cursor-pointer">
-                                        {isThai ? "ยกเลิก (Cancelled)" : "Cancelled"}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="grid gap-2 md:grid-cols-2">
-                            {/* Tournament Period: Date Range */}
-                            <div className="space-y-1">
-                                <Label>
-                                    {isThai ? "ระยะเวลาการแข่งขัน (เริ่ม - สิ้นสุด)" : "Tournament Period (Start - End)"} <span className="text-destructive">*</span>
-                                </Label>
-
-                                {/* Hidden inputs to pass data seamlessly to server action */}
-                                <input type="hidden" name="start_date" value={startDate} required />
-                                <input type="hidden" name="end_date" value={endDate} required />
-
-                                <DateRangePicker
-                                    startDate={startDate}
-                                    endDate={endDate}
-                                    onChange={({ startDate: s, endDate: e }) => {
-                                        setStartDate(s);
-                                        setEndDate(e);
-                                    }}
-                                    size="sm"
-                                    minYear={new Date().getFullYear() - 5}
-                                    maxYear={new Date().getFullYear() + 5}
-                                    defaultViewYear={startDate ? new Date(startDate).getFullYear() : new Date().getFullYear()}
-                                    placeholder={isThai ? "เลือกวันเริ่มต้น - สิ้นสุดการแข่งขัน" : "Select start - end date"}
-                                    disabled={isPending}
-                                />
-                            </div>
-
-                            {/* Document Deadline */}
-                            <div className="space-y-1">
-                                <Label>{t("document_deadline") || (isThai ? "วันปิดรับเอกสาร" : "Document Deadline")}</Label>
-                                <input type="hidden" name="document_deadline" value={docDeadline} />
-                                <DatePicker
-                                    value={docDeadline}
-                                    onChange={setDocDeadline}
-                                    size="sm"
-                                    clearable
-                                    minYear={new Date().getFullYear() - 5}
-                                    maxYear={new Date().getFullYear() + 5}
-                                    defaultViewYear={docDeadline ? new Date(docDeadline).getFullYear() : new Date().getFullYear()}
-                                    placeholder={isThai ? "เลือกวันปิดรับเอกสาร (ถ้ามี)" : "Select document deadline (optional)"}
-                                    disabled={isPending}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <Label>{isThai ? "รายละเอียดเพิ่มเติม" : "Description / Details"}</Label>
-                            <div className="pro-editor-wrapper relative">
-                                <ReactQuill
-                                    theme="snow"
-                                    value={description}
-                                    onChange={setDescription}
-                                    className="pro-editor h-auto text-foreground"
-                                    placeholder={isThai ? "เช่น กติกาการแข่งขัน เงินรางวัล และช่องทางการติดต่อผู้จัด..." : "e.g. Tournament rules, prize pool, and contact details..."}
-                                    modules={{
-                                        toolbar: [
-                                            [{ 'header': [1, 2, false] }],
-                                            ['bold', 'underline'],
-                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                            ['clean']
-                                        ]
-                                    }}
-                                />
-                            </div>
-                            <input type="hidden" name="description" value={description} />
-                        </div>
-
-                        <div className="space-y-1">
-                            <Label htmlFor="location_name">{isThai ? "สถานที่จัดการแข่งขัน" : "Location / Venue Name"}</Label>
-                            <Input
-                                id="location_name"
-                                name="location_name"
-                                size="sm"
-                                value={locationName}
-                                onChange={(e) => setLocationName(e.target.value)}
-                                placeholder={isThai ? "เช่น สนามกีฬาเฉลิมพระเกียรติ 80 พรรษา" : "e.g. National Stadium Bangkok"}
-                                className="bg-transparent text-foreground focus-visible:ring-0"
-                            />
-                        </div>
-
-                        <div className="space-y-1">
-                            <MapPicker
-                                value={googleMapUrl}
-                                onChange={(url) => setGoogleMapUrl(url)}
-                                onLocationNameSelect={(name) => setLocationName(name)}
-                            />
-                            <input type="hidden" name="google_map_url" value={googleMapUrl} />
-                        </div>
-
-                        <div className="flex justify-end">
-                            <Button
-                                type="submit"
-                                size="sm"
-                                disabled={isPending}
-                                className="md:w-fit w-full"
-                            >
-                                <span className="relative z-10 flex items-center gap-2">
-                                    {tCommon("save")}
-                                </span>
-                            </Button>
-                        </div>
-                    </form>
-                </div>
+        <div className={cn("space-y-4", className)}>
+            {/* Card Section Header (CategorySettings & profile-form style) */}
+            <div>
+                <Header level={4}>
+                    {isThai ? "ข้อมูลทั่วไปของทัวร์นาเมนต์" : "General Information"}
+                </Header>
+                <p className="text-xs text-muted-foreground">
+                    {isThai
+                        ? "จัดการรายละเอียดพื้นฐาน รูปภาพ วันที่ และสถานที่จัดการแข่งขัน"
+                        : "Manage tournament basic details, banners, dates, and venue information."}
+                </p>
             </div>
+
+            <form action={formAction}>
+                <input type="hidden" name="form_type" value="general" />
+                <input type="hidden" name="logo_img_remove" value={String(logoRemoved)} />
+                <input type="hidden" name="cover_img_remove" value={String(coverRemoved)} />
+
+                {/* 1. Cover Banner & Logo */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <Camera className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "รูปภาพหน้าปกและโลโก้" : "Cover Banner & Logo"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai
+                                    ? "ภาพหน้าปก (1440x720) และโลโก้สำหรับการประชาสัมพันธ์การแข่งขัน"
+                                    : "Cover banner (1440x720) and tournament logo"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-2">
+                        <div className="relative pb-10">
+                            <div
+                                onClick={() => coverInputRef.current?.click()}
+                                className="relative aspect-[2/1] w-full border border-dashed border-2 hover:border-primary/50 transition-all rounded-sm overflow-hidden flex flex-col items-center justify-center cursor-pointer group bg-muted/10"
+                            >
+                                {coverPreviewUrl ? (
+                                    <>
+                                        <Image
+                                            src={coverPreviewUrl}
+                                            alt="Cover Preview"
+                                            fill
+                                            className="object-cover p-1 rounded-sm transition-transform group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="font-bold text-xs"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    coverInputRef.current?.click();
+                                                }}
+                                            >
+                                                {isThai ? "เปลี่ยนรูป" : "Change Image"}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="sm"
+                                                className="font-bold text-xs"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setCoverPreviewUrl(null);
+                                                    setCoverFile(null);
+                                                    setCoverRemoved(true);
+                                                    setLastModifiedField('media');
+                                                    if (coverInputRef.current) coverInputRef.current.value = "";
+                                                }}
+                                            >
+                                                {isThai ? "ลบรูป" : "Remove"}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 pb-12">
+                                        <div className="group p-3 bg-muted rounded-full text-muted-foreground transition-transform group-hover:bg-primary/10 group-hover:text-primary">
+                                            <Upload className="h-4 w-4" />
+                                        </div>
+                                        <p className="text-xs font-bold text-muted-foreground">
+                                            {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
+                                        </p>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            (1440x720)
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 bg-card rounded-full shadow-sm">
+                                <LogoUploader
+                                    id="logo_img"
+                                    name="logo_img"
+                                    initialUrl={logoPreviewUrl}
+                                    onFileChange={(file) => {
+                                        setLogoFile(file);
+                                        if (file) {
+                                            setLogoPreviewUrl(URL.createObjectURL(file));
+                                            setLogoRemoved(false);
+                                        } else {
+                                            setLogoPreviewUrl(null);
+                                            setLogoRemoved(true);
+                                        }
+                                        setLastModifiedField('media');
+                                    }}
+                                    onRemove={() => {
+                                        setLogoFile(null);
+                                        setLogoPreviewUrl(null);
+                                        setLogoRemoved(true);
+                                        setLastModifiedField('media');
+                                    }}
+                                    uploadLabel={isThai ? "อัปโหลดโลโก้" : "Upload Logo"}
+                                    clickToUploadLabel={isThai ? "คลิกเพื่อเปลี่ยน" : "Click to Change"}
+                                    previewLabel={isThai ? "ตัวอย่าง" : "Preview"}
+                                    imageFit="contain"
+                                />
+                            </div>
+
+                            <input
+                                id="cover_img"
+                                name="cover_img"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                ref={coverInputRef}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setCoverFile(file);
+                                        setCoverPreviewUrl(URL.createObjectURL(file));
+                                        setCoverRemoved(false);
+                                        setLastModifiedField('media');
+                                    }
+                                }}
+                            />
+                        </div>
+                        {activeActionField === 'media' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 2. Tournament Name */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <Trophy className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "ชื่อทัวร์นาเมนต์" : "Tournament Name"} <span className="text-destructive">*</span>
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "ระบุชื่อการแข่งขันอย่างเป็นทางการ" : "Official tournament or league name"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <Input
+                            type="text"
+                            size="sm"
+                            id="name"
+                            name="name"
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setLastModifiedField('name');
+                            }}
+                            placeholder={isThai ? "เช่น ฟุตบอลเยาวชน ชิงถ้วยนายก ครั้งที่ 1" : "e.g. Youth Champions League 2026"}
+                            className="w-full"
+                            required
+                        />
+                        {activeActionField === 'name' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 3. Tournament Status */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <Activity className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "สถานะการแข่งขัน" : "Tournament Status"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "ควบคุมการแสดงผลและสถานะเปิดรับสมัคร" : "Control tournament progress and registration state"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <Select
+                            name="status"
+                            value={status}
+                            onValueChange={(val) => {
+                                setStatus(val);
+                                setLastModifiedField('status');
+                            }}
+                        >
+                            <SelectTrigger size="sm" className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                                <SelectItem value="draft" className="text-muted-foreground font-semibold text-xs cursor-pointer">
+                                    {isThai ? "แบบร่าง (Draft)" : "Draft"}
+                                </SelectItem>
+                                <SelectItem value="published" className="text-sky-500 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "เผยแพร่แล้ว (Published)" : "Published"}
+                                </SelectItem>
+                                <SelectItem value="registration_open" className="text-emerald-500 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "เปิดรับสมัคร (Registration Open)" : "Registration Open"}
+                                </SelectItem>
+                                <SelectItem value="registration_closed" className="text-amber-500 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "ปิดรับสมัคร (Registration Closed)" : "Registration Closed"}
+                                </SelectItem>
+                                <SelectItem value="upcoming" className="text-blue-500 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "เร็วๆ นี้ (Upcoming)" : "Upcoming"}
+                                </SelectItem>
+                                <SelectItem value="ongoing" className="text-emerald-600 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "กำลังแข่งขัน (Ongoing)" : "Ongoing"}
+                                </SelectItem>
+                                <SelectItem value="completed" className="text-primary font-semibold text-xs cursor-pointer">
+                                    {isThai ? "เสร็จสิ้นการแข่งขัน (Completed)" : "Completed"}
+                                </SelectItem>
+                                <SelectItem value="finished" className="text-primary font-semibold text-xs cursor-pointer">
+                                    {isThai ? "สิ้นสุด (Finished)" : "Finished"}
+                                </SelectItem>
+                                <SelectItem value="cancelled" className="text-destructive font-semibold text-xs cursor-pointer">
+                                    {isThai ? "ยกเลิก (Cancelled)" : "Cancelled"}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {activeActionField === 'status' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 4. Tournament Period */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <Calendar className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "ระยะเวลาการแข่งขัน" : "Tournament Period"} <span className="text-destructive">*</span>
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "วันเริ่มต้นและสิ้นสุดการแข่งขัน" : "Tournament start and end date"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <input type="hidden" name="start_date" value={startDate} required />
+                        <input type="hidden" name="end_date" value={endDate} required />
+                        <DateRangePicker
+                            startDate={startDate}
+                            endDate={endDate}
+                            onChange={({ startDate: s, endDate: e }) => {
+                                setStartDate(s);
+                                setEndDate(e);
+                                setLastModifiedField('period');
+                            }}
+                            size="sm"
+                            minYear={new Date().getFullYear() - 5}
+                            maxYear={new Date().getFullYear() + 5}
+                            defaultViewYear={startDate ? new Date(startDate).getFullYear() : new Date().getFullYear()}
+                            placeholder={isThai ? "เลือกวันเริ่มต้น - สิ้นสุดการแข่งขัน" : "Select start - end date"}
+                            disabled={isPending}
+                        />
+                        {activeActionField === 'period' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 5. Document Deadline */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <CalendarCheck className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "วันปิดรับเอกสาร" : "Document Deadline"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "กำหนดวันสุดท้ายสำหรับการส่งหลักฐานทีม (ถ้ามี)" : "Deadline for team document submissions (optional)"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <input type="hidden" name="document_deadline" value={docDeadline} />
+                        <DatePicker
+                            value={docDeadline}
+                            onChange={(val) => {
+                                setDocDeadline(val);
+                                setLastModifiedField('deadline');
+                            }}
+                            size="sm"
+                            clearable
+                            minYear={new Date().getFullYear() - 5}
+                            maxYear={new Date().getFullYear() + 5}
+                            defaultViewYear={docDeadline ? new Date(docDeadline).getFullYear() : new Date().getFullYear()}
+                            placeholder={isThai ? "เลือกวันปิดรับเอกสาร (ถ้ามี)" : "Select document deadline (optional)"}
+                            disabled={isPending}
+                        />
+                        {activeActionField === 'deadline' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 6. Description / Details */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <FileText className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "รายละเอียดเพิ่มเติม" : "Description / Details"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "กติกาการแข่งขัน เงินรางวัล และข้อกำหนดอื่นๆ" : "Tournament rules, prize pool, terms and conditions"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <div className="pro-editor-wrapper relative">
+                            <ReactQuill
+                                theme="snow"
+                                value={description}
+                                onChange={(content) => {
+                                    setDescription(content);
+                                    setLastModifiedField('description');
+                                }}
+                                className="pro-editor h-auto text-foreground"
+                                placeholder={isThai ? "เช่น กติกาการแข่งขัน เงินรางวัล และช่องทางการติดต่อผู้จัด..." : "e.g. Tournament rules, prize pool, and contact details..."}
+                                modules={{
+                                    toolbar: [
+                                        [{ 'header': [1, 2, false] }],
+                                        ['bold', 'underline'],
+                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                        ['clean']
+                                    ]
+                                }}
+                            />
+                        </div>
+                        <input type="hidden" name="description" value={description} />
+                        {activeActionField === 'description' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 7. Location Name */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <MapPin className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "สถานที่จัดการแข่งขัน" : "Location / Venue Name"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "ชื่อสนาม หรือสถานที่จัดงานหลัก" : "Venue name or sports facility"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <Input
+                            id="location_name"
+                            name="location_name"
+                            size="sm"
+                            value={locationName}
+                            onChange={(e) => {
+                                setLocationName(e.target.value);
+                                setLastModifiedField('location');
+                            }}
+                            placeholder={isThai ? "เช่น สนามกีฬาเฉลิมพระเกียรติ 80 พรรษา" : "e.g. National Stadium Bangkok"}
+                            className="w-full"
+                        />
+                        {activeActionField === 'location' && renderActionButtons()}
+                    </div>
+                </div>
+
+                {/* 8. Map Location */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between px-4 py-2 gap-3">
+                    <div className="flex items-start gap-4 sm:w-2/3">
+                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0">
+                            <Globe className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                            <Header level={6}>
+                                {isThai ? "แผนที่และพิกัด" : "Map Location"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground">
+                                {isThai ? "ปักหมุดหรือระบุพิกัด Google Maps เพื่อให้ผู้เข้าแข่งขันเดินทางสะดวก" : "Interactive map and coordinates for participants"}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="sm:w-2/3 space-y-1">
+                        <MapPicker
+                            value={googleMapUrl}
+                            onChange={(url) => {
+                                setGoogleMapUrl(url);
+                                setLastModifiedField('map');
+                            }}
+                            onLocationNameSelect={(name) => {
+                                setLocationName(name);
+                                setLastModifiedField('location');
+                            }}
+                        />
+                        <input type="hidden" name="google_map_url" value={googleMapUrl} />
+                        {activeActionField === 'map' && renderActionButtons()}
+                    </div>
+                </div>
+            </form>
         </div>
     );
 }
-

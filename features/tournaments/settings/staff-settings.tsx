@@ -1,29 +1,29 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Loader2, ShieldCheck, UserCog, Award, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Users, Loader2, ShieldCheck, UserCog, Award, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TournamentMember } from "@/types";
 import {
-    inviteStaff,
     getStaffs,
     updateStaffRole,
     removeStaff
 } from "@/actions/tournaments/staff";
+import { InviteStaffDialog } from "@/features/dialogs";
+import { RadioBtn } from "@/components/ui/radio-btn";
 import {
     Dialog,
     DialogContent,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     ActionMenu,
@@ -48,23 +48,21 @@ interface StaffSettingsProps {
     userPlan?: string;
     isPro?: boolean;
     togglePayment?: () => void;
+    className?: string;
 }
 
-export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProps) {
+export function StaffSettings({ tournamentId, togglePayment, className }: StaffSettingsProps) {
     const possessesStaffAccess = true;
     const t = useTranslations("StaffSettings");
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
+    const isThai = locale === "th";
     const { toast } = useToast();
 
     const [staffSettings, setStaffSettings] = useState<TournamentMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPending, startTransition] = useTransition();
 
-    // Dialog State
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState<'co_organizer' | 'staff' | 'referee'>('staff');
-    const [isInviting, setIsInviting] = useState(false);
     const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
 
     // Edit Role State
@@ -72,14 +70,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
     const [editRole, setEditRole] = useState<'co_organizer' | 'staff' | 'referee'>('staff');
     const [isUpdatingRole, setIsUpdatingRole] = useState(false);
 
-    const inviteScrollRef = useRef<HTMLDivElement>(null);
     const editRoleScrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (dialogOpen && inviteScrollRef.current) {
-            inviteScrollRef.current.scrollTop = 0;
-        }
-    }, [dialogOpen]);
 
     useEffect(() => {
         if (editingMember && editRoleScrollRef.current) {
@@ -99,24 +90,6 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
         };
         load();
     }, [tournamentId]);
-
-    const handleInvite = async () => {
-        if (!possessesStaffAccess) return;
-        if (!email.trim()) return;
-
-        setIsInviting(true);
-        const res = await inviteStaff(tournamentId, email.trim(), role);
-
-        if (res.success && res.data) {
-            setStaffSettings(prev => [...prev, res.data!]);
-            setEmail("");
-            setDialogOpen(false);
-            toast({ title: t("invite_sent"), description: t("invite_sent_desc") });
-        } else {
-            toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-        }
-        setIsInviting(false);
-    };
 
     const handleEditRoleClick = (member: TournamentMember) => {
         setEditingMember(member);
@@ -154,119 +127,37 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
     };
 
     return (
-        <div className="space-y-1 md:space-y-2">
-            <div className="flex justify-end gap-1 md:gap-2">
-                <Dialog open={possessesStaffAccess && dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button
-                            size="sm"
-                            disabled={!possessesStaffAccess}
-                            onClick={() => {
-                                if (!possessesStaffAccess) {
-                                    toast({
-                                        title: "ข้อจำกัดแพ็คเกจ",
-                                        description: "แพ็คเกจ Match ไม่รองรับการเพิ่มทีมงานจัดแข่ง กรุณาอัปเกรดเป็นแพ็คเกจ Event หรือ Cup",
-                                        variant: "destructive"
-                                    });
-                                    togglePayment?.();
-                                }
-                            }}
-                        >
-                            <Plus className="h-4 w-4" />
-                            {t("invite")}
-                        </Button>
-                    </DialogTrigger>
-                    {possessesStaffAccess && (
-                        <DialogContent className="max-h-[90vh] flex flex-col p-0 gap-0">
-                            <DialogHeader className="p-4 border-b shrink-0">
-                                <DialogTitle>{t("invite_title")}</DialogTitle>
-                            </DialogHeader>
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleInvite();
-                                }}
-                                className="flex flex-col flex-1 min-h-0"
-                            >
-                                <div ref={inviteScrollRef} className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="email">{t("email_address")} <span className="text-destructive">*</span></Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder={t("email_input_placeholder")}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label>{t("role")}</Label>
-                                        <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
-                                            {[
-                                                { id: 'co_organizer', label: t("role_co_organizer"), icon: <ShieldCheck className="h-4 w-4" /> },
-                                                { id: 'staff', label: t("role_staff"), icon: <UserCog className="h-4 w-4" /> },
-                                                { id: 'referee', label: t("role_referee"), icon: <Award className="h-4 w-4" /> },
-                                            ].map((item) => {
-                                                const isSelected = role === item.id;
-                                                return (
-                                                    <button
-                                                        key={item.id}
-                                                        type="button"
-                                                        onClick={() => setRole(item.id as 'co_organizer' | 'staff' | 'referee')}
-                                                        className={cn(
-                                                            "group flex flex-col items-center justify-center p-2.5 text-center transition-all cursor-pointer gap-1.5",
-                                                            isSelected
-                                                                ? "bg-primary/10 text-primary font-bold"
-                                                                : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
-                                                        )}
-                                                    >
-                                                        <div className={cn(
-                                                            "p-1.5 rounded-full transition-colors",
-                                                            isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                                        )}>
-                                                            {item.icon}
-                                                        </div>
-                                                        <span className="text-xs font-bold truncate w-full transition-colors">
-                                                            {item.label}
-                                                        </span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                                <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setDialogOpen(false)}
-                                        disabled={isInviting}
-                                    >
-                                        {tCommon("cancel")}
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={isInviting || !email.trim()}
-                                    >
-                                        {isInviting && <Loader2 className="h-4 w-4 animate-spin" />}
-                                        {t("send_invite")}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    )}
-                </Dialog>
+        <div className={cn("space-y-4", className)}>
+            {/* Section Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <Header level={4}>
+                        {isThai ? "ทีมงานจัดการแข่งขัน" : (t("title") || "Tournament Staff")}
+                    </Header>
+                    <p className="text-xs text-muted-foreground">
+                        {isThai
+                            ? "จัดการทีมงาน สิทธิ์การเข้าถึง และบทบาทในการช่วยบริหารจัดการทัวร์นาเมนต์"
+                            : "Manage tournament staff members, permissions, and roles."}
+                    </p>
+                </div>
+                <InviteStaffDialog
+                    tournamentId={tournamentId}
+                    disabled={!possessesStaffAccess}
+                    onUpgrade={togglePayment}
+                    onSuccess={(newMember) => {
+                        if (newMember) {
+                            setStaffSettings(prev => [...prev, newMember]);
+                        }
+                    }}
+                />
             </div>
 
-            <div className="relative overflow-hidden transition-colors">
-
-                <div className="relative z-10 space-y-2 lg:space-y-4">
-
-                    <div className={cn("space-y-2 md:space-y-4", !possessesStaffAccess && "opacity-40 grayscale pointer-events-none")}>
-                        {isLoading ? (
-                            null
-                        ) : staffSettings.length === 0 ? (
+            <div className={cn("space-y-2 md:space-y-4", !possessesStaffAccess && "opacity-40 grayscale pointer-events-none")}>
+                {isLoading ? (
+                    <div className="flex items-center justify-center p-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                ) : staffSettings.length === 0 ? (
                             <EmptyState
                                 icon={Users}
                                 title={t("no_staffSettings")}
@@ -365,7 +256,6 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                             </div>
                         )}
                     </div>
-                </div>
 
                 {/* Edit Role Dialog */}
                 <Dialog open={!!editingMember} onOpenChange={(open) => !open && setEditingMember(null)}>
@@ -406,38 +296,17 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
 
                                 <div className="space-y-1.5">
                                     <Label>{t("role")}</Label>
-                                    <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
-                                        {[
+                                    <RadioBtn
+                                        value={editRole}
+                                        onChange={(val) => setEditRole(val as 'co_organizer' | 'staff' | 'referee')}
+                                        options={[
                                             { id: 'co_organizer', label: t("role_co_organizer"), icon: <ShieldCheck className="h-4 w-4" /> },
                                             { id: 'staff', label: t("role_staff"), icon: <UserCog className="h-4 w-4" /> },
                                             { id: 'referee', label: t("role_referee"), icon: <Award className="h-4 w-4" /> },
-                                        ].map((item) => {
-                                            const isSelected = editRole === item.id;
-                                            return (
-                                                <button
-                                                    key={item.id}
-                                                    type="button"
-                                                    onClick={() => setEditRole(item.id as 'co_organizer' | 'staff' | 'referee')}
-                                                    className={cn(
-                                                        "group flex flex-col items-center justify-center p-2.5 text-center transition-all cursor-pointer gap-1.5",
-                                                        isSelected
-                                                            ? "bg-primary/10 text-primary font-bold"
-                                                            : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "p-1.5 rounded-full transition-colors",
-                                                        isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                                    )}>
-                                                        {item.icon}
-                                                    </div>
-                                                    <span className="text-xs font-bold truncate w-full transition-colors">
-                                                        {item.label}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                        ]}
+                                        disabled={isUpdatingRole}
+                                        className="w-full"
+                                    />
                                 </div>
                             </div>
                             <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
@@ -462,12 +331,18 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                 </Dialog>
 
                 <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
-                    <AlertDialogContent className="bg-card border lg:rounded-sm shadow-2xl max-w-md p-0">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="p-2 md:p-4 border-b">{t("remove_collaborator")}</AlertDialogTitle>
-                            <AlertDialogDescription className="p-2 md:p-4">{t("confirm_remove")}</AlertDialogDescription>
+                    <AlertDialogContent className="sm:max-w-[760px] h-auto sm:h-auto max-h-[88vh] overflow-hidden flex flex-col bg-card border rounded-none sm:rounded-sm shadow-2xl p-0">
+                        <AlertDialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0 bg-card">
+                            <AlertDialogTitle asChild>
+                                <Header level={4} className="text-destructive">
+                                    {t("remove_collaborator")}
+                                </Header>
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-xs text-muted-foreground mt-0.5">
+                                {t("confirm_remove")}
+                            </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                             <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
@@ -476,14 +351,13 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                     e.preventDefault();
                                     confirmRemove();
                                 }}
-                                className={cn(buttonVariants({ size: "sm", variant: "destructive" }), "flex items-center justify-center")}
+                                className={cn(buttonVariants({ size: "sm", variant: "destructive" }))}
                             >
                                 {t("remove") || "Remove"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
         </div>
     );
 }
