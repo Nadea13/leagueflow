@@ -1,17 +1,39 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
-import { useTranslations } from "next-intl";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useTranslations, useLocale } from "next-intl";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-
+import { Header } from "@/components/ui/header";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { deleteAccount } from "@/actions/common/user";
 
-export function DeleteAccountButton({ email }: { email: string }) {
+interface DeleteAccountButtonProps {
+    email: string;
+    trigger?: React.ReactNode;
+    disabled?: boolean;
+}
+
+export function DeleteAccountButton({
+    email,
+    trigger,
+    disabled = false,
+}: DeleteAccountButtonProps) {
     const t = useTranslations("DashboardSettings");
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
+    const isThai = locale === "th";
+    const { toast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
     const [confirmText, setConfirmText] = useState("");
     const [isPending, startTransition] = useTransition();
@@ -33,21 +55,40 @@ export function DeleteAccountButton({ email }: { email: string }) {
                 // Redirect happens on server
             } catch (error) {
                 console.error("Failed to delete account:", error);
-                alert("Failed to delete account. Please try again or contact support.");
+                toast({
+                    title: tCommon("error"),
+                    description: isThai
+                        ? "เกิดข้อผิดพลาดในการลบบัญชี โปรดลองใหม่อีกครั้ง"
+                        : "Failed to delete account. Please try again.",
+                    variant: "destructive",
+                });
             }
         });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                    {t("delete_account")}
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] flex flex-col p-0 gap-0">
-                <DialogHeader className="p-4 border-b shrink-0">
-                    <DialogTitle>{t("delete_confirm_title")}</DialogTitle>
+            {trigger !== undefined ? (
+                trigger ? (
+                    <DialogTrigger asChild>{trigger}</DialogTrigger>
+                ) : null
+            ) : (
+                <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={disabled}>
+                        {t("delete_account")}
+                    </Button>
+                </DialogTrigger>
+            )}
+            <DialogContent className="sm:max-w-[760px] h-auto sm:h-auto max-h-[88vh] p-0 flex flex-col overflow-hidden">
+                <DialogHeader className="p-4 sm:px-6 sm:py-4 border-b shrink-0 bg-card">
+                    <DialogTitle asChild>
+                        <Header level={4} className="text-destructive">
+                            {t("delete_account")}
+                        </Header>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                        {t("delete_account_desc")}
+                    </DialogDescription>
                 </DialogHeader>
 
                 <form
@@ -57,33 +98,49 @@ export function DeleteAccountButton({ email }: { email: string }) {
                             handleDelete();
                         }
                     }}
-                    className="flex flex-col flex-1 min-h-0"
+                    className="flex flex-col"
                 >
-                    <div ref={scrollContainerRef} className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
-                        <div className="space-y-2">
-                            <DialogDescription className="text-sm">
-                                {t("delete_confirm_desc")}
-                            </DialogDescription>
-                            <DialogDescription className="text-sm font-semibold text-foreground">
-                                {t("type_to_confirm", { text: email })}
-                            </DialogDescription>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Input
-                                id="confirm-delete"
-                                value={confirmText}
-                                onChange={(e) => setConfirmText(e.target.value)}
-                                placeholder={email}
-                                autoComplete="off"
-                                variant="destructive"
-                            />
+                    <div
+                        ref={scrollContainerRef}
+                        className="p-4 space-y-2 overflow-y-auto max-h-[60vh]"
+                    >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-2 gap-3">
+                            <div className="flex items-start gap-3 sm:gap-4 sm:w-1/2">
+                                <div className="size-9 rounded-sm bg-destructive/10 flex items-center justify-center shrink-0">
+                                    <AlertTriangle className="size-4 text-destructive" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Header level={6}>
+                                        {t("type_to_confirm", { text: email }) ||
+                                            (isThai
+                                                ? `โปรดพิมพ์ "${email}" เพื่อยืนยัน:`
+                                                : `Please type "${email}" to confirm:`)}
+                                    </Header>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("delete_confirm_desc")}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="sm:w-1/2 w-full">
+                                <Input
+                                    id="confirm-delete"
+                                    value={confirmText}
+                                    onChange={(e) => setConfirmText(e.target.value)}
+                                    placeholder={email}
+                                    autoComplete="off"
+                                    size="sm"
+                                    variant="destructive"
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-4 shrink-0 flex items-center justify-end gap-2 bg-muted/20">
+                    <DialogFooter className="p-3 sm:px-6 sm:py-3.5 border-t bg-card shrink-0 flex flex-row items-center justify-end gap-2">
                         <Button
                             type="button"
                             variant="outline"
+                            size="sm"
                             onClick={() => setIsOpen(false)}
                             disabled={isPending}
                         >
@@ -92,9 +149,12 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         <Button
                             type="submit"
                             variant="destructive"
-                            disabled={isPending || confirmText !== email}
+                            size="sm"
+                            disabled={confirmText !== email || isPending}
                         >
-                            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {isPending && (
+                                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                            )}
                             {t("delete_button")}
                         </Button>
                     </DialogFooter>
@@ -103,3 +163,6 @@ export function DeleteAccountButton({ email }: { email: string }) {
         </Dialog>
     );
 }
+
+// Convenient alias for dialog naming consistency
+export { DeleteAccountButton as DeleteAccountDialog };

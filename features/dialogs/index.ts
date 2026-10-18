@@ -4,6 +4,7 @@
 export * from "./user/become-organizer-dialog";
 export * from "./user/become-team-manager-dialog";
 export * from "./user/feedback-dialog";
+export { DeleteAccountButton, DeleteAccountDialog } from "@/components/settings/delete-account-button";
 
 // ==========================================
 // Tournaments
