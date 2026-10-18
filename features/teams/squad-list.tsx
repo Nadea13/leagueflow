@@ -95,27 +95,39 @@ export function SquadList({
     const positionOptions = getPositionOptions(team.sport || team.sport_name);
     
     const viewParam = searchParams.get("view");
-    const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
-        if (viewParam === "grid" || viewParam === "list") return viewParam;
+    const [viewMode, setViewMode] = useState<"list" | "card">(() => {
+        if (viewParam === "card" || viewParam === "list") return viewParam;
+        if (viewParam === "grid") return "card";
         if (typeof window !== "undefined") {
             try {
                 const saved = localStorage.getItem("squad_view_mode");
-                if (saved === "grid" || saved === "list") return saved;
+                if (saved === "card" || saved === "list") return saved;
+                if (saved === "grid") return "card";
             } catch {}
         }
         return "list";
     });
 
     useEffect(() => {
-        if (viewParam === "grid" || viewParam === "list") {
+        if (viewParam === "card" || viewParam === "list") {
             setViewMode(viewParam);
             try {
                 localStorage.setItem("squad_view_mode", viewParam);
             } catch {}
+        } else if (viewParam === "grid") {
+            setViewMode("card");
+            try {
+                localStorage.setItem("squad_view_mode", "card");
+            } catch {}
+            const params = new URLSearchParams(window.location.search);
+            params.set("view", "card");
+            const newUrl = `${pathname}?${params.toString()}`;
+            window.history.replaceState(null, "", newUrl);
+            router.replace(newUrl, { scroll: false });
         } else {
             try {
-                const saved = localStorage.getItem("squad_view_mode") as "list" | "grid" | null;
-                const targetMode = saved === "grid" || saved === "list" ? saved : "list";
+                const saved = localStorage.getItem("squad_view_mode");
+                const targetMode = saved === "card" || saved === "grid" ? "card" : "list";
                 setViewMode(targetMode);
                 const params = new URLSearchParams(window.location.search);
                 params.set("view", targetMode);
@@ -126,7 +138,7 @@ export function SquadList({
         }
     }, [viewParam, pathname, router, searchParams]);
 
-    const handleViewModeChange = (mode: "list" | "grid") => {
+    const handleViewModeChange = (mode: "list" | "card") => {
         setViewMode(mode);
         try {
             localStorage.setItem("squad_view_mode", mode);
@@ -197,7 +209,7 @@ export function SquadList({
         <div className={cn("bg-card space-y-2 md:space-y-4 border rounded-sm p-2 md:p-4", className)}>
             {/* Squad Header Bar with View Mode Switcher */}
             <div className="flex items-center justify-end">
-                <Tab<"list" | "grid">
+                <Tab<"list" | "card">
                     value={viewMode}
                     onChange={handleViewModeChange}
                     size="sm"
@@ -205,8 +217,8 @@ export function SquadList({
                     showIcons={true}
                     itemClassName="size-7"
                     options={[
-                        { label: "รายการ", value: "list", icon: List },
-                        { label: "ตาราง", value: "grid", icon: LayoutGrid },
+                        { label: isThai ? "รายการ" : "List", value: "list", icon: List },
+                        { label: isThai ? "การ์ด" : "Card", value: "card", icon: LayoutGrid },
                     ]}
                 />
             </div>

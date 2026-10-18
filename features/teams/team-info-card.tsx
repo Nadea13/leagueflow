@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Tournament } from "@/types/index";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useImageColor } from "@/hooks/use-image-color";
 
 interface TeamInfoCardProps {
     team: (Team | TournamentTeam) & {
@@ -34,6 +35,7 @@ interface TeamInfoCardProps {
 export function TeamInfoCard({ team, className }: TeamInfoCardProps) {
     const tSports = useTranslations("Sports");
     const logoUrl = resolveStorageUrl((team as { logo_img?: string }).logo_img || team.logo_url);
+    const dominantColor = useImageColor(logoUrl);
     const sportKey = team.sport || team.sport_name;
     const sportDisplay = team.sport ? (tSports.has(team.sport.toLowerCase() as any) ? tSports(team.sport.toLowerCase() as any) : (tSports.has(team.sport as any) ? tSports(team.sport as any) : team.sport)) : (team.sport_name || "");
     const phone = team.contact_phone || (team as any).contact_tel || "";
@@ -95,8 +97,34 @@ export function TeamInfoCard({ team, className }: TeamInfoCardProps) {
     return (
         <div className={cn("bg-card border border-border rounded-sm overflow-hidden divide-y divide-border", className)}>
             {/* Section 1: Team Identity */}
-            <div className="p-4 flex flex-col items-center text-center space-y-4">
-                <div className="relative inline-block">
+            <div className="p-4 flex flex-col items-center text-center space-y-4 relative overflow-hidden">
+                {/* Top-left subtle ambient gradient glow matching team profile logo */}
+                <div
+                    className={cn(
+                        "absolute -top-12 -left-12 w-48 h-48 rounded-full blur-3xl pointer-events-none transition-all duration-500",
+                        !dominantColor && (logoUrl ? "bg-white/10 dark:bg-white/10" : "bg-primary/15 dark:bg-primary/10")
+                    )}
+                    style={
+                        dominantColor
+                            ? { backgroundColor: `rgba(${dominantColor}, 0.22)` }
+                            : undefined
+                    }
+                />
+                <div
+                    className={cn(
+                        "absolute inset-0 pointer-events-none transition-all duration-500",
+                        !dominantColor && (logoUrl ? "bg-gradient-to-br from-white/10 via-transparent to-transparent" : "bg-gradient-to-br from-primary/10 via-transparent to-transparent")
+                    )}
+                    style={
+                        dominantColor
+                            ? {
+                                  background: `radial-gradient(circle at top left, rgba(${dominantColor}, 0.14) 0%, transparent 70%)`,
+                              }
+                            : undefined
+                    }
+                />
+
+                <div className="relative inline-block z-10">
                     {/* Team Circular Logo */}
                     <div className="h-24 w-24 rounded-full border bg-muted/20 flex items-center justify-center overflow-hidden">
                         {logoUrl ? (

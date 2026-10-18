@@ -132,8 +132,8 @@ export function UserDropdown({
                 <ActionMenuSub>
                     <ActionMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm flex items-center gap-2 md:gap-3">
                         <div className="relative flex items-center justify-center h-4 w-4 shrink-0">
-                            <Sun className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                            <Moon className="absolute h-4 w-4 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-muted-foreground group-hover:text-primary" />
+                            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-muted-foreground group-hover:text-primary" />
                         </div>
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
                     </ActionMenuSubTrigger>

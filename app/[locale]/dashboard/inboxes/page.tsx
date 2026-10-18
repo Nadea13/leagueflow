@@ -1726,7 +1726,7 @@ export default function InboxesPage() {
                             const regStatus = item.registration_status;
                             const displayLogo = item.team_logo || item.tournament_logo;
                             const initials = getInitials(item.team_name || item.tournament_name);
-                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+                            const squadViewQuery = typeof window !== "undefined" && (localStorage.getItem("squad_view_mode") === "card" || localStorage.getItem("squad_view_mode") === "grid") ? "?view=card" : "?view=list";
 
                             return (
                                 <div
@@ -1792,7 +1792,7 @@ export default function InboxesPage() {
                         if (item.type === 'team_request') {
                             const reqStatus = item.status;
                             const teamInitials = getInitials(item.team_name);
-                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+                            const squadViewQuery = typeof window !== "undefined" && (localStorage.getItem("squad_view_mode") === "card" || localStorage.getItem("squad_view_mode") === "grid") ? "?view=card" : "?view=list";
 
                             return (
                                 <div
@@ -1859,7 +1859,7 @@ export default function InboxesPage() {
                             const currentStatus = actionState[item.id] || item.status;
                             const avatarSrc = item.requester_avatar || item.team_logo;
                             const displayInitials = getInitials(item.requester_name || item.team_name);
-                            const squadViewQuery = typeof window !== "undefined" && localStorage.getItem("squad_view_mode") === "grid" ? "?view=grid" : "?view=list";
+                            const squadViewQuery = typeof window !== "undefined" && (localStorage.getItem("squad_view_mode") === "card" || localStorage.getItem("squad_view_mode") === "grid") ? "?view=card" : "?view=list";
 
                             return (
                                 <div

@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Users, Search, HelpCircle } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Users, Search, HelpCircle, List, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tab } from "@/components/ui/tab";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { CreateTeamForm } from "@/features/dialogs";
 import { VerifyTeamForm } from "@/features/dialogs";
@@ -22,6 +24,48 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
     const t = useTranslations("Team");
     const locale = useLocale();
     const isThai = locale === "th";
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const viewParam = searchParams.get("view");
+    const [viewMode, setViewMode] = useState<"list" | "card">(() => {
+        if (viewParam === "list" || viewParam === "card") return viewParam;
+        if (viewParam === "grid") return "card";
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem("teams_view_mode");
+                if (saved === "list" || saved === "card") return saved;
+            } catch {}
+        }
+        return "card";
+    });
+
+    useEffect(() => {
+        if (viewParam === "list" || viewParam === "card") {
+            setViewMode(viewParam);
+            try {
+                localStorage.setItem("teams_view_mode", viewParam);
+            } catch {}
+        } else if (viewParam === "grid") {
+            setViewMode("card");
+            try {
+                localStorage.setItem("teams_view_mode", "card");
+            } catch {}
+        }
+    }, [viewParam]);
+
+    const handleViewModeChange = (mode: "list" | "card") => {
+        setViewMode(mode);
+        try {
+            localStorage.setItem("teams_view_mode", mode);
+        } catch {}
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("view", mode);
+        const queryString = params.toString();
+        router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+    };
+
     const [searchQuery, setSearchQuery] = useState("");
 
     const startTour = useCallback(() => {
@@ -112,35 +156,62 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             placeholder={isThai ? "พิมพ์ชื่อทีม..." : "Search teams..."}
                         />
                     </div>
-                    <div id="tour-verify-team-btn" className="inline-block">
+                    <div id="tour-teams-view-mode" className="flex items-center shrink-0">
+                        <Tab<"list" | "card">
+                            value={viewMode}
+                            onChange={handleViewModeChange}
+                            size="sm"
+                            showLabels={false}
+                            showIcons={true}
+                            itemClassName="size-7"
+                            options={[
+                                { label: isThai ? "รายการ" : "List", value: "list", icon: List },
+                                { label: isThai ? "การ์ด" : "Card", value: "card", icon: LayoutGrid },
+                            ]}
+                        />
+                    </div>
+                    <div id="tour-verify-team-btn" className="inline-block shrink-0">
                         <VerifyTeamForm iconOnlyMobile />
                     </div>
-                    <div id="tour-create-team-btn" className="inline-block">
+                    <div id="tour-create-team-btn" className="inline-block shrink-0">
                         <CreateTeamForm iconOnlyMobile />
                     </div>
                 </div>
             </div>
 
-            <div id="tour-teams-grid" className="grid gap-2 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div id="tour-teams-grid">
                 {filteredTeams.length === 0 ? (
-                    <div className="col-span-full">
-                        <EmptyState
-                            icon={Users}
-                            title={t("no_teams_yet")}
-                            description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
-                            action={<CreateTeamForm />}
-                            className="bg-card rounded-sm border"
-                        />
+                    <EmptyState
+                        icon={Users}
+                        title={t("no_teams_yet")}
+                        description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
+                        action={<CreateTeamForm />}
+                        className="bg-card rounded-sm border"
+                    />
+                ) : viewMode === "card" ? (
+                    <div className="grid gap-2 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {filteredTeams.map((team) => (
+                            <DashboardCard
+                                key={team.id}
+                                type="team"
+                                data={team}
+                                mode="organizer"
+                                layout="card"
+                            />
+                        ))}
                     </div>
                 ) : (
-                    filteredTeams.map((team) => (
-                        <DashboardCard
-                            key={team.id}
-                            type="team"
-                            data={team}
-                            mode="organizer"
-                        />
-                    ))
+                    <div className="border bg-card rounded-sm divide-y divide-border overflow-hidden shadow-xs">
+                        {filteredTeams.map((team) => (
+                            <DashboardCard
+                                key={team.id}
+                                type="team"
+                                data={team}
+                                mode="organizer"
+                                layout="list"
+                            />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
