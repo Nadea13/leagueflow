@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 
-export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished' | 'registration_open' | 'registration_closed' | 'published' | 'completed' | 'cancelled';
+export type TournamentStatus = 'draft' | 'ongoing' | 'completed' | 'cancelled';
 export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled' | 'warmup' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'penalties' | 'completed' | 'cancelled' | 'postponed';
 export type SportCategoryType = 'team' | 'racket' | 'individual' | 'dual' | 'combat' | 'esports';
 export type SportType = 'football' | 'volleyball' | 'basketball' | 'futsal' | 'badminton' | 'tennis' | 'takraw' | 'cricket' | string;

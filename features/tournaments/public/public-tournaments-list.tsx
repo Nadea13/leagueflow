@@ -35,11 +35,11 @@ export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean
 
     const activeTournaments = tournaments.filter(t => {
         const s = (t.status || "").toLowerCase();
-        return s === "ongoing" || s === "active" || s === "upcoming" || s === "registration_open" || s === "published" || s === "draft";
+        return s === "ongoing" || s === "draft";
     });
     const completedTournaments = tournaments.filter(t => {
         const s = (t.status || "").toLowerCase();
-        return s === "finished" || s === "completed";
+        return s === "completed";
     });
 
     return (

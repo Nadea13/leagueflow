@@ -445,9 +445,6 @@ export async function updateTournament(
             if (formType === 'registration' || formData.has("is_registration_open")) {
                 const isOpen = formData.get("is_registration_open") === 'true';
                 currentSettings.is_registration_open = isOpen;
-                if (isOpen) {
-                    updateData.status = 'registration_open';
-                }
             }
 
             if (formData.has("bank_name")) currentSettings.bank_name = formData.get("bank_name") as string;
@@ -731,7 +728,7 @@ export async function getDashboardTournaments(query?: string) {
             sport: 'football' as SportType,
             format: t.format || 'knockout',
             plan: 'free' as const,
-            is_registration_open: t.status === 'registration_open'
+            is_registration_open: Boolean(t.is_registration_open ?? t.settings?.is_registration_open)
         }));
 
         // 2. Fetch tournament details for accepted invitations
@@ -772,7 +769,7 @@ export async function getDashboardTournaments(query?: string) {
                                 sport: 'football' as SportType,
                                 format: t.format || 'knockout',
                                 plan: 'free' as const,
-                                is_registration_open: t.status === 'registration_open'
+                                is_registration_open: Boolean(t.is_registration_open ?? t.settings?.is_registration_open)
                             };
                         } catch (e) {
                             console.error(`Error fetching staff tournament ${inv.tournament_id}:`, e);

@@ -7,7 +7,7 @@ import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Users, Check, X, Inbox } from "lucide-react";
+import { Loader2, ExternalLink, Phone, Users, Check, X, Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations, useLocale } from "next-intl";
 import { approveRegistration, rejectRegistration, withdrawTournamentTeam } from "@/actions/tournaments/registration";
@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TeamRosterDetailsDialog } from "@/features/dialogs";
 import { Input } from "@/components/ui/input";
+import { Header } from "@/components/ui/header";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -271,24 +272,24 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
             <div className="border bg-card rounded-sm overflow-hidden">
                 <div className="w-full overflow-x-auto">
                     <Table className="min-w-[800px]">
-                        <TableHeader className="bg-muted/40">
+                        <TableHeader>
                             <TableRow className="hover:bg-transparent h-10 border-b">
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("team_name")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("contact_info")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest">{t("payment_status")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest">{t("slip")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("date")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest"></TableHead>
+                                <TableHead className="px-4 text-xs font-bold tracking-widest">{t("team_name")}</TableHead>
+                                <TableHead className="px-4 text-xs font-bold tracking-widest">{t("contact_info")}</TableHead>
+                                <TableHead className="text-center px-4 text-xs font-bold tracking-widest">{t("payment_status")}</TableHead>
+                                <TableHead className="text-center px-4 text-xs font-bold tracking-widest">{t("slip")}</TableHead>
+                                <TableHead className="px-4 text-xs font-bold tracking-widest">{t("date")}</TableHead>
+                                <TableHead className="text-center px-4 text-xs font-bold tracking-widest"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y">
                             {registrations.map((reg) => (
-                                <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group">
-                                    <TableCell className="px-2 md:px-3">
+                                <TableRow key={reg.id} className="hover:bg-muted/30 transition-colors group">
+                                    <TableCell className="px-4">
                                         <button
                                             type="button"
                                             onClick={() => setSelectedTeamForDetails(reg)}
-                                            className="flex items-center gap-1 md:gap-2 cursor-pointer group/team text-left hover:opacity-80 transition-opacity"
+                                            className="flex items-center gap-4 cursor-pointer group/team text-left hover:opacity-80 transition-opacity"
                                             title={locale === 'th' ? "คลิกเพื่อดูข้อมูลทีมและรายชื่อนักกีฬา" : "Click to view team & roster"}
                                         >
                                             {reg.logo_url ? (
@@ -297,31 +298,30 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                                     alt={reg.team_name || "Team logo"}
                                                     width={24}
                                                     height={24}
-                                                    className="h-6 w-6 rounded-full object-cover border"
+                                                    className="size-9 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
+                                                <div className="size-9 rounded-full bg-muted-foreground/10 flex items-center justify-center">
                                                     <Users className="h-4 w-4 text-muted-foreground" />
                                                 </div>
                                             )}
-                                            <span className="font-black tracking-tight text-xs text-foreground group-hover/team:text-primary group-hover/team:underline transition-colors truncate max-w-[150px]">
+                                            <span className="font-bold tracking-tight text-xs text-foreground group-hover/team:text-primary group-hover/team:underline transition-colors truncate max-w-[150px]">
                                                 {reg.team_name}
                                             </span>
                                         </button>
                                     </TableCell>
-                                    <TableCell className="px-1 md:px-2">
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
-                                                <User className="h-4 w-4 text-primary" />
-                                                {reg.contact_name}
+                                    <TableCell className="px-4">
+                                        <div className="flex gap-4 items-center">
+                                            <div className="flex justify-center items-center bg-muted-foreground/10 size-9 rounded-sm">
+                                                <Phone className="h-4 w-4 text-muted-foreground" />
                                             </div>
-                                            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground tabular-nums tracking-widest">
-                                                <Phone className="h-4 w-4" />
-                                                {reg.contact_phone}
-                                            </div>
+                                        <div className="flex-1">
+                                            <Header level={6}>{reg.contact_name}</Header>
+                                            <p className="text-xs text-muted-foreground">{reg.contact_phone}</p>
+                                        </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center px-1 md:px-2">
+                                    <TableCell className="text-center px-4">
                                         <Badge
                                             variant="outline"
                                             className={cn(
@@ -349,10 +349,10 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
-                                            <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">{t("no_slip") || "No Slip"}</span>
+                                            <span className="text-[10px] font-bold text-muted-foreground/20 tracking-tighter">{t("no_slip") || "No Slip"}</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap tracking-widest">
+                                    <TableCell className="px-4 text-xs font-bold text-muted-foreground tabular-nums whitespace-nowrap tracking-wide">
                                         {new Date(reg.created_at).toLocaleString('en-US', {
                                             day: '2-digit',
                                             month: 'short',
@@ -422,7 +422,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>
                 <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md z-[9999]">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-bold tracking-tighter text-foreground flex items-center gap-2">
                             <X className="h-4 w-4 text-destructive" />
                             {locale === 'th' ? "ปฏิเสธการสมัคร" : "Reject Registration"}
                         </AlertDialogTitle>
@@ -473,8 +473,8 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                     </DialogHeader>
                     <div className="p-2 md:p-4 space-y-2">
                         <p className="text-xs text-muted-foreground">
-                            {locale === 'th' 
-                                ? "คุณแน่ใจหรือไม่ที่จะถอนทีมนี้ออกจากการแข่งขัน? การดำเนินการนี้ไม่สามารถย้อนกลับได้" 
+                            {locale === 'th'
+                                ? "คุณแน่ใจหรือไม่ที่จะถอนทีมนี้ออกจากการแข่งขัน? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
                                 : "Are you sure you want to withdraw this team from the tournament? This action cannot be undone."}
                         </p>
                         <div className="space-y-1">

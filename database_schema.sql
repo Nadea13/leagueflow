@@ -128,9 +128,9 @@ ALTER TYPE "public"."sport_type_enum" OWNER TO "postgres";
 
 CREATE TYPE "public"."tournament_status_enum" AS ENUM (
     'draft',
-    'upcoming',
     'ongoing',
-    'finished'
+    'completed',
+    'cancelled'
 );
 
 ALTER TYPE "public"."tournament_status_enum" OWNER TO "postgres";

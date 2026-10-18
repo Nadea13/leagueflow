@@ -42,13 +42,10 @@ const (
 type TournamentStatus string
 
 const (
-	StatusDraft              TournamentStatus = "draft"
-	StatusPublished          TournamentStatus = "published"
-	StatusRegistrationOpen   TournamentStatus = "registration_open"
-	StatusRegistrationClosed TournamentStatus = "registration_closed"
-	StatusOngoing            TournamentStatus = "ongoing"
-	StatusCompleted          TournamentStatus = "completed"
-	StatusCancelled          TournamentStatus = "cancelled"
+	StatusDraft     TournamentStatus = "draft"
+	StatusOngoing   TournamentStatus = "ongoing"
+	StatusCompleted TournamentStatus = "completed"
+	StatusCancelled TournamentStatus = "cancelled"
 )
 
 type SportType string

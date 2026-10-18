@@ -518,8 +518,8 @@ export function PublicTournamentShell({
                                 <div className="flex flex-wrap items-center gap-1 md:gap-2">
                                     <Badge className={cn(
                                         tournament?.status === 'ongoing' && "bg-primary hover:bg-primary/80",
-                                        tournament?.status === 'upcoming' && "bg-warning hover:bg-warning/80",
-                                        tournament?.status === 'finished' && "bg-muted-foreground hover:bg-muted-foreground/80",
+                                        tournament?.status === 'completed' && "bg-muted-foreground hover:bg-muted-foreground/80",
+                                        tournament?.status === 'cancelled' && "bg-destructive hover:bg-destructive/80 text-white",
                                         (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
                                     )}>
                                         {tTournament(tournament?.status || 'draft')}

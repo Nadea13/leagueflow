@@ -96,7 +96,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     }
 
     const settings = typeof tournament.settings === "object" && tournament.settings !== null ? tournament.settings : {};
-    const isRegistrationOpen = tournament.is_registration_open ?? settings.is_registration_open ?? (tournament.status === "registration_open");
+    const isRegistrationOpen = Boolean(tournament.is_registration_open ?? settings.is_registration_open);
 
     const activeCategory = tournamentCategoryId
         ? categories?.find((c: any) => String(c.id) === tournamentCategoryId)

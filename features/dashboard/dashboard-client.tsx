@@ -201,9 +201,9 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         }
     }, [startTour]);
 
-    // Filter tournaments based on search query (only show registration_open)
+    // Filter tournaments based on search query (only show tournaments open for registration)
     const filteredTournaments = initialTournaments
-        .filter(t => t.status === 'registration_open' || (t as any).is_registration_open)
+        .filter(t => Boolean(t.is_registration_open || (t as any).settings?.is_registration_open))
         .filter(t =>
             t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             t.description?.toLowerCase().includes(searchQuery.toLowerCase())

@@ -439,26 +439,11 @@ export function GeneralSettings({ tournament, className }: GeneralSettingsProps)
                                 <SelectItem value="draft" className="text-muted-foreground font-semibold text-xs cursor-pointer">
                                     {isThai ? "แบบร่าง (Draft)" : "Draft"}
                                 </SelectItem>
-                                <SelectItem value="published" className="text-sky-500 font-semibold text-xs cursor-pointer">
-                                    {isThai ? "เผยแพร่แล้ว (Published)" : "Published"}
-                                </SelectItem>
-                                <SelectItem value="registration_open" className="text-emerald-500 font-semibold text-xs cursor-pointer">
-                                    {isThai ? "เปิดรับสมัคร (Registration Open)" : "Registration Open"}
-                                </SelectItem>
-                                <SelectItem value="registration_closed" className="text-amber-500 font-semibold text-xs cursor-pointer">
-                                    {isThai ? "ปิดรับสมัคร (Registration Closed)" : "Registration Closed"}
-                                </SelectItem>
-                                <SelectItem value="upcoming" className="text-blue-500 font-semibold text-xs cursor-pointer">
-                                    {isThai ? "เร็วๆ นี้ (Upcoming)" : "Upcoming"}
-                                </SelectItem>
-                                <SelectItem value="ongoing" className="text-emerald-600 font-semibold text-xs cursor-pointer">
+                                <SelectItem value="ongoing" className="text-primary font-semibold text-xs cursor-pointer">
                                     {isThai ? "กำลังแข่งขัน (Ongoing)" : "Ongoing"}
                                 </SelectItem>
-                                <SelectItem value="completed" className="text-primary font-semibold text-xs cursor-pointer">
-                                    {isThai ? "เสร็จสิ้นการแข่งขัน (Completed)" : "Completed"}
-                                </SelectItem>
-                                <SelectItem value="finished" className="text-primary font-semibold text-xs cursor-pointer">
-                                    {isThai ? "สิ้นสุด (Finished)" : "Finished"}
+                                <SelectItem value="completed" className="text-emerald-600 font-semibold text-xs cursor-pointer">
+                                    {isThai ? "เสร็จสิ้น (Completed)" : "Completed"}
                                 </SelectItem>
                                 <SelectItem value="cancelled" className="text-destructive font-semibold text-xs cursor-pointer">
                                     {isThai ? "ยกเลิก (Cancelled)" : "Cancelled"}

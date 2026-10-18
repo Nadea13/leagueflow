@@ -1,4 +1,4 @@
-﻿CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- LeagueFlow Database Schema Dump (Clean & Organized)
 -- Generated on: 13/6/2569 16:23:00
@@ -118,9 +118,9 @@ CREATE TYPE "public"."sport_type_enum" AS ENUM (
 
 CREATE TYPE "public"."tournament_status_enum" AS ENUM (
     'draft',
-    'upcoming',
     'ongoing',
-    'finished'
+    'completed',
+    'cancelled'
 );
 
 

@@ -25,8 +25,7 @@ func (r *TournamentRepository) List(ctx context.Context, status string, organize
 		SELECT 
 			t.id, t.organizer_id, t.name, t.slug, t.description, t.format, 
 			CASE
-				WHEN t.status IN ('upcoming', 'published') AND t.start_date IS NOT NULL AND t.end_date IS NOT NULL AND CURRENT_DATE >= t.start_date AND CURRENT_DATE <= t.end_date THEN 'ongoing'::tournament_status
-				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'finished'::tournament_status
+				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'completed'::tournament_status
 				ELSE t.status
 			END as status,
 			t.start_date::text, t.end_date::text, t.location, t.banner_url, t.logo_url, t.rules, t.settings, 
@@ -46,8 +45,7 @@ func (r *TournamentRepository) List(ctx context.Context, status string, organize
 	if status != "" {
 		query += fmt.Sprintf(` AND (
 			CASE
-				WHEN t.status IN ('upcoming', 'published') AND t.start_date IS NOT NULL AND t.end_date IS NOT NULL AND CURRENT_DATE >= t.start_date AND CURRENT_DATE <= t.end_date THEN 'ongoing'
-				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'finished'
+				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'completed'
 				ELSE t.status::text
 			END = $%d
 		)`, argIdx)
@@ -117,8 +115,7 @@ func (r *TournamentRepository) GetByID(ctx context.Context, id uuid.UUID) (*mode
 		SELECT 
 			t.id, t.organizer_id, t.name, t.slug, t.description, t.format, 
 			CASE
-				WHEN t.status IN ('upcoming', 'published') AND t.start_date IS NOT NULL AND t.end_date IS NOT NULL AND CURRENT_DATE >= t.start_date AND CURRENT_DATE <= t.end_date THEN 'ongoing'::tournament_status
-				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'finished'::tournament_status
+				WHEN t.status = 'ongoing' AND t.end_date IS NOT NULL AND CURRENT_DATE > t.end_date THEN 'completed'::tournament_status
 				ELSE t.status
 			END as status,
 			t.start_date::text, t.end_date::text, t.location, t.banner_url, t.logo_url, t.rules, t.settings, t.created_at, t.updated_at,

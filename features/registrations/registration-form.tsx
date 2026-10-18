@@ -145,7 +145,7 @@ export function RegistrationForm({
 
     const locale = useLocale();
     const isThai = locale === "th";
-    const isRegistrationClosed = !tournament.is_registration_open || tournament.status === 'completed' || tournament.status === 'finished' || tournament.status === 'cancelled';
+    const isRegistrationClosed = !tournament.is_registration_open || tournament.status === 'completed' || tournament.status === 'cancelled';
     const isExistingTeam = selectedTeamId !== "" && selectedTeamId !== "new";
     const isFormDisabled = Boolean(isFull || isPastDeadline || isRegistrationClosed || isRegistrationDisabled);
     const isFieldDisabled = Boolean(isExistingTeam || isFormDisabled || isSubmitting);
