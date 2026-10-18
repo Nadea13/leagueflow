@@ -2,26 +2,29 @@ package config
 
 import (
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	Port             string
-	DatabaseURL      string
-	RedisURL         string
-	JWTSecret        string
-	JWTRefreshSecret string
-	CORSOrigins      string
-	ResendAPIKey     string
-	ResendFromEmail  string
-	SMTPHost           string
-	SMTPPort           string
-	GoogleClientID     string
-	GoogleClientSecret string
-	GoogleRedirectURL  string
-	FrontendURL        string
-	LokiURL            string
-	LokiUser           string
-	LokiToken          string
+	Port                string
+	DatabaseURL         string
+	RedisURL            string
+	JWTSecret           string
+	JWTRefreshSecret    string
+	CORSOrigins         string
+	ResendAPIKey        string
+	ResendFromEmail     string
+	SMTPHost            string
+	SMTPPort            string
+	GoogleClientID      string
+	GoogleClientSecret  string
+	GoogleRedirectURL   string
+	FrontendURL         string
+	LokiURL             string
+	LokiUser            string
+	LokiToken           string
+	RateLimitGeneralMax int
+	RateLimitAuthMax    int
 }
 
 func LoadConfig() *Config {
@@ -83,23 +86,39 @@ func LoadConfig() *Config {
 		frontendURL = "https://leagueflow.vercel.app"
 	}
 
+	rateLimitGeneralMax := 600
+	if val := os.Getenv("RATE_LIMIT_GENERAL_MAX"); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil && parsed > 0 {
+			rateLimitGeneralMax = parsed
+		}
+	}
+
+	rateLimitAuthMax := 30
+	if val := os.Getenv("RATE_LIMIT_AUTH_MAX"); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil && parsed > 0 {
+			rateLimitAuthMax = parsed
+		}
+	}
+
 	return &Config{
-		Port:               port,
-		DatabaseURL:        dbURL,
-		RedisURL:           redisURL,
-		JWTSecret:          jwtSecret,
-		JWTRefreshSecret:   jwtRefreshSecret,
-		CORSOrigins:        corsOrigins,
-		ResendAPIKey:       resendAPIKey,
-		ResendFromEmail:    resendFromEmail,
-		SMTPHost:           smtpHost,
-		SMTPPort:           smtpPort,
-		GoogleClientID:     googleClientID,
-		GoogleClientSecret: googleClientSecret,
-		GoogleRedirectURL:  googleRedirectURL,
-		FrontendURL:        frontendURL,
-		LokiURL:            os.Getenv("LOKI_URL"),
-		LokiUser:           os.Getenv("LOKI_USER"),
-		LokiToken:          os.Getenv("LOKI_TOKEN"),
+		Port:                port,
+		DatabaseURL:         dbURL,
+		RedisURL:            redisURL,
+		JWTSecret:           jwtSecret,
+		JWTRefreshSecret:    jwtRefreshSecret,
+		CORSOrigins:         corsOrigins,
+		ResendAPIKey:        resendAPIKey,
+		ResendFromEmail:     resendFromEmail,
+		SMTPHost:            smtpHost,
+		SMTPPort:            smtpPort,
+		GoogleClientID:      googleClientID,
+		GoogleClientSecret:  googleClientSecret,
+		GoogleRedirectURL:   googleRedirectURL,
+		FrontendURL:         frontendURL,
+		LokiURL:             os.Getenv("LOKI_URL"),
+		LokiUser:            os.Getenv("LOKI_USER"),
+		LokiToken:           os.Getenv("LOKI_TOKEN"),
+		RateLimitGeneralMax: rateLimitGeneralMax,
+		RateLimitAuthMax:    rateLimitAuthMax,
 	}
 }

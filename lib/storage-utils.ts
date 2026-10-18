@@ -25,6 +25,16 @@ export function resolveStorageUrl(url: string | null | undefined): string | null
         }
     }
 
+    // Handle Cloudflare R2 public dev URL
+    // e.g. https://pub-8080cc31b27e40c3ab82a87acbb6b477.r2.dev/teams/abc/logo.png
+    if (trimmed.includes(".r2.dev/")) {
+        const parts = trimmed.split(".r2.dev/");
+        if (parts.length > 1) {
+            const key = parts[1].replace(/^\/+/, "");
+            return `/api/storage/${key}`;
+        }
+    }
+
     // If already routed to our storage proxy
     if (trimmed.startsWith("/api/storage/")) {
         return trimmed;

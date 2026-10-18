@@ -2,17 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/routing";
-import { ApiClient, ApiError } from "@/lib/api-client";
+import { ApiClient, ApiError, UserProfile } from "@/lib/api-client";
 import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar";
 import { DashboardNavbar } from "@/features/dashboard/dashboard-navbar";
-
-interface UserProfile {
-    id: string;
-    email: string;
-    full_name: string;
-    role: string;
-    avatar_url?: string;
-}
 
 function parseJwt(token: string): { user_id?: string; email?: string; role?: string; exp?: number } | null {
     try {
@@ -33,8 +25,8 @@ function parseJwt(token: string): { user_id?: string; email?: string; role?: str
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [_isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<UserProfile | null>(() => ApiClient.getCachedProfile());
+    const [_isLoading, setIsLoading] = useState(!user);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -55,8 +47,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     return;
                 }
 
-                // Populate fast fallback profile from JWT claims while /auth/me loads
-                if (claims && claims.email) {
+                // Populate fast fallback profile from JWT claims if not yet set
+                if (!user && claims && claims.email) {
                     const email = claims.email;
                     setUser((prev) => prev || {
                         id: claims.user_id || '',
@@ -66,19 +58,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     });
                 }
 
-                const profile = await ApiClient.fetch<UserProfile>('/auth/me');
-                setUser(profile);
-            } catch (err: any) {
-                console.error("Failed to fetch user profile:", err);
+                const profile = await ApiClient.getUserProfile();
+                if (profile) {
+                    setUser(profile);
+                }
+            } catch (err: unknown) {
                 const isAuthError =
                     err instanceof ApiError
-                        ? err.status === 401 || err.status === 403
-                        : err?.status === 401 || err?.status === 403;
+                        ? err.isUnauthorized
+                        : (err as any)?.status === 401 || (err as any)?.status === 403;
+                const isRateLimited =
+                    err instanceof ApiError
+                        ? err.isRateLimited
+                        : (err as any)?.status === 429;
 
                 // Only wipe session and kick out if server explicitly returned 401/403
                 if (isAuthError) {
                     ApiClient.setToken(null);
                     router.push('/sign-in');
+                } else if (isRateLimited) {
+                    console.warn("User profile fetch throttled (429); preserving current active session.");
                 } else {
                     // For temporary network glitches, 502 Bad Gateway (Render cold start), do NOT destroy user session
                     console.warn("Backend unavailable or spinning up; preserving current session.");
@@ -96,7 +95,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     const isTeamManager = true;
     const userName = user?.full_name || (user?.email ? user.email.split('@')[0] : "");
     const userEmail = user?.email || "";
-    const userAvatar = user?.avatar_url;
+    const userAvatar = user?.avatar_url || undefined;
 
     return (
         <div className="min-h-screen w-full md:grid md:grid-cols-[64px_1fr]">

@@ -12,12 +12,12 @@ export default function SettingsPage() {
     const [userProfile, setUserProfile] = useState<any>(null);
     const [_isLoading, setIsLoading] = useState(true);
 
-    const fetchProfile = async () => {
+    const fetchProfile = async (forceRefresh = false) => {
         try {
-            const profile = await ApiClient.fetch<any>('/auth/me');
+            const profile = await ApiClient.getUserProfile(forceRefresh);
             setUserProfile(profile);
         } catch (err) {
-            console.error("Failed to fetch settings profile:", err);
+            console.warn("Failed to fetch settings profile:", err);
         } finally {
             setIsLoading(false);
         }
@@ -50,7 +50,7 @@ export default function SettingsPage() {
             user={userObj} 
             profile={profileObj} 
             activeTab={tab} 
-            onProfileUpdated={fetchProfile}
+            onProfileUpdated={() => fetchProfile(true)}
         />
     );
 }

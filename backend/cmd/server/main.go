@@ -114,11 +114,15 @@ func main() {
 		return c.IP()
 	}
 
-	// 1. General API Rate Limiter (150 requests per minute per IP)
+	// 1. General API Rate Limiter (Default: 600 req/min per IP, bypass on localhost for development)
 	generalLimiter := limiter.New(limiter.Config{
-		Max:        150,
+		Max:        cfg.RateLimitGeneralMax,
 		Expiration: 1 * time.Minute,
 		KeyGenerator: getClientIP,
+		Next: func(c *fiber.Ctx) bool {
+			ip := getClientIP(c)
+			return ip == "127.0.0.1" || ip == "::1" || ip == "localhost"
+		},
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 				"error": "Too many requests. Please slow down.",
@@ -127,11 +131,15 @@ func main() {
 	})
 	app.Use(generalLimiter)
 
-	// 2. Strict Auth Rate Limiter for Brute-Force & OTP spam prevention (15 requests per minute)
+	// 2. Strict Auth Rate Limiter for Brute-Force & OTP spam prevention (Default: 30 req/min)
 	authLimiter := limiter.New(limiter.Config{
-		Max:        15,
+		Max:        cfg.RateLimitAuthMax,
 		Expiration: 1 * time.Minute,
 		KeyGenerator: getClientIP,
+		Next: func(c *fiber.Ctx) bool {
+			ip := getClientIP(c)
+			return ip == "127.0.0.1" || ip == "::1" || ip == "localhost"
+		},
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
 				"error": "Too many authentication attempts. Please wait 1 minute before trying again.",
