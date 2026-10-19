@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, HelpCircle, Trophy } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Search, HelpCircle, Trophy, List, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tab } from "@/components/ui/tab";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { TournamentCreate } from "@/features/dialogs";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,6 +24,48 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
     const t = useTranslations("Dashboard");
     const locale = useLocale();
     const isThai = locale === "th";
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const viewParam = searchParams.get("view");
+    const [viewMode, setViewMode] = useState<"list" | "card">(() => {
+        if (viewParam === "list" || viewParam === "card") return viewParam;
+        if (viewParam === "grid") return "card";
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem("tournaments_view_mode");
+                if (saved === "list" || saved === "card") return saved;
+            } catch {}
+        }
+        return "card";
+    });
+
+    useEffect(() => {
+        if (viewParam === "list" || viewParam === "card") {
+            setViewMode(viewParam);
+            try {
+                localStorage.setItem("tournaments_view_mode", viewParam);
+            } catch {}
+        } else if (viewParam === "grid") {
+            setViewMode("card");
+            try {
+                localStorage.setItem("tournaments_view_mode", "card");
+            } catch {}
+        }
+    }, [viewParam]);
+
+    const handleViewModeChange = (mode: "list" | "card") => {
+        setViewMode(mode);
+        try {
+            localStorage.setItem("tournaments_view_mode", mode);
+        } catch {}
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("view", mode);
+        const queryString = params.toString();
+        router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+    };
+
     const [searchQuery, setSearchQuery] = useState("");
 
     const startTour = useCallback(() => {
@@ -112,7 +156,21 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                             placeholder={isThai ? "พิมพ์ชื่อการแข่งขัน..." : "Search tournaments..."}
                         />
                     </div>
-                    <div id="tour-create-tournament-btn" className="inline-block">
+                    <div id="tour-tournaments-view-mode" className="flex items-center shrink-0">
+                        <Tab<"list" | "card">
+                            value={viewMode}
+                            onChange={handleViewModeChange}
+                            size="sm"
+                            showLabels={false}
+                            showIcons={true}
+                            itemClassName="size-7"
+                            options={[
+                                { label: isThai ? "รายการ" : "List", value: "list", icon: List },
+                                { label: isThai ? "การ์ด" : "Card", value: "card", icon: LayoutGrid },
+                            ]}
+                        />
+                    </div>
+                    <div id="tour-create-tournament-btn" className="inline-block shrink-0">
                         <TournamentCreate
                             iconOnlyMobile
                             isDisabled={(() => {
@@ -161,7 +219,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                     }
                     className="bg-card rounded-sm border"
                 />
-            ) : (
+            ) : viewMode === "card" ? (
                 <div id="tour-tournaments-grid" className="grid gap-2 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredTournaments.map((tournament) => (
                         <DashboardCard
@@ -169,6 +227,19 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                             type="tournament"
                             data={tournament}
                             userPlan={userPlan}
+                            layout="card"
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div id="tour-tournaments-list" className="border bg-card rounded-sm divide-y divide-border overflow-hidden shadow-xs">
+                    {filteredTournaments.map((tournament) => (
+                        <DashboardCard
+                            key={tournament.id}
+                            type="tournament"
+                            data={tournament}
+                            userPlan={userPlan}
+                            layout="list"
                         />
                     ))}
                 </div>

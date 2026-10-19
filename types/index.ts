@@ -43,6 +43,25 @@ export interface Tournament {
     location?: string | null;
     google_map_url?: string | null;
     registration_fee?: number | null;
+    settings?: Record<string, any> | null;
+}
+
+export interface TournamentStatusRequest {
+    id: string;
+    tournament_id: string;
+    tournament_name?: string;
+    sport_name?: string;
+    current_status: TournamentStatus;
+    target_status: TournamentStatus;
+    reason?: string;
+    requested_by: string;
+    requested_by_email?: string;
+    requested_by_name?: string;
+    requested_at: string;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    reviewed_by?: string;
+    reviewed_at?: string;
+    reject_reason?: string;
 }
 
 export interface Match {

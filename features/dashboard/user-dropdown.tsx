@@ -118,9 +118,9 @@ export function UserDropdown({
                             <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tSettings("billing")}</span>
                         </Link>
                     </ActionMenuItem>
-                    {role === "admin" && (
+                    {(role === "admin" || role === "super_admin") && (
                         <ActionMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
-                            <Link href="/admin" className="w-full flex items-center gap-2 md:gap-3">
+                            <Link href="/admin" target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-2 md:gap-3">
                                 <Shield className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
                                 <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("admin") || "Admin"}</span>
                             </Link>

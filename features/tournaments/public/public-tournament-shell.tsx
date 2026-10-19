@@ -10,7 +10,6 @@ import { Standings } from "@/features/tournaments/ranking/standings";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
 import { Match, MatchEvent, Team, Goal, Tournament, Player, Announcement } from "@/types";
-import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -54,6 +53,19 @@ export function PublicTournamentShell({
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
+
+    useEffect(() => {
+        setMatches(initialMatches);
+    }, [initialMatches]);
+
+    useEffect(() => {
+        setEvents(initialEvents);
+    }, [initialEvents]);
+
+    useEffect(() => {
+        setTournament(initialTournament);
+    }, [initialTournament]);
+
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -414,65 +426,14 @@ export function PublicTournamentShell({
     };
 
     useEffect(() => {
-        const supabase = createClient();
-
-        const tourneyChannel = supabase
-            .channel(`public-tournament-${initialTournament.id}`)
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'tournaments',
-                filter: `id=eq.${initialTournament.id}`
-            }, (payload) => {
-                setTournament(payload.new as Tournament);
-            })
-            .subscribe();
-
-        const matchChannel = supabase
-            .channel(`public-matches-${initialTournament.id}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'matches',
-                filter: `tournament_id=eq.${initialTournament.id}`
-            }, (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    setMatches(prev => [...prev, payload.new as Match]);
-                } else if (payload.eventType === 'UPDATE') {
-                    setMatches(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m));
-                } else if (payload.eventType === 'DELETE') {
-                    setMatches(prev => prev.filter(m => m.id !== payload.old.id));
-                }
-            })
-            .subscribe();
-
-        const eventChannel = supabase
-            .channel(`public-events-${initialTournament.id}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'match_events'
-            }, (payload) => {
-                const matchIds = matches.map(m => m.id);
-                if (payload.new && !matchIds.includes((payload.new as MatchEvent).match_id)) return;
-                if (payload.old && !matchIds.includes((payload.old as MatchEvent).match_id)) return;
-
-                if (payload.eventType === 'INSERT') {
-                    setEvents(prev => [payload.new as MatchEvent, ...prev]);
-                } else if (payload.eventType === 'DELETE') {
-                    setEvents(prev => prev.filter(e => e.id !== payload.old.id));
-                } else if (payload.eventType === 'UPDATE') {
-                    setEvents(prev => prev.map(e => e.id === payload.new.id ? { ...e, ...payload.new } : e));
-                }
-            })
-            .subscribe();
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 15000);
 
         return () => {
-            supabase.removeChannel(tourneyChannel);
-            supabase.removeChannel(matchChannel);
-            supabase.removeChannel(eventChannel);
+            clearInterval(interval);
         };
-    }, [initialTournament.id, matches.length, matches]);
+    }, [router]);
 
     const getInitials = (name: string) => {
         const parts = name.trim().split(/\s+/);

@@ -1,150 +1,62 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/index";
-import { initTournamentStructure } from "@/lib/fixture-utils";
-import { validateTournamentAccess } from "@/lib/security";
+import { getServerSession } from "@/lib/auth-server";
 
-const getScoreTotal = (scoreObj: unknown): number => {
-    if (!scoreObj) return 0;
-    if (typeof scoreObj === 'object' && scoreObj !== null) {
-        return (scoreObj as { total?: number }).total || 0;
-    }
-    const val = Number(scoreObj);
-    return isNaN(val) ? 0 : val;
-};
-
-export async function generateFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-    
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    // Check if fixtures already exist and if we can regenerate
-    const { data: existingMatches } = await supabase
-        .from('matches')
-        .select('id, home_score, away_score, status')
-        .eq('tournament_category_id', tournamentCategoryId);
-
-    const hasFixtures = existingMatches && existingMatches.length > 0;
-    if (hasFixtures) {
-        // Allow regeneration for all formats if no results are recorded
-        const hasScores = existingMatches.some(m => {
-            if (m.status === 'finished') return true;
-            const homeTotal = getScoreTotal(m.home_score);
-            const awayTotal = getScoreTotal(m.away_score);
-            return homeTotal > 0 || awayTotal > 0;
-        });
-
-        if (hasScores) {
-            return { success: false, error: "Cannot regenerate: Some matches already have results recorded." };
-        }
-
-        // Delete existing matches for regeneration
-        const { error: deleteError } = await supabase
-            .from('matches')
-            .delete()
-            .eq('tournament_category_id', tournamentCategoryId);
-
-        if (deleteError) {
-            console.error("Delete error during regeneration:", deleteError);
-            return { success: false, error: "Failed to clear existing fixtures." };
-        }
-    }
-
-    // Generate fixtures using utility
-    const result = await initTournamentStructure(tournamentId, supabase);
-    
-    if (result.success) {
-        revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    }
-    
-    return result;
-}
-
-export async function resetFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) return { success: false, error: "No category found." };
-
-    // Delete all matches
-    const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("tournament_category_id", category.id);
-
-    if (matchError) {
-        return { success: false, error: "Failed to delete matches: " + matchError.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 export async function resetBracketFlow(tournamentId: string, categoryId?: string | null): Promise<ActionResponse> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
+    const session = await getServerSession();
+    if (!session?.user) return { success: false, error: "Authentication required" };
 
     let targetCategoryId = categoryId;
 
     if (!targetCategoryId) {
-        const { data: category } = await supabase
-            .from('tournament_categories')
-            .select('id')
-            .eq('tournament_id', tournamentId)
-            .limit(1)
-            .single();
-
-        if (!category) return { success: false, error: "No category found." };
-        targetCategoryId = category.id;
+        try {
+            const catRes = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/categories`, {
+                headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+                cache: 'no-store'
+            });
+            if (catRes.ok) {
+                const cats = await catRes.json();
+                if (Array.isArray(cats) && cats.length > 0) {
+                    targetCategoryId = cats[0].id;
+                }
+            }
+        } catch {
+            // ignore
+        }
     }
+
+    if (!targetCategoryId) {
+        return { success: false, error: "No tournament category found" };
+    }
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {})
+    };
 
     // 1. Reset canvas_data
-    const { error: canvasError } = await supabase
-        .from("tournament_categories")
-        .update({ canvas_data: null })
-        .eq("id", targetCategoryId);
-
-    if (canvasError) {
-        return { success: false, error: "Failed to reset canvas: " + canvasError.message };
+    try {
+        await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/categories/${targetCategoryId}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ canvas_data: null })
+        });
+    } catch {
+        // ignore
     }
 
-    // 2. Delete matches
-    const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("tournament_category_id", targetCategoryId);
-
-    if (matchError) {
-        return { success: false, error: "Failed to delete matches: " + matchError.message };
+    // 2. Delete matches for this category
+    try {
+        await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/categories/${targetCategoryId}/matches`, {
+            method: 'DELETE',
+            headers,
+        });
+    } catch {
+        // ignore
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);

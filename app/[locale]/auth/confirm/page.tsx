@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -20,45 +19,21 @@ export default function AuthConfirmPage() {
         let isMounted = true;
 
         const checkSession = async () => {
-            const supabase = createClient();
-
-            // First, check if we already have a session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (sessionError) {
-                console.error("AuthConfirmPage: Session error:", sessionError);
-                if (isMounted) setError(sessionError.message);
-                return;
-            }
-
-            if (session) {
-                // console.log("AuthConfirmPage: Session found, redirecting to dashboard");
-                window.location.href = `/${locale}/dashboard`;
-                return;
-            }
-
-            // No session yet, listen for auth state changes
-            // Supabase client will process the URL hash automatically
-            // console.log("AuthConfirmPage: No session, waiting for auth state change...");
-
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
-                // console.log("AuthConfirmPage: Auth state changed:", event);
-                if (event === 'SIGNED_IN' && session) {
+            try {
+                const token = typeof window !== "undefined" ? (localStorage.getItem("token") || localStorage.getItem("access_token")) : null;
+                if (token) {
                     window.location.href = `/${locale}/dashboard`;
+                    return;
                 }
-            });
 
-            // Timeout fallback - if no session after 5 seconds, redirect to login
-            setTimeout(() => {
-                if (isMounted) {
-                    // console.log("AuthConfirmPage: Timeout, redirecting to sign-in");
-                    router.push(`/${locale}/sign-in`);
-                }
-            }, 5000);
-
-            return () => {
-                subscription.unsubscribe();
-            };
+                setTimeout(() => {
+                    if (isMounted) {
+                        router.push(`/${locale}/sign-in`);
+                    }
+                }, 1500);
+            } catch (err: any) {
+                if (isMounted) setError(err?.message || "Authentication error");
+            }
         };
 
         checkSession();

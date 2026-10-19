@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, Users, Settings, Inbox, LucideIcon, Home } from "lucide-react"
+import { LayoutDashboard, Trophy, Users, Settings, Inbox, LucideIcon, Home, Shield } from "lucide-react"
 
 export interface NavItem {
     titleKey: string
@@ -38,6 +38,13 @@ export const organizerNavItems: NavItem[] = [
         href: "/dashboard/settings",
         icon: Settings,
     },
+    {
+        titleKey: "admin",
+        href: "/admin",
+        icon: Shield,
+        adminOnly: true,
+        openInNewTab: true,
+    },
 ]
 
 export const teamNavItems: NavItem[] = [
@@ -66,11 +73,20 @@ export const teamNavItems: NavItem[] = [
         href: "/manager/settings",
         icon: Settings,
     },
+    {
+        titleKey: "admin",
+        href: "/admin",
+        icon: Shield,
+        adminOnly: true,
+        openInNewTab: true,
+    },
 ]
 
 /**
  * Get nav items based on mode
  */
-export function getNavItems(mode: 'organizer' | 'team' = 'organizer', _role?: string): NavItem[] {
-    return mode === 'team' ? [...teamNavItems] : [...organizerNavItems];
+export function getNavItems(mode: 'organizer' | 'team' = 'organizer', role?: string): NavItem[] {
+    const isSuperAdmin = role === 'super_admin' || role === 'admin';
+    const baseItems = mode === 'team' ? [...teamNavItems] : [...organizerNavItems];
+    return baseItems.filter(item => !item.adminOnly || isSuperAdmin);
 }

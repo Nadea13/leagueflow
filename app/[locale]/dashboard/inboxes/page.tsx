@@ -1992,14 +1992,30 @@ export default function InboxesPage() {
                         }
 
                         // 6. SYSTEM NOTIFICATIONS
+                        const isApproved = item.title.startsWith("✅");
+                        const isRejected = item.title.startsWith("❌");
+
                         return (
                             <div
                                 key={`sys-${item.id}`}
                                 className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
                             >
                                 <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
-                                    <div className="h-10 w-10 border border-border rounded-full shrink-0 bg-primary/10 flex items-center justify-center text-primary">
-                                        <Bell className="h-4 w-4" />
+                                    <div className={cn(
+                                        "h-10 w-10 border rounded-full shrink-0 flex items-center justify-center",
+                                        isApproved
+                                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+                                            : isRejected
+                                            ? "border-destructive/20 bg-destructive/10 text-destructive"
+                                            : "border-border bg-primary/10 text-primary"
+                                    )}>
+                                        {isApproved ? (
+                                            <ShieldCheck className="h-4 w-4" />
+                                        ) : isRejected ? (
+                                            <AlertCircle className="h-4 w-4" />
+                                        ) : (
+                                            <Bell className="h-4 w-4" />
+                                        )}
                                     </div>
                                     <div className="space-y-1.5 min-w-0 flex-1">
                                         <p className="text-sm font-semibold leading-relaxed text-foreground">
@@ -2009,8 +2025,22 @@ export default function InboxesPage() {
                                             {item.message}
                                         </p>
                                         <div className="flex items-center gap-2 pt-0.5">
-                                            <Badge variant="outline" className="text-muted-foreground border-border">
-                                                {isTh ? "การแจ้งเตือนระบบ" : "System Notification"}
+                                            <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                    "border-border",
+                                                    isApproved
+                                                        ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10 font-bold"
+                                                        : isRejected
+                                                        ? "text-destructive border-destructive/30 bg-destructive/10 font-bold"
+                                                        : "text-muted-foreground"
+                                                )}
+                                            >
+                                                {isApproved
+                                                    ? (isTh ? "อนุมัติแล้ว" : "Approved")
+                                                    : isRejected
+                                                    ? (isTh ? "ปฏิเสธคำขอ" : "Rejected")
+                                                    : (isTh ? "การแจ้งเตือนระบบ" : "System Notification")}
                                             </Badge>
                                             <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                             <span className="text-[10px] text-muted-foreground/60 font-medium">

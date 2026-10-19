@@ -113,6 +113,7 @@ export function DashboardSidebar({
                             key={item.href}
                             href={item.href}
                             target={item.openInNewTab ? "_blank" : undefined}
+                            rel={item.openInNewTab ? "noopener noreferrer" : undefined}
                             onClick={(e) => {
                                 if (item.href === "/dashboard/tournaments" && !isOrganizer) {
                                     e.preventDefault();

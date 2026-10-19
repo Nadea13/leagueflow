@@ -1,6 +1,5 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentMember } from "@/types";
 import { logActivity } from "@/lib/audit";
@@ -8,34 +7,6 @@ import { validateTournamentAccess } from "@/lib/security";
 import { getServerSession } from "@/lib/auth-server";
 import { resolveStorageUrl } from "@/lib/storage-utils";
 
-async function getStaffUser(): Promise<{ id: string; email: string; full_name?: string } | null> {
-    try {
-        const session = await getServerSession();
-        if (session?.user) {
-            return {
-                id: session.user.id,
-                email: session.user.email,
-                full_name: session.user.full_name
-            };
-        }
-    } catch (e) {
-        console.error("Error in getServerSession:", e);
-    }
-    try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            return {
-                id: user.id,
-                email: user.email || '',
-                full_name: user.user_metadata?.full_name || ''
-            };
-        }
-    } catch (e) {
-        console.error("Error in supabase.auth.getUser:", e);
-    }
-    return null;
-}
 
 /**
  * Invite a collaborator to a tournament by email.
@@ -628,7 +599,7 @@ export async function rejectTeamManagementRequest(
 }
 
 /**
- * Get system notifications from notifications table for current user.
+ * Get system notifications for current user.
  */
 export async function getUserSystemNotifications(): Promise<ActionResponse<Array<{
     id: string;
@@ -639,109 +610,7 @@ export async function getUserSystemNotifications(): Promise<ActionResponse<Array
     is_read: boolean;
     created_at: string;
 }>>> {
-    try {
-        const user = await getStaffUser();
-        if (!user) return { success: true, data: [] };
-        const adminSupabase = createAdminClient();
-
-        // 1. Fetch persistent notifications
-        const { data: dbNotifs } = await adminSupabase
-            .from("notifications")
-            .select("id, title, message, type, link, is_read, created_at")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
-
-        const dynamicNotifs: Array<{
-            id: string;
-            title: string;
-            message: string;
-            type: 'invite' | 'payment' | 'system';
-            link?: string | null;
-            is_read: boolean;
-            created_at: string;
-        }> = [];
-
-        // 2. Reminder Check: 2 days before start_date or document_deadline for teams user owns
-        try {
-            const { data: userTeams } = await adminSupabase
-                .from("teams")
-                .select("id")
-                .eq("user_id", user.id);
-
-            const userTeamIds = (userTeams || []).map(t => t.id);
-
-            if (userTeamIds.length > 0) {
-                const { data: participations } = await adminSupabase
-                    .from("tournament_teams")
-                    .select(`
-                        id,
-                        team_id,
-                        roster_status,
-                        registration_status,
-                        teams ( name ),
-                        tournament_categories (
-                            name,
-                            min_players,
-                            tournaments (
-                                id,
-                                name,
-                                start_date,
-                                document_deadline
-                            )
-                        )
-                    `)
-                    .in("team_id", userTeamIds)
-                    .neq("registration_status", "rejected");
-
-                const now = new Date();
-                const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
-
-                for (const part of (participations || [])) {
-                    const cat = part.tournament_categories as any;
-                    const tournament = cat?.tournaments;
-                    if (!tournament) continue;
-
-                    const targetDateStr = tournament.document_deadline || tournament.start_date;
-                    if (!targetDateStr) continue;
-
-                    const targetDate = new Date(targetDateStr);
-                    const timeDiff = targetDate.getTime() - now.getTime();
-
-                    // Within 2 days before target date and in the future (or today)
-                    if (timeDiff > 0 && timeDiff <= twoDaysMs) {
-                        // Check if team has valid approved or submitted roster
-                        const { count: submissionCount } = await adminSupabase
-                            .from("tournament_roster_submissions")
-                            .select("id", { count: 'exact', head: true })
-                            .eq("tournament_team_id", part.id)
-                            .is("deleted_at", null);
-
-                        const minRequired = cat?.min_players || 1;
-                        if (!submissionCount || submissionCount < minRequired) {
-                            const teamName = (part.teams as any)?.name || "ทีมของคุณ";
-                            const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-                            dynamicNotifs.push({
-                                id: `reminder-roster-${part.id}`,
-                                title: `⏰ แจ้งเตือน: กรุณาส่งรายชื่อนักกีฬา (${teamName})`,
-                                message: `เหลือเวลาอีก ${daysLeft} วัน ก่อนกำหนดปิดรับรายชื่อสำหรับรายการ "${tournament.name}" กรุณาส่งรายชื่อนักกีฬาให้ครบตามเกณฑ์ (${minRequired} คนขึ้นไป)`,
-                                type: 'system',
-                                link: `/dashboard/tournament-teams/${part.id}`,
-                                is_read: false,
-                                created_at: new Date().toISOString(),
-                            });
-                        }
-                    }
-                }
-            }
-        } catch (remErr) {
-            console.warn("[getUserSystemNotifications] Reminder calculation error:", remErr);
-        }
-
-        const combined = [...dynamicNotifs, ...(dbNotifs || [])];
-        return { success: true, data: combined as any };
-    } catch {
-        return { success: true, data: [] };
-    }
+    return { success: true, data: [] };
 }
 
 /**

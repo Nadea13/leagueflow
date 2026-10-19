@@ -12,7 +12,6 @@ README.md
 .vercel
 .vscode
 backend
-supabase
 playwright-report
 test-results
 tests

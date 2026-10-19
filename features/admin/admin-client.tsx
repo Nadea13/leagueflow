@@ -7,14 +7,24 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/dropdown"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive, UserCheck, Link as LinkIcon, Unlink } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive, UserCheck, Link as LinkIcon, Unlink, RotateCcw, ArrowRight, Loader2 } from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
-import { Payment } from "@/types"
-import { AdminUser, AdminMasterPlayer, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats, ActiveUserInfo, linkMasterPlayerToUser, approveMasterPlayerRequest, rejectMasterPlayerRequest } from "@/actions/common/admin"
-import { createClient } from "@/lib/supabase/client"
+import { Payment, TournamentStatusRequest } from "@/types"
+import { AdminUser, AdminMasterPlayer, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats, ActiveUserInfo, linkMasterPlayerToUser, approveMasterPlayerRequest, rejectMasterPlayerRequest, approveTournamentStatusRequest, rejectTournamentStatusRequest } from "@/actions/common/admin"
 import { cn } from "@/lib/utils"
 import { Header } from "@/components/ui/header"
 
@@ -22,11 +32,12 @@ interface AdminClientProps {
     initialPayments: Payment[]
     initialUsers: AdminUser[]
     initialMasterPlayers: AdminMasterPlayer[]
+    initialStatusRequests: TournamentStatusRequest[]
 }
 
-type TabType = "pending" | "payments" | "users" | "players" | "monitor"
+type TabType = "pending" | "payments" | "users" | "players" | "monitor" | "status_requests"
 
-export function AdminClient({ initialPayments, initialUsers, initialMasterPlayers }: AdminClientProps) {
+export function AdminClient({ initialPayments, initialUsers, initialMasterPlayers, initialStatusRequests }: AdminClientProps) {
     const t = useTranslations("Admin")
     const tCommon = useTranslations("Common")
     const { toast } = useToast()
@@ -34,6 +45,11 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
     const [payments, setPayments] = useState<Payment[]>(initialPayments)
     const [users, setUsers] = useState<AdminUser[]>(initialUsers)
     const [masterPlayers, setMasterPlayers] = useState<AdminMasterPlayer[]>(initialMasterPlayers)
+    const [statusRequests, setStatusRequests] = useState<TournamentStatusRequest[]>(initialStatusRequests || [])
+    const [statusRequestSearch, setStatusRequestSearch] = useState("")
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+    const [selectedRequestForReject, setSelectedRequestForReject] = useState<TournamentStatusRequest | null>(null)
+    const [adminRejectReason, setAdminRejectReason] = useState("")
     const [paymentSearch, setPaymentSearch] = useState("")
     const [userSearch, setUserSearch] = useState("")
     const [playerSearch, setPlayerSearch] = useState("")
@@ -44,7 +60,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
     const [isLoadingStats, setIsLoadingStats] = useState(false)
     const [logFilterTab, setLogFilterTab] = useState<"all" | "auth" | "guest">("all")
 
-    const [presenceUsers, setPresenceUsers] = useState<ActiveUserInfo[]>([])
+    const [presenceUsers, _setPresenceUsers] = useState<ActiveUserInfo[]>([])
 
     const fetchMonitorStats = async (showLoading = false) => {
         if (showLoading) setIsLoadingStats(true)
@@ -61,57 +77,12 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
         // Initial fetch on tab switch
         Promise.resolve().then(() => fetchMonitorStats(true))
 
-        // 1. Set up Supabase Realtime Subscription for instant DB event pushes & Realtime Presence
-        const supabase = createClient()
-        const channel = supabase
-            .channel('online-users-room')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => fetchMonitorStats(false))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchMonitorStats(false))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => fetchMonitorStats(false))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => fetchMonitorStats(false))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_teams' }, () => fetchMonitorStats(false))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => fetchMonitorStats(false))
-            .on('presence', { event: 'sync' }, () => {
-                const newState = channel.presenceState()
-                const onlineUsers: ActiveUserInfo[] = []
-                Object.keys(newState).forEach((key) => {
-                    const presences = newState[key] as Record<string, unknown>[]
-                    presences.forEach((p) => {
-                        const presence = p as { id?: string; email?: string; full_name?: string | null; ip?: string; onlineAt?: string }
-                        if (presence.email && !onlineUsers.some(u => u.id === presence.id)) {
-                            onlineUsers.push({
-                                id: presence.id || key,
-                                email: presence.email,
-                                full_name: presence.full_name || null,
-                                ip: presence.ip || '127.0.0.1',
-                                lastActive: presence.onlineAt || new Date().toISOString()
-                            })
-                        }
-                    })
-                })
-                setPresenceUsers(onlineUsers)
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    const { data: { user } } = await supabase.auth.getUser()
-                    if (user) {
-                        await channel.track({
-                            id: user.id,
-                            email: user.email,
-                            full_name: user.user_metadata?.full_name || null,
-                            onlineAt: new Date().toISOString()
-                        })
-                    }
-                }
-            })
-
-        // 2. Add lightweight heartbeat ticker (3s)
+        // Polling ticker (3s) for monitor stats
         const heartbeatId = setInterval(() => {
             fetchMonitorStats(false)
         }, 3000)
 
         return () => {
-            supabase.removeChannel(channel)
             clearInterval(heartbeatId)
         }
     }, [activeTab])
@@ -127,6 +98,12 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
             label: t("payments_pending") || "Pending Approvals",
             icon: AlertCircle,
             badge: payments.filter(p => p.status === "pending").length
+        },
+        {
+            value: "status_requests",
+            label: "Status Requests",
+            icon: RotateCcw,
+            badge: statusRequests.filter(r => r.status === 'pending').length > 0 ? statusRequests.filter(r => r.status === 'pending').length : undefined
         },
         {
             value: "payments",
@@ -145,6 +122,52 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
             badge: masterPlayers.filter(mp => !mp.user_id).length > 0 ? masterPlayers.filter(mp => !mp.user_id).length : undefined
         }
     ]
+
+    const handleApproveStatusRequest = async (tournamentId: string) => {
+        if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการอนุมัติคำขอเปลี่ยนสถานะของทัวร์นาเมนต์นี้?")) return
+
+        startTransition(async () => {
+            const res = await approveTournamentStatusRequest(tournamentId)
+            if (res.success) {
+                toast({
+                    title: tCommon("success"),
+                    description: "อนุมัติคำขอเปลี่ยนสถานะเรียบร้อยแล้ว สถานะทัวร์นาเมนต์ถูกเปลี่ยนแล้ว"
+                })
+                setStatusRequests(prev => prev.map(r => r.tournament_id === tournamentId ? { ...r, status: 'approved' } : r))
+            } else {
+                toast({
+                    title: tCommon("error"),
+                    description: res.error || "เกิดข้อผิดพลาดในการอนุมัติ",
+                    variant: "destructive"
+                })
+            }
+        })
+    }
+
+    const handleRejectStatusRequest = async () => {
+        if (!selectedRequestForReject) return
+        const tournamentId = selectedRequestForReject.tournament_id
+
+        startTransition(async () => {
+            const res = await rejectTournamentStatusRequest(tournamentId, adminRejectReason.trim())
+            if (res.success) {
+                toast({
+                    title: tCommon("success"),
+                    description: "ปฏิเสธคำขอเรียบร้อยแล้ว"
+                })
+                setRejectDialogOpen(false)
+                setSelectedRequestForReject(null)
+                setAdminRejectReason("")
+                setStatusRequests(prev => prev.map(r => r.tournament_id === tournamentId ? { ...r, status: 'rejected', reject_reason: adminRejectReason.trim() } : r))
+            } else {
+                toast({
+                    title: tCommon("error"),
+                    description: res.error || "เกิดข้อผิดพลาดในการปฏิเสธ",
+                    variant: "destructive"
+                })
+            }
+        })
+    }
 
     const handlePaymentAction = async (paymentId: string, status: 'success' | 'failed') => {
         const confirmMessage = status === 'success'
@@ -331,6 +354,16 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
     })
 
     const pendingPayments = payments.filter(p => p.status === "pending")
+    const filteredStatusRequests = statusRequests.filter(req => {
+        const query = statusRequestSearch.toLowerCase().trim()
+        if (!query) return true
+        return (
+            (req.tournament_name && req.tournament_name.toLowerCase().includes(query)) ||
+            (req.requested_by_name && req.requested_by_name.toLowerCase().includes(query)) ||
+            (req.requested_by_email && req.requested_by_email.toLowerCase().includes(query)) ||
+            (req.reason && req.reason.toLowerCase().includes(query))
+        )
+    })
 
     return (
         <div className="space-y-2 lg:space-y-4 max-w-5xl mx-auto">
@@ -350,7 +383,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                 </Badge>
                             </h3>
                             <p className="text-xs text-muted-foreground">
-                                Real-time connection status, latency, and Supabase data breakdown.
+                                Real-time connection status, latency, and database data breakdown.
                             </p>
                         </div>
                         <Button
@@ -442,7 +475,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                         <div className="flex items-center justify-between">
                             <div>
                                 <Header level={4}>Active Logged-in Sessions (USER_ACTIVE)</Header>
-                                <CardDescription>Realtime online user sessions tracked via Supabase Realtime Presence.</CardDescription>
+                                <CardDescription>Realtime online user sessions tracked across active sessions.</CardDescription>
                             </div>
                             {(() => {
                                 const allActiveUsers = [...(monitorStats?.activeUsers || [])]
@@ -515,7 +548,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                     <div className="space-y-1 lg:space-y-2">
                         <div>
                             <Header level={4}>Database Table Statistics</Header>
-                            <CardDescription>Live row counts across core data tables in Supabase.</CardDescription>
+                            <CardDescription>Live row counts across core data tables in database.</CardDescription>
                         </div>
                         <div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 lg:gap-2 text-center">
@@ -552,7 +585,7 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                             <div>
                                 <Header level={4}>System Activity & Logs</Header>
-                                <CardDescription>Live system activity, registration events, and visitor logs fetched from Supabase.</CardDescription>
+                                <CardDescription>Live system activity, registration events, and visitor logs fetched from system.</CardDescription>
                             </div>
                             <Tab
                                 options={[
@@ -708,6 +741,174 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                                                             {t("reject") || "Reject"}
                                                         </Button>
                                                     </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {activeTab === "status_requests" && (
+                <Card>
+                    <CardHeader className="space-y-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <CardTitle className="text-sm font-bold tracking-wider text-primary flex items-center gap-2">
+                                    <RotateCcw className="size-4 text-warning" />
+                                    <span>คำขอเปลี่ยนสถานะการแข่งขัน (Tournament Status Change Requests)</span>
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                    พิจารณาคำขอจากผู้จัดการแข่งขันที่ต้องการเปลี่ยนสถานะของทัวร์นาเมนต์ที่เสร็จสิ้นหรือถูกยกเลิกแล้ว
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                    <Input
+                                        placeholder="ค้นหาทัวร์นาเมนต์หรือผู้ขอ..."
+                                        value={statusRequestSearch}
+                                        onChange={(e) => setStatusRequestSearch(e.target.value)}
+                                        className="pl-8 text-xs h-8"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {filteredStatusRequests.length === 0 ? (
+                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-sm">
+                                ไม่มีคำขอเปลี่ยนสถานะการแข่งขัน
+                            </div>
+                        ) : (
+                            <div className="border rounded-sm bg-card overflow-hidden">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="text-xs font-black">ทัวร์นาเมนต์</TableHead>
+                                            <TableHead className="text-xs font-black">ผู้ยื่นคำขอ</TableHead>
+                                            <TableHead className="text-xs font-black">การเปลี่ยนสถานะ</TableHead>
+                                            <TableHead className="text-xs font-black">เหตุผล</TableHead>
+                                            <TableHead className="text-xs font-black">วันเวลาที่ยื่น</TableHead>
+                                            <TableHead className="text-xs font-black">สถานะคำขอ</TableHead>
+                                            <TableHead className="text-xs font-black text-right">ดำเนินการ</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredStatusRequests.map((req) => (
+                                            <TableRow key={req.id} className="text-xs">
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <Link
+                                                            href={`/dashboard/tournaments/${req.tournament_id}`}
+                                                            target="_blank"
+                                                            className="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                                                        >
+                                                            <span>{req.tournament_name || req.tournament_id}</span>
+                                                        </Link>
+                                                        {req.sport_name && (
+                                                            <span className="text-[10px] text-muted-foreground">{req.sport_name}</span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-foreground">{req.requested_by_name || "N/A"}</span>
+                                                        <span className="text-[10px] text-muted-foreground">{req.requested_by_email || req.requested_by}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={cn(
+                                                                "text-[10px] px-1.5 py-0 h-4 font-semibold capitalize",
+                                                                req.current_status === 'completed' && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
+                                                                req.current_status === 'cancelled' && "border-destructive/40 bg-destructive/10 text-destructive",
+                                                                req.current_status === 'ongoing' && "border-primary/40 bg-primary/10 text-primary",
+                                                                req.current_status === 'draft' && "border-border bg-muted/40 text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            {req.current_status}
+                                                        </Badge>
+                                                        <ArrowRight className="size-3 text-muted-foreground" />
+                                                        <Badge
+                                                            className={cn(
+                                                                "text-[10px] px-1.5 py-0 h-4 font-semibold capitalize text-white",
+                                                                req.target_status === 'ongoing' && "bg-primary",
+                                                                req.target_status === 'draft' && "bg-muted-foreground",
+                                                                req.target_status === 'completed' && "bg-emerald-600",
+                                                                req.target_status === 'cancelled' && "bg-destructive"
+                                                            )}
+                                                        >
+                                                            {req.target_status}
+                                                        </Badge>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="max-w-[200px]">
+                                                    <span className="text-[11px] text-foreground/90 line-clamp-2" title={req.reason}>
+                                                        {req.reason || "-"}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                                    {new Date(req.requested_at).toLocaleString('th-TH')}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "text-[10px] font-bold px-2 py-0.5",
+                                                            req.status === 'pending' && "bg-warning/10 text-warning border-warning/30",
+                                                            req.status === 'approved' && "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+                                                            req.status === 'rejected' && "bg-destructive/10 text-destructive border-destructive/30",
+                                                            req.status === 'cancelled' && "bg-muted text-muted-foreground border-border"
+                                                        )}
+                                                    >
+                                                        {req.status === 'pending' ? "รออนุมัติ (Pending)"
+                                                            : req.status === 'approved' ? "อนุมัติแล้ว (Approved)"
+                                                            : req.status === 'rejected' ? "ปฏิเสธ (Rejected)"
+                                                            : "ยกเลิก (Cancelled)"}
+                                                    </Badge>
+                                                    {req.reject_reason && (
+                                                        <p className="text-[10px] text-destructive mt-0.5 max-w-[150px] truncate" title={req.reject_reason}>
+                                                            เหตุผล: {req.reject_reason}
+                                                        </p>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {req.status === 'pending' ? (
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="default"
+                                                                disabled={isPending}
+                                                                onClick={() => handleApproveStatusRequest(req.tournament_id)}
+                                                                className="h-7 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                                                            >
+                                                                <Check className="size-3.5 mr-1" />
+                                                                อนุมัติ
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                disabled={isPending}
+                                                                onClick={() => {
+                                                                    setSelectedRequestForReject(req);
+                                                                    setAdminRejectReason("");
+                                                                    setRejectDialogOpen(true);
+                                                                }}
+                                                                className="h-7 px-2 text-[11px] text-destructive border-destructive/30 hover:bg-destructive/10"
+                                                            >
+                                                                <X className="size-3.5 mr-1" />
+                                                                ปฏิเสธ
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[11px] text-muted-foreground">-</span>
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -1101,6 +1302,58 @@ export function AdminClient({ initialPayments, initialUsers, initialMasterPlayer
                     </CardContent>
                 </Card>
             )}
+
+            {/* Reject Status Request Dialog */}
+            <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+                <AlertDialogContent className="rounded-sm">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="p-2 lg:p-4 border-b">
+                            <Header level={4} className="text-destructive">
+                                ปฏิเสธคำขอเปลี่ยนสถานะการแข่งขัน
+                            </Header>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="p-2 lg:p-4 text-xs text-foreground/80 space-y-3">
+                            <p>
+                                คุณกำลังจะปฏิเสธคำขอเปลี่ยนสถานะของทัวร์นาเมนต์:{" "}
+                                <span className="font-bold text-foreground">
+                                    {selectedRequestForReject?.tournament_name}
+                                </span>
+                            </p>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-foreground">
+                                    ระบุเหตุผลในการปฏิเสธคำขอ (จะแสดงให้ผู้จัดการแข่งขันเห็น):
+                                </label>
+                                <Input
+                                    value={adminRejectReason}
+                                    onChange={(e) => setAdminRejectReason(e.target.value)}
+                                    placeholder="เช่น ไม่อนุญาตเนื่องจากการแข่งขันจบสิ้นสมบูรณ์แล้ว"
+                                    className="text-xs"
+                                />
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="p-2 lg:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setRejectDialogOpen(false);
+                                setSelectedRequestForReject(null);
+                            }}
+                            className="mt-0"
+                            disabled={isPending}
+                        >
+                            ยกเลิก
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleRejectStatusRequest}
+                            disabled={isPending}
+                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold"
+                        >
+                            {isPending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+                            ยืนยันปฏิเสธ
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

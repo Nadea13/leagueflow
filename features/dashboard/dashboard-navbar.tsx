@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
@@ -49,6 +49,8 @@ export function DashboardNavbar({
                         <Link
                             key={item.href}
                             href={item.href}
+                            target={item.openInNewTab ? "_blank" : undefined}
+                            rel={item.openInNewTab ? "noopener noreferrer" : undefined}
                             onClick={(e) => {
                                 if (item.href === "/dashboard/tournaments" && !isOrganizer) {
                                     e.preventDefault();

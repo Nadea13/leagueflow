@@ -38,7 +38,6 @@ const eslintConfig = defineConfig([
     "scratch/**",
     "scratch-*",
     "scripts/**",
-    "supabase/**",
     "lint_*.json",
   ]),
 ]);

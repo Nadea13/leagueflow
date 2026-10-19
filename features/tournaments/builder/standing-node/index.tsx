@@ -3,7 +3,7 @@
 import React, { memo, useEffect, useState } from "react";
 import { NodeProps, Node } from "@xyflow/react";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { SportType } from "@/types";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { FootballStandingNode, StandingNodeData } from "./football-standing-node";
@@ -14,7 +14,6 @@ export const StandingNode = memo((props: NodeProps<Node<StandingNodeData>>) => {
     const tournamentId = params.id as string;
     const storeSport = useBracketStore((state) => state.sport);
     const activeCategoryId = useBracketStore((state) => state.activeCategoryId);
-    const supabase = React.useMemo(() => createClient(), []);
 
     const [fetchedSport, setFetchedSport] = useState<SportType | null>(null);
 
@@ -25,31 +24,17 @@ export const StandingNode = memo((props: NodeProps<Node<StandingNodeData>>) => {
 
         let isMounted = true;
         async function fetchSport() {
-            if (tournamentId) {
-                const { data: tData } = await supabase
-                    .from('tournaments')
-                    .select('sport')
-                    .eq('id', tournamentId)
-                    .maybeSingle();
+            const targetId = tournamentId || activeCategoryId;
+            if (!targetId) return;
 
-                if (isMounted && tData?.sport) {
-                    setFetchedSport(tData.sport as SportType);
-                    return;
+            try {
+                const data = await ApiClient.fetch<{ tournament?: { sport?: string }; sport?: string }>(`/tournaments/${targetId}`);
+                const s = data?.tournament?.sport || data?.sport;
+                if (isMounted && s) {
+                    setFetchedSport(s as SportType);
                 }
-            }
-
-            const catId = activeCategoryId || tournamentId;
-            if (catId) {
-                const { data: cData } = await supabase
-                    .from('tournament_categories')
-                    .select('tournament_id, tournament:tournaments(sport)')
-                    .eq('id', catId)
-                    .maybeSingle();
-
-                const catSport = (cData?.tournament as unknown as { sport?: string } | null)?.sport;
-                if (isMounted && catSport) {
-                    setFetchedSport(catSport as SportType);
-                }
+            } catch {
+                // Ignore error
             }
         }
 
@@ -57,7 +42,7 @@ export const StandingNode = memo((props: NodeProps<Node<StandingNodeData>>) => {
         return () => {
             isMounted = false;
         };
-    }, [tournamentId, activeCategoryId, storeSport, props.data?.sport, supabase]);
+    }, [tournamentId, activeCategoryId, storeSport, props.data?.sport]);
 
     if (sport === 'volleyball') {
         return <VolleyballStandingNode {...props} />;

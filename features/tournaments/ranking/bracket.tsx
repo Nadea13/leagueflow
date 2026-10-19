@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { BracketCanvasData, Match } from "@/types/index";
+import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
 const getScore = (score: number | { total?: number } | null | undefined): number | null => {
@@ -42,7 +43,13 @@ interface BracketProps {
     isPublic?: boolean;
 }
 
-function CanvasBracket({ canvasData }: { canvasData: BracketCanvasData }) {
+function CanvasBracket({ canvasData, matches }: { canvasData: BracketCanvasData; matches?: Match[] }) {
+    useEffect(() => {
+        if (matches && matches.length > 0) {
+            useBracketStore.getState().setMatches(matches);
+        }
+    }, [matches]);
+
     if (canvasData.nodes.length === 0) {
         return null;
     }
@@ -199,7 +206,7 @@ export function Bracket({ matches, canvasData, isPublic = false }: BracketProps)
     return (
         <ReactFlowProvider>
             {hasCanvasData && canvasData ? (
-                <CanvasBracket canvasData={canvasData} />
+                <CanvasBracket canvasData={canvasData} matches={matches} />
             ) : (
                 <LegacyBracket matches={matches} isPublic={isPublic} />
             )}

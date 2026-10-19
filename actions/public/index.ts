@@ -93,3 +93,17 @@ export async function getPublicMatches() {
 export async function getPublicTournamentMatches(_tournamentId: string) {
     return [];
 }
+
+export async function getPublicSports(): Promise<{ id: string; sport_name: string }[]> {
+    try {
+        const resp = await ApiClient.fetch<any>('/sports');
+        const sports = Array.isArray(resp) ? resp : (resp?.data || []);
+        return sports.map((s: any) => ({
+            id: String(s.id),
+            sport_name: s.sport_name || s.name || "",
+        }));
+    } catch (err) {
+        console.error("Error fetching sports from Go backend:", err);
+        return [];
+    }
+}

@@ -1,14 +1,11 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import type { SupabaseClient } from "@/lib/supabase/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ActionResponse, SportType, Match, MatchStatus } from "@/types/index";
+import { ActionResponse, SportType, MatchStatus, TournamentStatus, TournamentStatusRequest } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { validateTournamentAccess } from "@/lib/security";
 import { validateUploadedFile } from "@/lib/file-validation";
-import { initTournamentStructure } from "@/lib/fixture-utils";
 import { uploadToR2 } from "@/lib/r2";
 import { getServerSession } from "@/lib/auth-server";
 import { ApiClient } from "@/lib/api-client";
@@ -162,19 +159,21 @@ export async function addTeam(
         }
 
         const regData = await regRes.json().catch(() => ({}));
-        let ttId = regData?.id;
+        let ttId = regData?.id || regData?.data?.id || regData?.tournament_team?.id;
         if (!ttId && createdTeam?.id) {
-            const adminSupabase = createAdminClient();
-            const { data: latestTT } = await adminSupabase
-                .from("tournament_teams")
-                .select("id")
-                .eq("tournament_id", tournamentId)
-                .eq("team_id", createdTeam.id)
-                .order("created_at", { ascending: false })
-                .limit(1)
-                .maybeSingle();
-            if (latestTT) {
-                ttId = latestTT.id;
+            try {
+                const ttRes = await fetch(`${apiUrl}/tournaments/${tournamentId}/teams`, {
+                    headers: { Authorization: `Bearer ${session.token}` },
+                    cache: 'no-store'
+                });
+                if (ttRes.ok) {
+                    const listData = await ttRes.json();
+                    const teamsList = Array.isArray(listData) ? listData : (listData.data || listData.teams || []);
+                    const matched = teamsList.find((t: any) => t.team_id === createdTeam.id || t.id === createdTeam.id);
+                    if (matched) ttId = matched.id;
+                }
+            } catch (err) {
+                console.warn("[addTeam] Fallback team lookup error:", err);
             }
         }
 
@@ -216,8 +215,11 @@ export async function updateTeam(
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
-    
-    const supabase = await createClient();
+
+    const session = await getServerSession();
+    if (!session?.token) return { success: false, error: "Authentication required" };
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const contact_name = formData.get("contact_name") as string;
@@ -228,17 +230,6 @@ export async function updateTeam(
 
     let logo_url = existingLogoUrl;
 
-    // Get team_id from tournament_teams
-    const { data: registration } = await supabase
-        .from("tournament_teams")
-        .select("team_id")
-        .eq("id", teamId)
-        .single();
-
-    if (!registration || !registration.team_id) {
-        return { success: false, error: "Team registration not found" };
-    }
-
     // Handle File Upload
     if (logoFile && logoFile.size > 0) {
         const fileCheck = validateUploadedFile(logoFile);
@@ -246,7 +237,7 @@ export async function updateTeam(
 
         const fileExt = logoFile.name.split('.').pop() || 'png';
         const fileName = `logo-${Date.now()}.${fileExt}`;
-        const filePath = `teams/${registration.team_id}/${fileName}`;
+        const filePath = `teams/${teamId}/${fileName}`;
 
         const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
         if (!uploadRes.success || !uploadRes.url) {
@@ -256,39 +247,35 @@ export async function updateTeam(
         logo_url = uploadRes.url;
     }
 
-
-    const updateData: Record<string, string | null> = {
+    const updateData: Record<string, unknown> = {
         name,
         description: description || null,
-        logo_img: logo_url || null
+        logo_url: logo_url || null
     };
     if (contact_name) updateData.contact_name = contact_name;
     if (contact_phone) updateData.contact_phone = contact_phone;
     if (contact_email !== undefined) updateData.contact_email = contact_email ? contact_email.trim() : null;
 
-    const { error } = await supabase
-        .from("teams")
-        .update(updateData)
-        .eq("id", registration.team_id);
+    try {
+        const res = await fetch(`${apiUrl}/teams/${teamId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify(updateData)
+        });
 
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    // Also update tournament_teams contact info if present
-    const ttUpdate: Record<string, string | null> = {};
-    if (contact_name) ttUpdate.contact_name = contact_name;
-    if (contact_phone) ttUpdate.contact_phone = contact_phone;
-    if (contact_email !== undefined) ttUpdate.contact_email = contact_email ? contact_email.trim() : null;
-    if (Object.keys(ttUpdate).length > 0) {
-        await supabase
-            .from("tournament_teams")
-            .update(ttUpdate)
-            .eq("id", teamId);
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update team" };
+        }
+    } catch (e: any) {
+        return { success: false, error: e?.message || "Failed to update team" };
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_TEAM', 'team', registration.team_id, { name, tournament_id: tournamentId });
+    await logActivity('UPDATE_TEAM', 'team', teamId, { name, tournament_id: tournamentId });
     return { success: true };
 }
 
@@ -297,53 +284,25 @@ export async function deleteTeam(teamId: string, tournamentId: string): Promise<
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
     
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    const session = await getServerSession();
+    if (!session?.token) return { success: false, error: "Authentication required" };
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
-    // Fetch the tournament_team to get its global team_id (if any)
-    const { data: team } = await supabase
-        .from("tournament_teams")
-        .select("team_id")
-        .eq("id", teamId)
-        .single();
-
-    const now = new Date().toISOString();
-
-    // 1. Soft-delete the tournament_team
-    const { error: ttError } = await adminSupabase
-        .from("tournament_teams")
-        .update({ deleted_at: now })
-        .eq("id", teamId);
-
-    if (ttError) {
-        return { success: false, error: ttError.message };
-    }
-
-    const globalTeamId = team?.team_id || teamId;
-
-    // Fetch player_ids from player_sports
-    const { data: psRecords } = await adminSupabase
-        .from("player_sports")
-        .select("player_id")
-        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
-
-    // 2. Soft-delete player_sports
-    await adminSupabase
-        .from("player_sports")
-        .update({ deleted_at: now })
-        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
-
-    // 3. Soft-delete players
-    if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r: { player_id: string }) => r.player_id);
-        await adminSupabase
-            .from("players")
-            .update({ deleted_at: now })
-            .in("id", playerIds);
+    try {
+        const res = await fetch(`${apiUrl}/teams/${teamId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${session.token}` }
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to delete team" };
+        }
+    } catch (e: any) {
+        return { success: false, error: e?.message || "Failed to delete team" };
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('DELETE_TEAM', 'team', globalTeamId, { tournament_id: tournamentId });
+    await logActivity('DELETE_TEAM', 'team', teamId, { tournament_id: tournamentId });
     return { success: true };
 }
 
@@ -385,6 +344,12 @@ export async function updateTournament(
             if (formData.has("name")) updateData.name = formData.get("name") as string;
             if (formData.has("status")) {
                 const newStatus = formData.get("status") as string;
+                if ((currentTour?.status === 'completed' || currentTour?.status === 'cancelled') && newStatus !== currentTour?.status) {
+                    return {
+                        success: false,
+                        error: "Tournament status is locked because it is completed or cancelled. Please use the Danger Zone to request a status change."
+                    };
+                }
                 updateData.status = newStatus;
                 if (newStatus === 'registration_open') {
                     currentSettings.is_registration_open = true;
@@ -507,6 +472,238 @@ export async function updateTournament(
     } catch (error) {
         console.error("Update tournament error:", error);
         return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+export async function updateTournamentStatus(
+    tournamentId: string,
+    status: TournamentStatus,
+    options?: {
+        reason?: string;
+        unlockManual?: boolean;
+    }
+): Promise<ActionResponse> {
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    try {
+        const session = await getServerSession();
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        if (session?.token) {
+            headers['Authorization'] = `Bearer ${session.token}`;
+        }
+
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}/status`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ status }),
+        });
+
+        if (!res.ok) {
+            // Fallback to PUT /tournaments/${tournamentId}
+            const fallbackRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ id: tournamentId, status }),
+            });
+            if (!fallbackRes.ok) {
+                const errData = await fallbackRes.json().catch(() => ({}));
+                return { success: false, error: errData.error || `Failed to update tournament status: ${fallbackRes.status}` };
+            }
+        }
+
+        // If unlockManual or reason provided, or if completing/cancelling, update settings accordingly
+        try {
+            const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+            if (tourRes.ok) {
+                const tourData = await tourRes.json();
+                const currentSettings = (tourData.tournament?.settings as Record<string, any>) || {};
+                let shouldUpdateSettings = false;
+
+                if (options?.unlockManual) {
+                    currentSettings.status_unlocked = true;
+                    if (options.reason) currentSettings.status_unlock_reason = options.reason;
+                    currentSettings.status_unlocked_at = new Date().toISOString();
+                    shouldUpdateSettings = true;
+                } else if (status === 'completed' || status === 'cancelled') {
+                    if (currentSettings.status_unlocked) {
+                        currentSettings.status_unlocked = false;
+                        shouldUpdateSettings = true;
+                    }
+                }
+
+                if (shouldUpdateSettings) {
+                    await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({
+                            id: tournamentId,
+                            settings: currentSettings,
+                        }),
+                    });
+                }
+            }
+        } catch (settingsErr) {
+            console.error("Error updating tournament settings for status unlock:", settingsErr);
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        await logActivity('UPDATE_TOURNAMENT_STATUS', 'tournament', tournamentId, { status, ...options });
+        return { success: true };
+    } catch (err) {
+        console.error("Error updating tournament status:", err);
+        return { success: false, error: err instanceof Error ? err.message : "Failed to update status" };
+    }
+}
+
+export async function requestTournamentStatusChange(
+    tournamentId: string,
+    targetStatus: TournamentStatus,
+    reason?: string
+): Promise<ActionResponse> {
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const access = await validateTournamentAccess(tournamentId, 'editor');
+        if (!access.success) return { success: false, error: access.error };
+
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (session.token) headers['Authorization'] = `Bearer ${session.token}`;
+
+        // Call Go backend status request endpoint to insert into dedicated tournament_status_requests table
+        let goBackendSuccess = false;
+        try {
+            const reqRes = await fetch(`${apiUrl}/tournaments/${tournamentId}/status-request`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    target_status: targetStatus,
+                    reason: reason?.trim() || ""
+                })
+            });
+            if (reqRes.ok) {
+                goBackendSuccess = true;
+            }
+        } catch (backendErr) {
+            console.warn("[requestTournamentStatusChange] Go backend endpoint error:", backendErr);
+        }
+
+        // Fetch tournament & sync settings
+        const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store', headers });
+        if (!tourRes.ok) return { success: false, error: "Tournament not found" };
+        const tourData = await tourRes.json();
+        const currentTour = tourData.tournament;
+        const currentSettings = (currentTour?.settings as Record<string, any>) || {};
+
+        const statusRequest: TournamentStatusRequest = {
+            id: crypto.randomUUID(),
+            tournament_id: tournamentId,
+            tournament_name: currentTour.name,
+            current_status: currentTour.status,
+            target_status: targetStatus,
+            reason: reason?.trim() || "",
+            requested_by: session.user.id,
+            requested_by_email: session.user.email,
+            requested_by_name: (session.user as any).user_metadata?.full_name || (session.user as any).name || session.user.email,
+            requested_at: new Date().toISOString(),
+            status: 'pending'
+        };
+
+        currentSettings.status_request = statusRequest;
+
+        const updateRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+                id: tournamentId,
+                settings: currentSettings
+            })
+        });
+
+        if (!updateRes.ok && !goBackendSuccess) {
+            return { success: false, error: "Failed to submit status change request" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/admin`);
+        await logActivity('REQUEST_TOURNAMENT_STATUS_CHANGE', 'tournament', tournamentId, { statusRequest });
+
+        return { success: true };
+    } catch (e) {
+        console.error("Error submitting tournament status change request:", e);
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
+    }
+}
+
+export async function cancelTournamentStatusChangeRequest(tournamentId: string): Promise<ActionResponse> {
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    try {
+        const session = await getServerSession();
+        if (!session?.user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const access = await validateTournamentAccess(tournamentId, 'editor');
+        if (!access.success) return { success: false, error: access.error };
+
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (session.token) headers['Authorization'] = `Bearer ${session.token}`;
+
+        // Call Go backend status request endpoint to cancel in dedicated tournament_status_requests table
+        try {
+            await fetch(`${apiUrl}/tournaments/${tournamentId}/status-request`, {
+                method: 'DELETE',
+                headers
+            });
+        } catch (backendErr) {
+            console.warn("[cancelTournamentStatusChangeRequest] Go backend endpoint error:", backendErr);
+        }
+
+        // Fetch tournament
+        const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store', headers });
+        if (!tourRes.ok) return { success: false, error: "Tournament not found" };
+        const tourData = await tourRes.json();
+        const currentTour = tourData.tournament;
+        const currentSettings = (currentTour?.settings as Record<string, any>) || {};
+
+        if (currentSettings.status_request) {
+            currentSettings.status_request = {
+                ...currentSettings.status_request,
+                status: 'cancelled'
+            };
+        }
+
+        const updateRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+                id: tournamentId,
+                settings: currentSettings
+            })
+        });
+
+        if (!updateRes.ok) {
+            return { success: false, error: "Failed to cancel status change request" };
+        }
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/tournaments/${tournamentId}`);
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+        revalidatePath(`/admin`);
+        await logActivity('CANCEL_TOURNAMENT_STATUS_CHANGE_REQUEST', 'tournament', tournamentId);
+
+        return { success: true };
+    } catch (e) {
+        console.error("Error cancelling tournament status change request:", e);
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
     }
 }
 
@@ -927,288 +1124,6 @@ export async function createTournamentCategory(
     }
 }
 
-const getScoreTotal = (scoreObj: unknown): number => {
-    if (!scoreObj) return 0;
-    if (typeof scoreObj === 'object' && scoreObj !== null) {
-        const total = (scoreObj as Record<string, unknown>).total;
-        const val = Number(total);
-        return isNaN(val) ? 0 : val;
-    }
-    const val = Number(scoreObj);
-    return isNaN(val) ? 0 : val;
-};
-
-async function getLastRound(tournamentCategoryId: string, supabase: SupabaseClient): Promise<number> {
-    const { data } = await supabase
-        .from('matches')
-        .select('round')
-        .eq('tournament_category_id', tournamentCategoryId)
-        .order('round', { ascending: false })
-        .limit(1)
-        .single();
-    return data?.round || 0;
-}
-
-export async function generateFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    // Check if fixtures already exist and if we can regenerate
-    const { data: existingMatches } = await supabase
-        .from('matches')
-        .select('id, home_score, away_score, status')
-        .eq('tournament_category_id', tournamentCategoryId);
-
-    const hasFixtures = existingMatches && existingMatches.length > 0;
-    if (hasFixtures) {
-        // Allow regeneration for all formats if no results are recorded
-        const hasScores = existingMatches.some(m => {
-            if (m.status === 'finished') return true;
-            const homeTotal = getScoreTotal(m.home_score);
-            const awayTotal = getScoreTotal(m.away_score);
-            return homeTotal > 0 || awayTotal > 0;
-        });
-
-        if (hasScores) {
-            return { success: false, error: "Cannot regenerate: Some matches already have results recorded." };
-        }
-
-        // Delete existing matches for regeneration
-        const { error: deleteError } = await supabase
-            .from('matches')
-            .delete()
-            .eq('tournament_category_id', tournamentCategoryId);
-
-        if (deleteError) {
-            console.error("Delete error during regeneration:", deleteError);
-            return { success: false, error: "Failed to clear existing fixtures." };
-        }
-    }
-
-    // Generate fixtures using utility
-    const result = await initTournamentStructure(tournamentId, supabase);
-
-    if (result.success) {
-        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    }
-
-    return result;
-}
-
-export async function generateKnockoutRound(
-    tournamentId: string,
-    stage: string,
-    matchCount: number
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    const lastRound = await getLastRound(tournamentCategoryId, supabase);
-    const startRound = lastRound + 1;
-
-    const matches = Array(matchCount).fill(0).map((_, i) => ({
-        tournament_category_id: tournamentCategoryId,
-        home_team_id: null,
-        away_team_id: null,
-        round: startRound,
-        stage: stage,
-        status: 'scheduled',
-        is_manual: true,
-        match_index: i + 1,
-        home_score: { total: 0 },
-        away_score: { total: 0 }
-    }));
-
-    const { error } = await supabase.from('matches').insert(matches);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
-export async function updateMatchScore(
-    matchId: string,
-    homeScore: number,
-    awayScore: number,
-    tournamentId: string
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    // 1. Update Scores & Fetch Updated Record
-    const { data: updatedMatch, error } = await supabase
-        .from("matches")
-        .update({
-            home_score: { total: homeScore },
-            away_score: { total: awayScore },
-        })
-        .eq("id", matchId)
-        .select('*')
-        .single();
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    // 2. Auto-Advance Winner (Knockout Only)
-    if (updatedMatch && updatedMatch.stage !== 'league' && updatedMatch.stage !== 'group') {
-        let winnerId = null;
-
-        const homeTotal = getScoreTotal(updatedMatch.home_score);
-        const awayTotal = getScoreTotal(updatedMatch.away_score);
-
-        if (homeTotal !== awayTotal) {
-            winnerId = homeTotal > awayTotal ? updatedMatch.home_team_id : updatedMatch.away_team_id;
-        }
-
-        if (winnerId) {
-            // Update status (no winner_id column in matches)
-            const { error: winnerError } = await supabase
-                .from('matches')
-                .update({ status: 'finished' })
-                .eq('id', matchId);
-
-            if (winnerError) {
-                console.error("Error saving winner status:", winnerError);
-            } else {
-                // Propagate to next round
-                await advanceWinner(updatedMatch, winnerId, supabase);
-            }
-        }
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_MATCH_SCORE', 'match', matchId, { home_score: homeScore, away_score: awayScore });
-    return { success: true };
-}
-
-export async function resetFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) return { success: false, error: "No category found." };
-
-    // Delete all matches
-    const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("tournament_category_id", category.id);
-
-    if (matchError) {
-        return { success: false, error: "Failed to delete matches: " + matchError.message };
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
-export async function createMatch(
-    tournamentId: string,
-    homeTeamId: string,
-    awayTeamId: string,
-    round: number,
-    stage: string = 'league',
-    match_date?: string,
-    match_time?: string,
-): Promise<ActionResponse> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) return { success: false, error: "No tournament category setup found" };
-
-    let scheduled_at: string | null = null;
-    if (match_date) {
-        const timePart = match_time || "00:00:00";
-        scheduled_at = new Date(`${match_date}T${timePart}`).toISOString();
-    }
-
-    let matchStage: 'group' | 'knockout' | 'final' = 'group';
-    if (stage === 'league' || stage === 'group') {
-        matchStage = 'group';
-    } else if (stage === 'final' || stage === 'semi_final' || stage === 'quarter_final' || stage === 'round_of_16' || stage === 'round_of_32' || stage === 'round_of_64') {
-        matchStage = stage === 'final' ? 'final' : 'knockout';
-    } else {
-        matchStage = 'knockout';
-    }
-
-    const { error } = await supabase.from('matches').insert({
-        tournament_category_id: category.id,
-        home_team_id: homeTeamId || null,
-        away_team_id: awayTeamId || null,
-        round,
-        stage: matchStage,
-        is_manual: true,
-        status: 'scheduled',
-        home_score: { total: 0 },
-        away_score: { total: 0 },
-        scheduled_at
-    });
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
 export async function updateMatch(
     matchId: string,
     data: {
@@ -1330,16 +1245,8 @@ export async function deleteMatch(matchId: string, tournamentId: string): Promis
         revalidatePath(`/dashboard/tournaments/${tournamentId}`);
         return { success: true };
     } catch (err: any) {
-        console.error("Error soft deleting match via Go API:", err);
-        // Fallback to Supabase soft delete
-        try {
-            const supabase = await createClient();
-            await supabase.from('matches').update({ deleted_at: new Date().toISOString() }).eq('id', matchId);
-            revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-            return { success: true };
-        } catch (fbErr: any) {
-            return { success: false, error: fbErr?.message || err?.message || "Failed to delete match" };
-        }
+        console.error("Error deleting match via Go API:", err);
+        return { success: false, error: err?.message || "Failed to delete match" };
     }
 }
 
@@ -1347,293 +1254,9 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
 
-    const supabase = await createClient();
-
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) return { success: false, error: "No category found." };
-    const tournamentCategoryId = category.id;
-
-    // 1. Fetch all matches and teams
-    const { data: matches } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('tournament_category_id', tournamentCategoryId);
-
-    const { data: teams } = await supabase
-        .from('tournament_teams')
-        .select('*')
-        .eq('tournament_category_id', tournamentCategoryId)
-        .is("deleted_at", null);
-
-    if (!matches || matches.length === 0) {
-        return { success: false, error: "No matches found." };
-    }
-
-    if (!teams) {
-        return { success: false, error: "No teams found." };
-    }
-
-    const stageOrder = ['group', 'round_of_64', 'round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final'];
-
-    if (matches.some(m => m.stage === 'league')) {
-        return { success: false, error: "League format does not support automatic stage advancement." };
-    }
-
-    let currentStage = 'group';
-
-    for (const stage of stageOrder) {
-        const stageMatches = matches.filter(m => m.stage === stage);
-        if (stageMatches.length === 0) continue;
-
-        const hasTeams = stageMatches.some(m => m.home_team_id || m.away_team_id);
-        const allFinished = stageMatches.every(m => m.status === 'finished');
-
-        if (!hasTeams) {
-            break;
-        }
-
-        currentStage = stage;
-
-        if (!allFinished) {
-            break;
-        }
-    }
-
-    const currentStageMatches = matches.filter(m => m.stage === currentStage);
-    const allFinished = currentStageMatches.every(m => m.status === 'finished');
-
-    if (!allFinished) {
-        return { success: false, error: `Not all matches in ${currentStage} are finished.` };
-    }
-
-    const nextMatches: Partial<Match>[] = [];
-
-    // Since group_name is removed, we only run knockout stage progression
-    if (currentStage === 'group') {
-        return { success: false, error: "Group advancement is not supported with the current schema." };
-    } else {
-        let nextStage = '';
-        if (currentStage === 'round_of_16') nextStage = 'quarter_final';
-        else if (currentStage === 'quarter_final') nextStage = 'semi_final';
-        else if (currentStage === 'semi_final') nextStage = 'final';
-        else if (currentStage === 'final') return { success: false, error: "Tournament is already finished." };
-
-        currentStageMatches.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-        const validWinners = currentStageMatches.map(m => {
-            const homeTotal = getScoreTotal(m.home_score);
-            const awayTotal = getScoreTotal(m.away_score);
-            if (homeTotal > awayTotal) return m.home_team_id;
-            if (awayTotal > homeTotal) return m.away_team_id;
-            return null;
-        }).filter(Boolean) as string[];
-
-        if (validWinners.length < 2) {
-            return { success: false, error: "Not enough winners to create next round matches." };
-        }
-
-        const lastRound = await getLastRound(tournamentCategoryId, supabase);
-        const startRound = lastRound + 1;
-
-        if (nextStage === 'final') {
-            const { data: finalMatchPlaceholder } = await supabase
-                .from('matches')
-                .select('*')
-                .eq('tournament_category_id', tournamentCategoryId)
-                .eq('stage', 'final')
-                .single();
-
-            if (finalMatchPlaceholder && validWinners.length >= 2) {
-                await supabase.from('matches').update({
-                    home_team_id: validWinners[0],
-                    away_team_id: validWinners[1],
-                    status: 'scheduled'
-                }).eq('id', finalMatchPlaceholder.id);
-
-                revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-                return { success: true };
-            }
-        }
-
-        for (let i = 0; i < validWinners.length; i += 2) {
-            if (i + 1 < validWinners.length) {
-                nextMatches.push({
-                    tournament_category_id: tournamentCategoryId,
-                    home_team_id: validWinners[i],
-                    away_team_id: validWinners[i + 1],
-                    round: startRound,
-                    stage: nextStage as Match['stage'],
-                    status: 'scheduled',
-                    is_manual: false,
-                    home_score: { total: 0 },
-                    away_score: { total: 0 }
-                });
-            }
-        }
-    }
-
-    if (nextMatches.length > 0) {
-        const { error } = await supabase.from('matches').insert(nextMatches);
-        if (error) return { success: false, error: error.message };
-
-        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-        return { success: true };
-    }
-
-    return { success: false, error: "Could not generate next round matches." };
-}
-
-export async function addGoal(
-    matchId: string,
-    teamId: string,
-    playerName: string,
-    tournamentId: string,
-    goalTime?: string | number
-): Promise<ActionResponse<{ id: string }>> {
-    const supabase = await createClient();
-
-    if (!playerName) return { success: false, error: "Player Name required" };
-
-    const { data: newEvent, error: insertError } = await supabase.from('match_events').insert({
-        match_id: matchId,
-        team_id: teamId,
-        player_id: null,
-        event_type: 'goal',
-        minute: goalTime ? Number(goalTime) : null,
-        extra_info: { player_name: playerName }
-    }).select('id').single();
-
-    if (insertError) return { success: false, error: insertError.message };
-
-    const { data: match, error: matchError } = await supabase
-        .from('matches')
-        .select('home_team_id, away_team_id')
-        .eq('id', matchId)
-        .single();
-
-    if (matchError || !match) {
-        return { success: false, error: "Match not found for score update" };
-    }
-
-    const { count: homeCount } = await supabase
-        .from('match_events')
-        .select('*', { count: 'exact', head: true })
-        .eq('match_id', matchId)
-        .eq('team_id', match.home_team_id)
-        .eq('event_type', 'goal')
-        .is('deleted_at', null);
-
-    const { count: awayCount } = await supabase
-        .from('match_events')
-        .select('*', { count: 'exact', head: true })
-        .eq('match_id', matchId)
-        .eq('team_id', match.away_team_id)
-        .eq('event_type', 'goal')
-        .is('deleted_at', null);
-
-    const { error: updateError } = await supabase
-        .from('matches')
-        .update({
-            home_score: { total: homeCount || 0 },
-            away_score: { total: awayCount || 0 }
-        })
-        .eq('id', matchId);
-
-    if (updateError) return { success: false, error: updateError.message };
-
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    return { success: true, data: { id: newEvent?.id || '' } };
-}
-
-export async function deleteGoal(goalId: string, tournamentId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
-
-    const { data: event } = await supabase
-        .from('match_events')
-        .select('match_id')
-        .eq('id', goalId)
-        .single();
-
-    if (!event) return { success: false, error: "Goal event not found" };
-    const matchId = event.match_id;
-
-    const { error: deleteError } = await supabase.from('match_events').delete().eq('id', goalId);
-    if (deleteError) return { success: false, error: deleteError.message };
-
-    const { data: match } = await supabase
-        .from('matches')
-        .select('home_team_id, away_team_id')
-        .eq('id', matchId)
-        .single();
-
-    if (match) {
-        const { count: homeCount } = await supabase
-            .from('match_events')
-            .select('*', { count: 'exact', head: true })
-            .eq('match_id', matchId)
-            .eq('team_id', match.home_team_id)
-            .eq('event_type', 'goal')
-            .is('deleted_at', null);
-
-        const { count: awayCount } = await supabase
-            .from('match_events')
-            .select('*', { count: 'exact', head: true })
-            .eq('match_id', matchId)
-            .eq('team_id', match.away_team_id)
-            .eq('event_type', 'goal')
-            .is('deleted_at', null);
-
-        await supabase
-            .from('matches')
-            .update({
-                home_score: { total: homeCount || 0 },
-                away_score: { total: awayCount || 0 }
-            })
-            .eq('id', matchId);
-    }
-
-    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
     return { success: true };
-}
-
-async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseClient) {
-    if (match.match_index === null || match.match_index === undefined) return;
-
-    const { data: currentRoundMatches } = await supabase
-        .from('matches')
-        .select('id, match_index')
-        .eq('tournament_category_id', match.tournament_category_id)
-        .eq('round', match.round)
-        .order('match_index', { ascending: true });
-
-    if (!currentRoundMatches || currentRoundMatches.length === 0) return;
-
-    const indexInRound = currentRoundMatches.findIndex((m: { id: string }) => m.id === match.id);
-    if (indexInRound === -1) return;
-
-    const nextRound = match.round + 1;
-    const nextMatchPosition = Math.floor(indexInRound / 2);
-    const isHomePos = indexInRound % 2 === 0;
-
-    const { data: nextRoundMatches } = await supabase
-        .from('matches')
-        .select('*')
-        .eq('tournament_category_id', match.tournament_category_id)
-        .eq('round', nextRound)
-        .order('match_index', { ascending: true });
-
-    if (nextRoundMatches && nextRoundMatches[nextMatchPosition]) {
-        const nextMatch = nextRoundMatches[nextMatchPosition];
-        const updateData = isHomePos ? { home_team_id: winnerId } : { away_team_id: winnerId };
-
-        await supabase.from('matches').update(updateData).eq('id', nextMatch.id);
-    }
 }
 
 export async function updateTournamentCategory(
@@ -1781,15 +1404,25 @@ export async function updateBroadcastSettings(
         const access = await validateTournamentAccess(tournamentId, 'editor');
         if (!access.success) return { success: false, error: access.error };
 
-        const adminSupabase = createAdminClient();
-        const { error } = await adminSupabase
-            .from("tournaments")
-            .update({ broadcast_settings: settings })
-            .eq("id", tournamentId);
+        const session = await getServerSession();
+        if (!session?.token) return { success: false, error: "Authentication required" };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
-        if (error) {
-            console.error("Update broadcast settings error:", error);
-            return { success: false, error: error.message };
+        const res = await fetch(`${apiUrl}/tournaments/${tournamentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({
+                id: tournamentId,
+                broadcast_settings: settings
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update broadcast settings" };
         }
 
         return { success: true };

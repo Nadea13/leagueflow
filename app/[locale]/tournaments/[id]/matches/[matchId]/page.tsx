@@ -6,6 +6,7 @@ import { ConsolePage as FootballConsolePage } from "@/features/sports/football/c
 import { VolleyballConsolePage } from "@/features/sports/volleyball/console-page";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { PublicFooter } from "@/components/layout/public-footer";
+import { syncCategoryBracket } from "@/actions/tournaments/bracket";
 
 export default async function MatchConsoleReadOnlyPage(props: {
     params: Promise<{ locale: string; id: string; matchId: string }>;
@@ -39,6 +40,20 @@ export default async function MatchConsoleReadOnlyPage(props: {
         categories = resp?.categories || [];
     } catch (e) {
         console.error("Error fetching tournament from Go API:", e);
+    }
+
+    // Auto-resolve team IDs if missing in database for this match node
+    const catId = rawMatch.category_id || rawMatch.tournament_category_id;
+    if ((!rawMatch.home_team_id || !rawMatch.away_team_id) && catId) {
+        try {
+            await syncCategoryBracket(id, catId, true);
+            const refreshed = await ApiClient.fetch<any>(`/matches/${matchId}`);
+            if (refreshed && refreshed.id) {
+                rawMatch = refreshed;
+            }
+        } catch (syncErr) {
+            console.error("Error auto-syncing bracket match teams in public page:", syncErr);
+        }
     }
 
     // 3. Fetch initial events

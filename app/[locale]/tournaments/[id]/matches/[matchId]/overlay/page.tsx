@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense, Children, cloneElement } from "react";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { Match, MatchEvent } from "@/types";
@@ -225,79 +225,59 @@ function BroadcastOverlayContent() {
     const [tournamentLogo, setTournamentLogo] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const supabase = createClient();
-
     // Fetch initial match
     useEffect(() => {
         const fetchTournament = async () => {
-            const { data, error } = await supabase
-                .from("tournaments")
-                .select("name, logo_img")
-                .eq("id", id)
-                .single();
-            if (!error && data) {
-                setTournamentName(data.name);
-                setTournamentLogo(data.logo_img || null);
+            try {
+                const data = await ApiClient.fetch<{ tournament?: { name?: string; logo_img?: string }; name?: string; logo_img?: string }>(`/tournaments/${id}`);
+                const tName = data.tournament?.name || data.name || "";
+                const tLogo = data.tournament?.logo_img || data.logo_img || null;
+                if (tName) setTournamentName(tName);
+                if (tLogo) setTournamentLogo(tLogo);
+            } catch {
+                // Ignore error
             }
         };
         fetchTournament();
 
         const fetchMatch = async () => {
-            const { data, error } = await supabase
-                .from("matches")
-                .select(`
-                    *,
-                    home_team:teams!matches_home_team_id_fkey(id, name, logo_img),
-                    away_team:teams!matches_away_team_id_fkey(id, name, logo_img)
-                `)
-                .eq("id", matchId)
-                .single();
+            try {
+                const data = await ApiClient.fetch<Match>(`/matches/${matchId}`);
+                if (data) {
+                    const homeTeam = data.home_team as unknown as Record<string, unknown>;
+                    const awayTeam = data.away_team as unknown as Record<string, unknown>;
 
-            if (!error && data) {
-                const homeTeam = data.home_team as unknown as Record<string, unknown>;
-                const awayTeam = data.away_team as unknown as Record<string, unknown>;
-
-                const mappedMatch = {
-                    ...data,
-                    home_team: data.home_team ? {
-                        ...data.home_team,
-                        logo_url: (homeTeam?.logo_img as string) || null
-                    } : null,
-                    away_team: data.away_team ? {
-                        ...data.away_team,
-                        logo_url: (awayTeam?.logo_img as string) || null
-                    } : null
-                };
-                setRealMatch(mappedMatch as unknown as Match);
+                    const mappedMatch = {
+                        ...data,
+                        home_team: data.home_team ? {
+                            ...data.home_team,
+                            logo_url: (homeTeam?.logo_url as string) || (homeTeam?.logo_img as string) || null
+                        } : null,
+                        away_team: data.away_team ? {
+                            ...data.away_team,
+                            logo_url: (awayTeam?.logo_url as string) || (awayTeam?.logo_img as string) || null
+                        } : null
+                    };
+                    setRealMatch(mappedMatch as unknown as Match);
+                }
+            } catch {
+                // Ignore error
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchMatch();
 
-        // Subscribe to matches updates using exact same channel pattern as console
-        const channel = supabase
-            .channel(`match-${matchId}`)
-            .on(
-                "postgres_changes",
-                { event: "UPDATE", schema: "public", table: "matches", filter: `id=eq.${matchId}` },
-                (payload) => {
-                    const updated = payload.new as Partial<Match>;
-                    setRealMatch((prev) => (prev ? { ...prev, ...updated } : null));
-                }
-            )
-            .subscribe();
-
-        // Polling fallback to guarantee sync even if realtime websocket fails/disconnects
+        // Polling fallback to guarantee sync
         const pollInterval = setInterval(() => {
             fetchMatch();
         }, 3000);
 
         return () => {
-            supabase.removeChannel(channel);
             clearInterval(pollInterval);
         };
-    }, [matchId, supabase, id]);
+    }, [matchId, id]);
 
     // Match Hooks (using existing application hooks for real-time consistency)
     const { events: realEvents } = useMatchEvents(matchId, id, undefined, true);

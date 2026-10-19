@@ -6,7 +6,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { ListOrdered, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { Match, TournamentTeam } from "@/types";
 
 export interface CalculatedFootballStanding {
@@ -52,7 +52,6 @@ export const FootballStandingNode = memo(({
     const storeTeams = useBracketStore((state) => state.teams);
     const params = useParams();
     const tournamentId = params.id as string;
-    const supabase = React.useMemo(() => createClient(), []);
 
     const [loading, setLoading] = React.useState(true);
     const [standings, setStandings] = React.useState<CalculatedFootballStanding[]>([]);
@@ -137,14 +136,12 @@ export const FootballStandingNode = memo(({
                 }
 
                 const [matchesRes, teamsRes] = await Promise.all([
-                    supabase.from('matches').select('*').eq('tournament_category_id', categoryId).is('deleted_at', null),
-                    supabase.from('tournament_teams').select('*, team:teams(id, name)').eq('tournament_category_id', categoryId).is('deleted_at', null)
+                    ApiClient.fetch<DatabaseMatch[]>(`/tournaments/${tournamentId}/categories/${categoryId}/matches`).catch(() => []),
+                    ApiClient.fetch<DBTeam[]>(`/tournaments/${tournamentId}/teams?category_id=${categoryId}`).catch(() => [])
                 ]);
 
-                if (matchesRes.error || teamsRes.error) throw matchesRes.error || teamsRes.error;
-
-                const dbMatches = (matchesRes.data || []) as DatabaseMatch[];
-                const dbTeams = (teamsRes.data || []) as unknown as DBTeam[];
+                const dbMatches = (matchesRes || []) as DatabaseMatch[];
+                const dbTeams = (teamsRes || []) as unknown as DBTeam[];
 
                 const teamIdToName = new Map<string, string>();
                 dbTeams.forEach((t) => {
@@ -222,7 +219,7 @@ export const FootballStandingNode = memo(({
         }
 
         fetchAndCalculate();
-    }, [tournamentId, teamsJson, id, supabase, updateNodeData, activeCategoryId]);
+    }, [tournamentId, teamsJson, id, updateNodeData, activeCategoryId]);
 
     const showPlayed = data.showPlayed !== false;
     const showWin = data.showWin !== false;

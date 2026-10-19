@@ -54,6 +54,8 @@ interface BracketState {
     teams: TournamentTeam[];
     setTeams: (teams: TournamentTeam[]) => void;
     fetchTeams: (categoryId: string) => Promise<void>;
+    matches: Match[];
+    setMatches: (matches: Match[]) => void;
     activeNodeId: string | null;
     setActiveNodeId: (id: string | null) => void;
     activeCategoryId: string | null;
@@ -80,6 +82,8 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     isDirty: false,
     teams: [],
     setTeams: (teams) => set({ teams }),
+    matches: [],
+    setMatches: (matches) => set({ matches }),
     fetchTeams: async (categoryId: string) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
@@ -238,7 +242,6 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 c.type === 'position' ||
                 c.type === 'remove' ||
                 c.type === 'add' ||
-                c.type === 'dimensions' ||
                 c.type === 'replace'
             );
 

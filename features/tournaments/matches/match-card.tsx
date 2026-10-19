@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/routing";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { useMatchTimer } from "@/hooks/use-match-timer";
-import { createClient } from "@/lib/supabase/client";
+import { useMatchWebSocket } from "@/hooks/use-match-websocket";
 import { MatchScoreBox } from "./score-boxes";
 import {
     AlertDialog,
@@ -81,20 +81,24 @@ export function MatchCard({
         setMatchState(initialMatch);
     }, [initialMatch]);
 
-    // Supabase Realtime Subscription
-    useEffect(() => {
-        const supabase = createClient();
-        const channelId = Math.random().toString(36).substring(7);
-        const channel = supabase
-            .channel(`match-card-${match.id}-${channelId}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload: { new: Match }) => {
-                setMatchState(prev => ({ ...prev, ...payload.new }));
-                // No router.refresh() here to avoid full page reloads on every card update, local state is enough for the card itself
-            })
-            .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
-    }, [match.id]);
+    // Realtime WebSocket Subscription
+    useMatchWebSocket(match.id, {
+        onMatchUpdate: (data) => {
+            if (data?.match) {
+                setMatchState(prev => ({ ...prev, ...data.match }));
+            }
+        },
+        onScoreUpdate: (data) => {
+            if (data) {
+                setMatchState(prev => ({
+                    ...prev,
+                    home_score: data.home_score,
+                    away_score: data.away_score,
+                    status: (data.status as Match["status"]) || prev.status
+                }));
+            }
+        }
+    });
 
     // Local state for auto-save inputs
     const [matchDate, setMatchDate] = useState(match.match_date || "");

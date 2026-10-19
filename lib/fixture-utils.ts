@@ -1,4 +1,5 @@
 import { ActionResponse, Match } from "@/types/index";
+import { ApiClient } from "@/lib/api-client";
 
 const getScoreTotal = (scoreObj: number | { total?: number } | null | undefined): number => {
     if (!scoreObj) return 0;
@@ -9,41 +10,31 @@ const getScoreTotal = (scoreObj: number | { total?: number } | null | undefined)
     return isNaN(val) ? 0 : val;
 };
 
-export async function initTournamentStructure(tournamentId: string, supabase?: any): Promise<ActionResponse> {
-    // 1. Fetch tournament dates and pitches
-    const { data: tournament } = await supabase
-        .from('tournaments')
-        .select('start_date, end_date, number_of_pitches')
-        .eq('id', tournamentId)
-        .single();
+export async function initTournamentStructure(tournamentId: string): Promise<ActionResponse> {
+    try {
+        // 1. Fetch tournament dates and pitches
+        const tourData = await ApiClient.fetch<any>(`/tournaments/${tournamentId}`);
+        const tournament = tourData?.tournament || tourData;
 
-    if (!tournament) {
-        return { success: false, error: "Tournament not found" };
-    }
+        if (!tournament) {
+            return { success: false, error: "Tournament not found" };
+        }
 
-    // 2. Fetch the category (default to the first category setup)
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id, max_teams')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
+        // 2. Fetch the category (default to the first category setup)
+        const categories = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/categories`);
+        const category = Array.isArray(categories) && categories.length > 0 ? categories[0] : null;
 
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
+        if (!category) {
+            return { success: false, error: "No tournament category setup found" };
+        }
 
-    const tournamentCategoryId = category.id;
-    const maxTeams = category.max_teams || 8;
-    const format: string = 'knockout'; // Fallback format since it's removed from tournaments table
-    const advancingTeams = 2;  // Default fallback
+        const tournamentCategoryId = category.id;
+        const maxTeams = category.max_teams || 8;
+        const format: string = 'knockout'; // Fallback format since it's removed from tournaments table
+        const advancingTeams = 2;  // Default fallback
 
-    // 3. Fetch registered teams for this category
-    const { data: teams } = await supabase
-        .from('tournament_teams')
-        .select('id, team_id')
-        .eq('tournament_category_id', tournamentCategoryId)
-        .is('deleted_at', null);
+        // 3. Fetch registered teams for this category
+        const teams = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/teams?category_id=${tournamentCategoryId}`).catch(() => []);
 
     const fixtures: Partial<Match>[] = [];
     const startRound = 1;
@@ -261,14 +252,16 @@ export async function initTournamentStructure(tournamentId: string, supabase?: a
     }
 
     console.log(`Inserting ${fixtures.length} matches for tournament ${tournamentId} / category ${tournamentCategoryId}`);
-    const { error } = await supabase.from('matches').insert(fixtures);
-
-    if (error) {
-        console.error("Fixture generation error:", error);
-        return { success: false, error: "Failed to create matches: " + error.message };
-    }
+    await ApiClient.fetch(`/tournaments/${tournamentId}/categories/${tournamentCategoryId}/sync-matches`, {
+        method: 'POST',
+        body: JSON.stringify({ matches: fixtures })
+    });
 
     return { success: true };
+    } catch (err: any) {
+        console.error("Fixture generation error:", err);
+        return { success: false, error: err?.message || "Failed to create matches" };
+    }
 }
 
 function generateRoundRobinMatches(teamIds: (string | null)[], tournamentCategoryId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {

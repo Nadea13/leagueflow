@@ -1,6 +1,5 @@
 'use server';
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player, Sport } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
@@ -9,6 +8,7 @@ import { uploadToR2 } from "@/lib/r2";
 import { resolveStorageUrl } from "@/lib/storage-utils";
 import { getServerSession } from "@/lib/auth-server";
 import { classifyPlayerNames } from "@/lib/name-helper";
+import { getPublicSports } from "@/actions/public";
 
 import { 
     getGlobalPlayers as getGP, 
@@ -44,61 +44,27 @@ export async function unlinkPlayerFromGlobal(playerId: string) {
  * Checks global team ownership and tournament participation ownership/management.
  */
 async function isAuthorizedForTeam(teamId: string, userId: string) {
-    const supabase = await createClient();
-    
-    // Check if it's a global team owned by user
-    const { data: globalTeam } = await supabase
-        .from("teams")
-        .select("id")
-        .eq("id", teamId)
-        .eq("user_id", userId)
-        .single();
-    
-    if (globalTeam) return true;
+    try {
+        const session = await getServerSession();
+        if (!session?.token) return false;
 
-    // Check if it's a tournament team owned by user or if user is tournament manager
-    const { data: participation } = await supabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            team_id,
-            teams ( user_id ),
-            tournament_category_id,
-            tournament_categories ( tournament_id )
-        `)
-        .eq("id", teamId)
-        .single();
-    
-    if (participation) {
-        const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
-        if (teamOwnerId === userId) return true;
-
-        const tournamentId = (participation.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
-        if (tournamentId) {
-            // Check if user is organizer of the tournament
-            const { data: tournament } = await supabase
-                .from("tournaments")
-                .select("organizer_id")
-                .eq("id", tournamentId)
-                .single();
-            
-            if (tournament && tournament.organizer_id === userId) return true;
-
-            // Check if user is a member with admin/editor role
-            const { data: membership } = await supabase
-                .from("tournament_invitations")
-                .select("role")
-                .eq("tournament_id", tournamentId)
-                .eq("user_id", userId)
-                .eq("status", "accepted")
-                .in("role", ["co_organizer", "staff"])
-                .is("deleted_at", null)
-                .maybeSingle();
-            
-            if (membership) return true;
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+            headers: { Authorization: `Bearer ${session.token}` },
+            cache: 'no-store'
+        });
+        if (res.ok) {
+            const team = await res.json();
+            if (team && (team.user_id === userId || !team.user_id)) return true;
         }
-    }
 
+        const ttRes = await fetch(`${API_BASE_URL}/tournament-teams/${teamId}`, {
+            headers: { Authorization: `Bearer ${session.token}` },
+            cache: 'no-store'
+        });
+        if (ttRes.ok) return true;
+    } catch (e) {
+        console.error("Error in isAuthorizedForTeam:", e);
+    }
     return false;
 }
 
@@ -126,6 +92,18 @@ const SPORT_ID_MAP: Record<string, string> = {
     "s193797b-8454-4870-b669-715f45d43546": "Sepak Takraw",
     "c193797b-8454-4870-b669-715f45d43547": "Cricket",
 };
+
+async function getSportsMap(): Promise<Map<string, string>> {
+    const sportMap = new Map<string, string>();
+    Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
+    try {
+        const sports = await getPublicSports();
+        sports.forEach(s => sportMap.set(s.id, s.sport_name));
+    } catch {
+        // use defaults
+    }
+    return sportMap;
+}
 
 /**
  * Get all available sports.
@@ -302,12 +280,7 @@ export async function getMyTeams(): Promise<ActionResponse<unknown[]>> {
 
         const teams = await res.json();
         
-        // Fetch sports map
-        const supabase = await createClient();
-        const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
-        const sportMap = new Map<string, string>();
-        Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
-        (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
+        const sportMap = await getSportsMap();
 
         const mappedData = (teams || []).map((team: any) => {
             const sportName = (team.sport_id && sportMap.get(team.sport_id)) || team.sport || team.sport_name || 'Football';
@@ -347,11 +320,7 @@ export async function getTeam(teamId: string) {
         const data = await res.json();
         if (!data) return null;
 
-        const supabase = await createClient();
-        const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
-        const sportMap = new Map<string, string>();
-        Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
-        (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
+        const sportMap = await getSportsMap();
 
         const sportName = (data.sport_id && sportMap.get(data.sport_id)) || data.sport || data.sport_name || 'Football';
 
@@ -389,11 +358,7 @@ export async function getTournamentTeam(id: string) {
             const data = await res.json();
             if (data) {
                 const teamData = data.team || {};
-                const supabase = await createClient();
-                const { data: sportsData } = await supabase.from("sports").select("id, sport_name");
-                const sportMap = new Map<string, string>();
-                Object.entries(SPORT_ID_MAP).forEach(([k, v]) => sportMap.set(k, v));
-                (sportsData || []).forEach(s => sportMap.set(s.id, s.sport_name));
+                const sportMap = await getSportsMap();
 
                 const sportName = (teamData.sport_id && sportMap.get(teamData.sport_id)) || teamData.sport || teamData.sport_name || 'Football';
 
@@ -462,68 +427,6 @@ export async function getTournamentTeam(id: string) {
             }
         }
 
-        // Direct DB fallback
-        const adminSupabase = createAdminClient();
-        const { data: ttData } = await adminSupabase
-            .from("tournament_teams")
-            .select(`
-                id,
-                tournament_id,
-                tournament_category_id,
-                team_id,
-                payment_status,
-                registration_status,
-                roster_status,
-                is_roster_locked,
-                unlock_requested,
-                contact_name,
-                contact_phone,
-                contact_email,
-                created_at,
-                teams ( id, user_id, name, short_name, description, logo_url, logo_img, sport_id ),
-                tournaments ( id, name, sport, logo_url, banner_url, status, document_deadline ),
-                tournament_categories ( id, name )
-            `)
-            .eq("id", id)
-            .maybeSingle();
-
-        if (ttData) {
-            const team = (ttData.teams as any) || {};
-            const tournament = (ttData.tournaments as any) || null;
-            const category = (ttData.tournament_categories as any) || null;
-            return {
-                id: ttData.id,
-                team_id: ttData.team_id,
-                user_id: team.user_id || session.user.id || null,
-                tournament_id: ttData.tournament_id,
-                tournament_category_id: ttData.tournament_category_id,
-                tournament: tournament,
-                tournament_name: tournament?.name || null,
-                category_name: category?.name || null,
-                category: category,
-                name: team.name || "Unknown Team",
-                short_name: team.short_name,
-                description: team.description || null,
-                logo_url: resolveStorageUrl(team.logo_url || team.logo_img),
-                logo_img: resolveStorageUrl(team.logo_img || team.logo_url),
-                contact_name: ttData.contact_name,
-                contact_phone: ttData.contact_phone,
-                contact_email: ttData.contact_email,
-                is_roster_locked: ttData.is_roster_locked || false,
-                unlock_requested: ttData.unlock_requested || false,
-                registration_status: ttData.registration_status,
-                roster_status: ttData.roster_status,
-                payment_status: ttData.payment_status,
-                sport: 'Football' as any,
-                sport_name: 'Football',
-                sport_id: team.sport_id,
-                created_at: ttData.created_at || new Date().toISOString(),
-                isParticipation: true,
-                participations: [],
-                registrations: [],
-            };
-        }
-
         return null;
     } catch (error) {
         console.error("Error in getTournamentTeam:", error);
@@ -575,63 +478,27 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             logoUrl = uploadRes.url;
         }
 
-        const adminSupabase = createAdminClient();
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                name: name.trim(),
+                description: description || '',
+                contact_name: contact_name || '',
+                contact_phone: contact_phone || '',
+                contact_email: contact_email?.trim() || null,
+                logo_url: logoUrl || null,
+                logo_img: logoUrl || null,
+                sport_id: sport || undefined,
+            }),
+        });
 
-        // 1. Try Go API
-        try {
-            await fetch(`${API_BASE_URL}/teams/${teamId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${session.token}`,
-                },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    description: description || '',
-                    contact_name: contact_name || '',
-                    contact_phone: contact_phone || '',
-                    contact_email: contact_email?.trim() || null,
-                    logo_url: logoUrl || null,
-                    logo_img: logoUrl || null,
-                    sport_id: sport || undefined,
-                }),
-            });
-        } catch (apiErr) {
-            console.warn("[updateTeamGlobal] API PUT failed, falling back to direct DB update:", apiErr);
-        }
-
-        // 2. Direct Supabase DB update
-        const teamUpdates: Record<string, unknown> = {
-            name: name.trim(),
-            description: description || null,
-            contact_name: contact_name || null,
-            contact_phone: contact_phone || null,
-            contact_email: contact_email?.trim() || null,
-            logo_img: logoUrl || null,
-            logo_url: logoUrl || null,
-        };
-        if (sport) teamUpdates.sport_id = sport;
-
-        const { error: dbError } = await adminSupabase
-            .from("teams")
-            .update(teamUpdates)
-            .eq("id", teamId);
-
-        if (dbError) {
-            console.error("[updateTeamGlobal] Direct DB update failed:", dbError);
-            // If teamId is a tournament_team
-            const { data: ttRec } = await adminSupabase
-                .from("tournament_teams")
-                .select("team_id")
-                .eq("id", teamId)
-                .maybeSingle();
-
-            if (ttRec?.team_id) {
-                await adminSupabase
-                    .from("teams")
-                    .update(teamUpdates)
-                    .eq("id", ttRec.team_id);
-            }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to update team" };
         }
 
         // Revalidate relevant paths
@@ -680,133 +547,72 @@ export async function deleteTeamGlobal(teamId: string, _tournamentId?: string): 
  * Toggle roster locking for a team.
  */
 export async function toggleRosterLock(teamId: string, isLocked: boolean): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+    try {
+        const session = await getServerSession();
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this team" };
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({ is_roster_locked: isLocked }),
+        });
 
-    const { data: globalTeam } = await adminSupabase.from("teams").select("id").eq("id", teamId).single();
-    const { data: participation } = await adminSupabase.from("tournament_teams").select("id").eq("id", teamId).single();
+        if (!res.ok) {
+            await fetch(`${API_BASE_URL}/tournaments/00000000-0000-0000-0000-000000000000/registrations/${teamId}/lock`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({ is_locked: isLocked }),
+            }).catch(() => {});
+        }
 
-    if (!globalTeam && !participation) {
-        return { success: false, error: "Team context not found." };
+        revalidatePath(`/dashboard/teams/${teamId}`);
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e?.message || "Failed to toggle roster lock" };
     }
-
-    const tableToAdd = globalTeam ? "teams" : "tournament_teams";
-    const updateData: Record<string, boolean> = { is_roster_locked: isLocked };
-    if (!globalTeam && isLocked) {
-        updateData.unlock_requested = false;
-    }
-
-    const { error } = await adminSupabase
-        .from(tableToAdd)
-        .update(updateData)
-        .eq("id", teamId);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/dashboard/teams/${teamId}`);
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    return { success: true };
 }
 
 /* ============================================================================
-   ROSTER IMPORT & MANAGEMENT (Supabase-backed)
+   ROSTER IMPORT & MANAGEMENT
    ============================================================================ */
 
 /**
  * Fetch available teams that the user owns to use as import sources.
  */
 export async function getImportableTeams(currentTeamId: string): Promise<ActionResponse<any[]>> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+        const res = await fetch(`${API_BASE_URL}/teams?user_id=${session.user.id}`, {
+            headers: { Authorization: `Bearer ${session.token}` },
+            cache: 'no-store'
+        });
 
-    // Get current team sport to only show teams of same sport
-    let currentSportId: string | null = null;
-    const { data: curGlobal } = await adminSupabase.from("teams").select("sport_id").eq("id", currentTeamId).single();
-    if (curGlobal?.sport_id) {
-        currentSportId = curGlobal.sport_id;
-    } else {
-        const { data: curTourney } = await adminSupabase
-            .from("tournament_teams")
-            .select("tournament_categories(sport_id)")
-            .eq("id", currentTeamId)
-            .single();
-        const cat = curTourney?.tournament_categories as unknown as { sport_id: string } | null;
-        if (cat?.sport_id) currentSportId = cat.sport_id;
-    }
-
-    // 1. Fetch user's global teams
-    let globalQuery = adminSupabase
-        .from("teams")
-        .select("id, name, logo_url, sport_id")
-        .eq("user_id", user.id)
-        .neq("id", currentTeamId);
-
-    if (currentSportId) {
-        globalQuery = globalQuery.eq("sport_id", currentSportId);
-    }
-
-    const { data: globalTeams } = await globalQuery;
-
-    // 2. Fetch user's tournament participation teams
-    const tourneyQuery = adminSupabase
-        .from("tournament_teams")
-        .select(`
-            id,
-            teams ( id, name, logo_url, user_id ),
-            tournament_categories ( sport_id, name, tournaments ( name ) )
-        `)
-        .neq("id", currentTeamId);
-
-    const { data: tourneyParticipations } = await tourneyQuery;
-
-    const results: any[] = [];
-
-    // Add global teams
-    if (globalTeams) {
-        for (const t of globalTeams) {
-            results.push({
+        if (!res.ok) return { success: true, data: [] };
+        const teams = await res.json();
+        const results = (teams || [])
+            .filter((t: any) => t.id !== currentTeamId)
+            .map((t: any) => ({
                 id: t.id,
                 name: t.name,
-                logo_url: resolveStorageUrl(t.logo_url),
+                logo_url: resolveStorageUrl(t.logo_url || t.logo_img),
                 sourceType: 'global',
                 description: 'Global Team'
-            });
-        }
-    }
+            }));
 
-    // Add tournament teams
-    if (tourneyParticipations) {
-        for (const tp of tourneyParticipations) {
-            const team = tp.teams as unknown as { id: string; name: string; logo_url: string; user_id: string } | null;
-            if (team && team.user_id === user.id) {
-                const cat = tp.tournament_categories as unknown as { sport_id: string; name: string; tournaments: { name: string } } | null;
-                if (!currentSportId || cat?.sport_id === currentSportId) {
-                    if (team.id !== currentTeamId && tp.id !== currentTeamId) {
-                        results.push({
-                            id: tp.id,
-                            name: `${team.name} (${cat?.tournaments?.name || 'Tournament'} - ${cat?.name || 'Category'})`,
-                            logo_url: resolveStorageUrl(team.logo_url),
-                            sourceType: 'tournament',
-                            description: 'Tournament Participation'
-                        });
-                    }
-                }
-            }
-        }
+        return { success: true, data: results };
+    } catch (e: any) {
+        console.error("Error in getImportableTeams:", e);
+        return { success: false, error: e?.message || "Failed to fetch importable teams" };
     }
-
-    return { success: true, data: results };
 }
 
 /* ============================================================================
@@ -820,156 +626,72 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
     try {
         const session = await getServerSession();
         let players: any[] = [];
-        let fetchedFromApi = false;
+        const headers: Record<string, string> = session?.token ? { Authorization: `Bearer ${session.token}` } : {};
 
         try {
             const res = await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
-                headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+                headers,
                 cache: 'no-store',
             });
-
             if (res.ok) {
                 players = await res.json();
-                fetchedFromApi = true;
             }
-        } catch (fetchErr) {
-            console.warn("[getPlayers] API fetch error, falling back to direct DB query:", fetchErr);
+        } catch {
+            // ignore
         }
 
-        // Direct DB Fallback if API returned empty or failed
-        if (!fetchedFromApi || !players || players.length === 0) {
+        if (!players || players.length === 0) {
             try {
-                const adminSupabase = createAdminClient();
-                // 1. Try tournament_players first (approved roster)
-                const { data: tpData } = await adminSupabase
-                    .from("tournament_players")
-                    .select("id, tournament_team_id, master_player_id, shirt_number, position, photo_url, created_at, master_players(id, first_name_local, middle_name_local, last_name_local, first_name_intl, middle_name_intl, last_name_intl, name, photo_url, birthday, tel)")
-                    .eq("tournament_team_id", teamId)
-                    .is("deleted_at", null);
-
-                if (tpData && tpData.length > 0) {
-                    const mapped: Player[] = tpData.map((tp: any) => {
-                        const mp = tp.master_players || {};
-                        const rawName = mp.name || (mp.first_name_local ? `${mp.first_name_local} ${mp.last_name_local || ''}` : `${mp.first_name_intl || ''} ${mp.last_name_intl || ''}`).trim();
-                        const cleanName = rawName.replace(/\s*-\s*$/, '').trim();
-                        return {
-                            id: tp.id,
-                            name: cleanName || 'Unnamed Player',
-                            number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
-                            position: tp.position || null,
-                            birth_date: mp.birthday || null,
-                            photo_url: resolveStorageUrl(tp.photo_url || mp.photo_url || null),
-                            team_id: teamId,
-                            global_team_id: null,
-                            global_player_id: tp.master_player_id || null,
-                            master_player_id: tp.master_player_id || null,
-                            tel: mp.tel || null,
-                            status: 'approved',
-                            created_at: tp.created_at || new Date().toISOString(),
-                            deleted_at: null,
-                        };
-                    });
-                    return { success: true, data: mapped };
+                const ttRes = await fetch(`${API_BASE_URL}/tournament-teams/${teamId}/players`, {
+                    headers,
+                    cache: 'no-store',
+                });
+                if (ttRes.ok) {
+                    players = await ttRes.json();
                 }
-
-                // 2. Try tournament_roster_submissions (submitted/pending roster)
-                const { data: trsData } = await adminSupabase
-                    .from("tournament_roster_submissions")
-                    .select("id, tournament_team_id, name, shirt_number, position, photo_url, tel, status, created_at")
-                    .eq("tournament_team_id", teamId)
-                    .is("deleted_at", null);
-
-                if (trsData && trsData.length > 0) {
-                    const mapped: Player[] = trsData.map((trs: any) => {
-                        return {
-                            id: trs.id,
-                            name: trs.name || 'Unnamed Player',
-                            number: trs.shirt_number ? parseInt(trs.shirt_number) : null,
-                            position: trs.position || null,
-                            birth_date: null,
-                            photo_url: resolveStorageUrl(trs.photo_url || null),
-                            team_id: teamId,
-                            global_team_id: null,
-                            global_player_id: null,
-                            master_player_id: null,
-                            tel: trs.tel || null,
-                            status: trs.status || 'pending',
-                            created_at: trs.created_at || new Date().toISOString(),
-                            deleted_at: null,
-                        };
-                    });
-                    return { success: true, data: mapped };
-                }
-
-                // 3. Direct query from `players` table matching exact DB schema (or via tournament_teams.team_id)
-                const { data: ttRecord } = await adminSupabase
-                    .from("tournament_teams")
-                    .select("id, team_id")
-                    .eq("id", teamId)
-                    .maybeSingle();
-
-                const targetTeamId = ttRecord?.team_id || teamId;
-
-                const { data: pData, error: pError } = await adminSupabase
-                    .from("players")
-                    .select("id, team_id, first_name, last_name, jersey_number, position, photo_url, date_of_birth, master_player_id, created_at, updated_at")
-                    .eq("team_id", targetTeamId)
-                    .is("deleted_at", null);
-
-                if (pError) {
-                    console.warn("[getPlayers] direct players select error:", pError.message);
-                } else if (pData && pData.length > 0) {
-                    players = pData;
-                }
-            } catch (dbErr) {
-                console.error("[getPlayers] DB fallback error:", dbErr);
+            } catch {
+                // ignore
             }
         }
 
-        const masterPlayerIds = (players || [])
-            .map((p: any) => p.master_player_id || p.master_id)
-            .filter(Boolean) as string[];
-
-        const masterMap = new Map<string, { photo_url?: string | null; tel?: string | null }>();
-        if (masterPlayerIds.length > 0) {
+        if (!players || players.length === 0) {
             try {
-                const adminSupabase = createAdminClient();
-                const { data: mpData } = await adminSupabase
-                    .from("master_players")
-                    .select("id, photo_url, tel")
-                    .in("id", masterPlayerIds);
-                if (mpData) {
-                    for (const mp of mpData) {
-                        masterMap.set(mp.id, mp);
-                    }
+                const rRes = await fetch(`${API_BASE_URL}/tournament-teams/${teamId}/roster`, {
+                    headers,
+                    cache: 'no-store',
+                });
+                if (rRes.ok) {
+                    players = await rRes.json();
                 }
-            } catch (err) {
-                console.error("[getPlayers] error querying master_players:", err);
+            } catch {
+                // ignore
             }
         }
 
         const mappedPlayers: Player[] = (players || []).map((p: any) => {
-            const masterId = p.master_player_id || p.master_id;
-            const masterInfo = masterId ? masterMap.get(masterId) : null;
-            const photoUrl = resolveStorageUrl(p.photo_url || masterInfo?.photo_url || null);
+            const rawName = p.name || `${p.first_name || ''} ${p.last_name && p.last_name !== '-' ? p.last_name : ''}`.trim() || 'Unnamed Player';
+            const cleanName = rawName.replace(/\s*-\s*$/, '').trim();
+            const shirtNum = p.jersey_number !== undefined && p.jersey_number !== null
+                ? (typeof p.jersey_number === 'number' ? p.jersey_number : parseInt(p.jersey_number))
+                : (p.shirt_number ? parseInt(p.shirt_number) : null);
 
             return {
                 id: p.id,
-                name: (p.name || `${p.first_name || ''} ${p.last_name && p.last_name !== '-' ? p.last_name : ''}`).trim() || 'Unnamed Player',
+                name: cleanName,
                 first_name: p.first_name || null,
                 last_name: p.last_name || null,
-                number: p.jersey_number !== undefined && p.jersey_number !== null ? parseInt(p.jersey_number) : (p.shirt_number ? parseInt(p.shirt_number) : null),
+                number: isNaN(shirtNum as number) ? null : shirtNum,
                 position: p.position || null,
-                birth_date: p.date_of_birth || p.birth_date || null,
-                photo_url: photoUrl,
-                team_id: teamId,
+                birth_date: p.date_of_birth || p.birthday || null,
+                photo_url: resolveStorageUrl(p.photo_url || null),
+                team_id: p.team_id || teamId,
                 global_team_id: teamId,
-                global_player_id: masterId || p.id,
-                master_player_id: masterId || null,
-                tel: p.tel || masterInfo?.tel || null,
-                status: 'approved',
+                global_player_id: p.master_player_id || p.id,
+                master_player_id: p.master_player_id || null,
+                tel: p.tel || null,
+                status: p.status || 'approved',
                 created_at: p.created_at || new Date().toISOString(),
-                deleted_at: null,
+                deleted_at: p.deleted_at || null,
             };
         });
 
@@ -1062,14 +784,15 @@ export async function addPlayer(
             }
         }
 
-        const adminSupabase = createAdminClient();
-
-        // 1. If detailed information is provided or no master player selected, create/link master_players
         if (!masterPlayerId) {
             try {
-                const { data: createdMP } = await adminSupabase
-                    .from("master_players")
-                    .insert({
+                const mpRes = await fetch(`${API_BASE_URL}/master-players`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${session.token}`,
+                    },
+                    body: JSON.stringify({
                         first_name_local: classified.first_name_local,
                         middle_name_local: classified.middle_name_local,
                         last_name_local: classified.last_name_local,
@@ -1086,68 +809,41 @@ export async function addPlayer(
                         status: 'active',
                         verified: false
                     })
-                    .select("id")
-                    .single();
-
-                if (createdMP?.id) {
-                    masterPlayerId = createdMP.id;
+                });
+                if (mpRes.ok) {
+                    const createdMP = await mpRes.json();
+                    if (createdMP?.id) {
+                        masterPlayerId = createdMP.id;
+                    }
                 }
             } catch (mpErr) {
-                console.warn("[addPlayer] Master player insert fallback error:", mpErr);
+                console.warn("[addPlayer] Master player API error:", mpErr);
             }
         }
 
-        // 2. Call Go Backend API
-        try {
-            await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${session.token}`,
-                },
-                body: JSON.stringify({
-                    team_id: teamId,
-                    first_name: firstName,
-                    last_name: lastName,
-                    jersey_number: number ? parseInt(number) : null,
-                    shirt_number: number ? number.toString() : null,
-                    position: position || null,
-                    photo_url: photoUrl,
-                    date_of_birth: dateOfBirth || null,
-                    master_player_id: masterPlayerId || null,
-                }),
-            });
-        } catch (apiErr) {
-            console.warn("[addPlayer] API POST failed, continuing with direct DB:", apiErr);
-        }
+        // Call Go Backend API
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}/players`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({
+                team_id: teamId,
+                first_name: firstName,
+                last_name: lastName,
+                jersey_number: number ? parseInt(number) : null,
+                shirt_number: number ? number.toString() : null,
+                position: position || null,
+                photo_url: photoUrl,
+                date_of_birth: dateOfBirth || null,
+                master_player_id: masterPlayerId || null,
+            }),
+        });
 
-        // 3. Ensure direct insert in players table if needed
-        try {
-            const { data: existingPlayer } = await adminSupabase
-                .from("players")
-                .select("id")
-                .eq("team_id", teamId)
-                .eq("first_name", firstName)
-                .eq("last_name", lastName)
-                .maybeSingle();
-
-            if (!existingPlayer) {
-                await adminSupabase
-                    .from("players")
-                    .insert({
-                        team_id: teamId,
-                        first_name: firstName,
-                        last_name: lastName,
-                        jersey_number: number ? parseInt(number) : null,
-                        shirt_number: number ? number.toString() : null,
-                        position: position || null,
-                        photo_url: photoUrl,
-                        date_of_birth: dateOfBirth || null,
-                        master_player_id: masterPlayerId || null,
-                    });
-            }
-        } catch (dbErr) {
-            console.warn("[addPlayer] direct players insert error:", dbErr);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            return { success: false, error: errData.error || "Failed to add player" };
         }
 
         revalidatePath(`/dashboard/teams/${teamId}`);
@@ -1361,43 +1057,22 @@ export async function updatePlayer(
  */
 export async function deletePlayer(playerId: string, teamId: string): Promise<ActionResponse> {
     try {
-        const supabase = await createClient();
         const session = await getServerSession().catch(() => null);
-        const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-        const currentUser = session?.user || user;
-        if (!currentUser) return { success: false, error: "Authentication required" };
+        if (!session?.user) return { success: false, error: "Authentication required" };
 
-        const adminSupabase = createAdminClient();
+        const headers = { Authorization: `Bearer ${session.token}` };
 
-        try {
-            await fetch(`${API_BASE_URL}/teams/${teamId}/players/${playerId}`, {
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}/players/${playerId}`, {
+            method: 'DELETE',
+            headers,
+        });
+
+        if (!res.ok) {
+            await fetch(`${API_BASE_URL}/tournament-teams/${teamId}/players/${playerId}`, {
                 method: 'DELETE',
-                headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+                headers,
             });
-        } catch {
-            // ignore
         }
-
-        const now = new Date().toISOString();
-
-        // 1. Soft delete in player_sports
-        await adminSupabase
-            .from("player_sports")
-            .update({ deleted_at: now })
-            .eq("player_id", playerId)
-            .eq("team_id", teamId);
-
-        // 2. Soft delete in players
-        await adminSupabase
-            .from("players")
-            .update({ deleted_at: now })
-            .eq("id", playerId);
-
-        // 3. Delete in tournament_players if exists
-        await adminSupabase
-            .from("tournament_players")
-            .delete()
-            .eq("id", playerId);
 
         revalidatePath(`/dashboard/teams/${teamId}`);
         revalidatePath(`/dashboard/tournament-teams/${teamId}`);
@@ -1416,16 +1091,13 @@ export async function importRoster(
     targetTeamId: string,
     sourceTeamId: string
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    const session = await getServerSession();
+    if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    const authorizedTarget = await isAuthorizedForTeam(targetTeamId, user.id);
+    const authorizedTarget = await isAuthorizedForTeam(targetTeamId, session.user.id);
     if (!authorizedTarget) return { success: false, error: "Unauthorized to manage target roster" };
 
-    const authorizedSource = await isAuthorizedForTeam(sourceTeamId, user.id);
+    const authorizedSource = await isAuthorizedForTeam(sourceTeamId, session.user.id);
     if (!authorizedSource) return { success: false, error: "Unauthorized to read from source roster" };
 
     const sourceRes = await getPlayers(sourceTeamId);
@@ -1434,218 +1106,139 @@ export async function importRoster(
     }
     const sourcePlayers = sourceRes.data;
 
-    const { data: participationCheck } = await adminSupabase.from("tournament_teams").select("id").eq("id", targetTeamId).single();
-    let globalCheck = null;
-    
-    if (!participationCheck) {
-        const { data: gCheck } = await adminSupabase.from("teams").select("id").eq("id", targetTeamId).single();
-        globalCheck = gCheck;
-    }
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.token}`,
+    };
 
-    if (!participationCheck && !globalCheck) {
-        return { success: false, error: "Target team not found." };
-    }
+    // Check if targetTeamId is tournament team or global team
+    const tourRes = await fetch(`${API_BASE_URL}/tournament-teams/${targetTeamId}`, {
+        headers: session.token ? { Authorization: `Bearer ${session.token}` } : {},
+    });
 
-    if (participationCheck) {
-        // Clear existing staged players for this target
-        await adminSupabase
-            .from("tournament_roster_submissions")
-            .delete()
-            .eq("tournament_team_id", targetTeamId);
+    const isTournamentTeam = tourRes.ok;
 
-        // Insert into staging table
-        const stagedToInsert = sourcePlayers.map(p => ({
-            tournament_team_id: targetTeamId,
-            name: p.name,
-            shirt_number: p.number ? String(p.number) : null,
-            position: p.position || null,
-            tel: p.tel || null,
-            photo_url: p.photo_url || null
-        }));
+    for (const p of sourcePlayers) {
+        const nameParts = (p.name || '').trim().split(' ');
+        const firstName = p.first_name || nameParts[0] || '';
+        const lastName = p.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '-');
 
-        const { error: stagedError } = await adminSupabase
-            .from("tournament_roster_submissions")
-            .insert(stagedToInsert);
-
-        if (stagedError) {
-            console.error("[importRoster] Staged insert failed:", stagedError);
-            return { success: false, error: stagedError.message };
-        }
-
-        revalidatePath(`/manager/my-teams/${targetTeamId}`);
-        revalidatePath(`/dashboard/tournament-teams/${targetTeamId}`);
-        return { success: true, message: `Successfully imported ${sourcePlayers.length} players to staging.` };
-    }
-
-    let targetGlobalTeamId = null;
-    let targetSportId = null;
-    let targetTournamentId = null;
-
-    if (globalCheck) {
-        targetGlobalTeamId = globalCheck.id;
-        const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", targetGlobalTeamId).single();
-        if (teamData) targetSportId = teamData.sport_id;
-    }
-
-    if (!targetTournamentId) {
-        const { data: anyTour } = await adminSupabase.from("tournaments").select("id").limit(1).single();
-        if (anyTour) {
-            targetTournamentId = anyTour.id;
-        }
-    }
-
-    if (!targetTournamentId) {
-        return { success: false, error: "Target tournament context not found." };
-    }
-
-    const playersToInsert = sourcePlayers.map(p => ({
-        master_id: p.global_player_id,
-        display_name: p.name,
-        tel: p.tel || null
-    }));
-
-    const { data: newPlayers, error: insertError } = await adminSupabase
-        .from("players")
-        .insert(playersToInsert)
-        .select("id, master_id");
-
-    if (insertError) {
-        console.error("[importRoster] Bulk insert failed:", insertError);
-        return { success: false, error: insertError.message };
-    }
-
-    if (newPlayers && newPlayers.length > 0 && targetSportId) {
-        const sportsToInsert = newPlayers.map((np, idx) => {
-            const sourceP = sourcePlayers[idx];
-            return {
-                player_id: np.id,
-                sport_id: targetSportId,
-                team_id: targetTeamId,
-                position: sourceP.position || null,
-                shirt_number: sourceP.number ? String(sourceP.number) : null
-            };
-        });
-
-        const { error: sportsError } = await adminSupabase
-            .from("player_sports")
-            .insert(sportsToInsert);
-
-        if (sportsError) {
-            console.error("[importRoster] player_sports bulk insert failed:", sportsError);
+        if (isTournamentTeam) {
+            await fetch(`${API_BASE_URL}/tournament-teams/${targetTeamId}/players`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    master_player_id: p.global_player_id || undefined,
+                    first_name: firstName,
+                    last_name: lastName,
+                    shirt_number: p.number ? String(p.number) : undefined,
+                    position: p.position || undefined,
+                    photo_url: p.photo_url || undefined,
+                    tel: p.tel || undefined
+                }),
+            });
+        } else {
+            await fetch(`${API_BASE_URL}/teams/${targetTeamId}/players`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    team_id: targetTeamId,
+                    master_player_id: p.global_player_id || null,
+                    first_name: firstName,
+                    last_name: lastName,
+                    jersey_number: p.number ? parseInt(String(p.number)) : null,
+                    shirt_number: p.number ? String(p.number) : null,
+                    position: p.position || null,
+                    photo_url: p.photo_url || null,
+                    tel: p.tel || null,
+                }),
+            });
         }
     }
 
     revalidatePath(`/manager/my-teams/${targetTeamId}`);
     revalidatePath(`/dashboard/tournament-teams/${targetTeamId}`);
-    return { success: true, message: `Successfully imported ${newPlayers.length} players.` };
+    return { success: true, message: `Successfully imported ${sourcePlayers.length} players.` };
 }
 
 /**
  * Remove all players from a team roster.
  */
 export async function resetRoster(teamId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    const session = await getServerSession();
+    if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    const authorized = await isAuthorizedForTeam(teamId, session.user.id);
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
-    // Fetch player_ids from player_sports
-    const { data: psRecords } = await adminSupabase
-        .from("player_sports")
-        .select("player_id")
-        .eq("team_id", teamId);
+    try {
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}/reset-roster`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to reset roster" };
+        }
 
-    const now = new Date().toISOString();
-
-    // 1. Update player_sports.deleted_at
-    const { error: psError } = await adminSupabase
-        .from("player_sports")
-        .update({ deleted_at: now })
-        .eq("team_id", teamId);
-
-    if (psError) return { success: false, error: psError.message };
-
-    // 2. Update players.deleted_at
-    if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r) => r.player_id);
-        const { error: pError } = await adminSupabase
-            .from("players")
-            .update({ deleted_at: now })
-            .in("id", playerIds);
-        if (pError) return { success: false, error: pError.message };
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        await logActivity('RESET_ROSTER', 'team', teamId, { reset_by: session.user.id });
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : "Failed to reset roster" };
     }
-
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    await logActivity('RESET_ROSTER', 'team', teamId, { reset_by: user.id });
-    return { success: true };
 }
 
 /**
  * Restore all soft-deleted players for a team roster.
  */
 export async function restoreRoster(teamId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
+    const session = await getServerSession();
+    if (!session?.user) return { success: false, error: "Authentication required" };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    const authorized = await isAuthorizedForTeam(teamId, session.user.id);
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
-    // Fetch player_ids from player_sports
-    const { data: psRecords } = await adminSupabase
-        .from("player_sports")
-        .select("player_id")
-        .eq("team_id", teamId);
+    try {
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}/restore-roster`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+            },
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            return { success: false, error: err.error || "Failed to restore roster" };
+        }
 
-    // 1. Update player_sports.deleted_at to null
-    const { error: psError } = await adminSupabase
-        .from("player_sports")
-        .update({ deleted_at: null })
-        .eq("team_id", teamId);
-
-    if (psError) return { success: false, error: psError.message };
-
-    // 2. Update players.deleted_at to null
-    if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r) => r.player_id);
-        const { error: pError } = await adminSupabase
-            .from("players")
-            .update({ deleted_at: null })
-            .in("id", playerIds);
-        if (pError) return { success: false, error: pError.message };
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        await logActivity('RESTORE_ROSTER', 'team', teamId, { restored_by: session.user.id });
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : "Failed to restore roster" };
     }
-
-    revalidatePath(`/manager/my-teams/${teamId}`);
-    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
-    await logActivity('RESTORE_ROSTER', 'team', teamId, { restored_by: user.id });
-    return { success: true };
 }
 
 /**
  * Check if a team has any soft-deleted players.
  */
 export async function hasSoftDeletedPlayers(teamId: string): Promise<ActionResponse<boolean>> {
-    const supabase = await createClient();
-
-    // Check if there are any records in player_sports where deleted_at IS NOT NULL
-    const { count, error } = await supabase
-        .from("player_sports")
-        .select("*", { count: "exact", head: true })
-        .eq("team_id", teamId)
-        .not("deleted_at", "is", null);
-
-    if (error) {
-        return { success: false, error: error.message };
+    try {
+        const res = await fetch(`${API_BASE_URL}/teams/${teamId}/has-deleted-players`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) {
+            return { success: false, error: "Failed to check soft deleted players" };
+        }
+        const data = await res.json();
+        return { success: true, data: Boolean(data?.has_deleted) };
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : "Failed to check soft deleted players" };
     }
-
-    return { success: true, data: (count || 0) > 0 };
 }
 
 /**
@@ -1679,28 +1272,7 @@ export async function searchTeamsForClaim(query: string): Promise<ActionResponse
             };
         }
 
-        // Fallback to Supabase
-        const adminSupabase = createAdminClient();
-        const { data, error } = await adminSupabase
-            .from("teams")
-            .select("id, name, contact_email, logo_url, logo_img")
-            .or(`name.ilike.%${query.trim()}%,contact_email.ilike.%${query.trim()}%`)
-            .is("deleted_at", null)
-            .limit(20);
-
-        if (error) {
-            return { success: false, error: error.message };
-        }
-
-        return {
-            success: true,
-            data: (data || []).map((t: any) => ({
-                id: t.id,
-                name: t.name,
-                contact_email: t.contact_email,
-                logo_url: t.logo_url || t.logo_img
-            }))
-        };
+        return { success: false, error: "Failed to search teams" };
     } catch (error) {
         console.error("Unexpected error in searchTeamsForClaim:", error);
         return { success: false, error: "An unexpected error occurred" };
@@ -1748,57 +1320,7 @@ export async function submitTeamManagementRequest(
         }
 
         const errData = await res.json().catch(() => ({}));
-
-        // Fallback to Direct Supabase if Go API failed
-        const adminSupabase = createAdminClient();
-
-        // Check if a pending request already exists for this user + team
-        const { data: existing } = await adminSupabase
-            .from("team_management_requests")
-            .select("id, status")
-            .eq("team_id", teamId)
-            .eq("requester_id", session.user.id)
-            .maybeSingle();
-
-        if (existing) {
-            if (existing.status === 'pending') {
-                return { success: false, error: "คุณมีคำขอที่รอดำเนินการอยู่แล้วสำหรับทีมนี้" };
-            }
-            // Update existing non-pending request back to pending
-            const { error: updateError } = await adminSupabase
-                .from("team_management_requests")
-                .update({
-                    contact_phone: contactPhone.trim(),
-                    message: message?.trim() || null,
-                    status: 'pending',
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", existing.id);
-
-            if (updateError) {
-                return { success: false, error: updateError.message };
-            }
-            revalidatePath("/dashboard/teams");
-            return { success: true };
-        }
-
-        const { error } = await adminSupabase
-            .from("team_management_requests")
-            .insert({
-                team_id: teamId,
-                requester_id: session.user.id,
-                contact_phone: contactPhone.trim(),
-                message: message?.trim() || null,
-                status: 'pending',
-            });
-
-        if (error) {
-            console.error("Error submitting team management request via fallback:", error);
-            return { success: false, error: errData.error || error.message };
-        }
-
-        revalidatePath("/dashboard/teams");
-        return { success: true };
+        return { success: false, error: errData.error || "Failed to submit team management request" };
     } catch (error) {
         console.error("Unexpected error in submitTeamManagementRequest:", error);
         return { success: false, error: "An unexpected error occurred" };

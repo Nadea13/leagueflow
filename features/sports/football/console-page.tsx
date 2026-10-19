@@ -6,6 +6,7 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { getPlayers } from "@/actions/tournaments/player";
 import { updateMatch, advanceStage, updateCategoryRulesConfig } from "@/actions/tournaments/general";
+import { syncCategoryBracket } from "@/actions/tournaments/bracket";
 import { getPenaltyShootout } from "@/actions/tournaments/penalty";
 import { useMatchWebSocket } from "@/hooks/use-match-websocket";
 import { ApiClient } from "@/lib/api-client";
@@ -805,6 +806,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
                 // Auto-advance if possible
                 await advanceStage(tournamentId);
+                const catId = match.category_id || match.tournament_category_id;
+                if (catId) {
+                    try {
+                        await syncCategoryBracket(tournamentId, catId);
+                    } catch (e) {
+                        console.error("Failed to auto-sync bracket after finishing match:", e);
+                    }
+                }
             }
         });
     };
@@ -833,6 +842,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
                     // Auto-advance if possible
                     await advanceStage(tournamentId);
+                    const catId = match.category_id || match.tournament_category_id;
+                    if (catId) {
+                        try {
+                            await syncCategoryBracket(tournamentId, catId);
+                        } catch (e) {
+                            console.error("Failed to auto-sync bracket after walkover:", e);
+                        }
+                    }
 
                     setWoDialogOpen(false);
                 } catch (error) {

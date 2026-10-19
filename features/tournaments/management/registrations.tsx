@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
 import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -46,7 +45,6 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
 
     // Team Details & Roster Dialog state
     const [selectedTeamForDetails, setSelectedTeamForDetails] = useState<Registration | null>(null);
-    const _supabase = createClient();
 
     const fetchRegistrations = useCallback(async (showLoading = false) => {
         if (showLoading) setIsLoading(true);

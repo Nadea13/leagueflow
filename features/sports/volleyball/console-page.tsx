@@ -20,6 +20,7 @@ import { Header } from "@/components/ui/header";
 import { cn } from "@/lib/utils";
 import { useMatchWebSocket } from "@/hooks/use-match-websocket";
 import { updateMatch, updateCategoryRulesConfig } from "@/actions/tournaments/general";
+import { syncCategoryBracket } from "@/actions/tournaments/bracket";
 import { ApiClient } from "@/lib/api-client";
 import { getPlayers } from "@/actions/tournaments/player";
 import { useMatchEvents } from "@/hooks/use-match-events";
@@ -590,13 +591,19 @@ export function VolleyballConsolePage({
                     away_score: awaySets,
                     winner_id: winnerId
                 });
+                const catId = match.category_id || match.tournament_category_id;
+                if (catId) {
+                    syncCategoryBracket(tournamentId, catId).catch(e => {
+                        console.error("Failed to auto-sync bracket after volleyball match finished:", e);
+                    });
+                }
                 toast({
                     title: locale === "th" ? "จบการแข่งขันเรียบร้อย!" : "Match Completed!",
                     description: `Winner: ${homeSets >= setsToWin ? match.home_team?.name : match.away_team?.name}`
                 });
             });
         }
-    }, [homeSets, awaySets, match.status, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, readOnly, locale, toast, maxSets, queueMatchUpdate]);
+    }, [homeSets, awaySets, match.status, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, match.category_id, match.tournament_category_id, tournamentId, readOnly, locale, toast, maxSets, queueMatchUpdate]);
 
     const handleUndo = async () => {
         if (readOnly) return;
@@ -706,6 +713,14 @@ export function VolleyballConsolePage({
                 winner_id: winnerTeamId
             }));
             setWoDialogOpen(false);
+            const catId = match.category_id || match.tournament_category_id;
+            if (catId) {
+                try {
+                    await syncCategoryBracket(tournamentId, catId);
+                } catch (e) {
+                    console.error("Failed to auto-sync bracket after volleyball walkover:", e);
+                }
+            }
             toast({ title: locale === "th" ? "บันทึกชนะบายเรียบร้อย" : "Walkover recorded" });
         }
     };

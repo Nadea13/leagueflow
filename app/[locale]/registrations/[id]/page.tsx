@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth-server";
 import { ApiClient } from "@/lib/api-client";
 import { RegistrationForm } from "@/features/registrations/registration-form";
@@ -47,7 +46,6 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
     const initialTeamId = resolvedSearchParams?.team;
     const tournamentCategoryId = typeof categoryParam === "string" ? categoryParam : undefined;
     const t = await getTranslations({ locale, namespace: "Registration" });
-    const supabase = await createClient();
     const session = await getServerSession();
     const user = session?.user || null;
 
@@ -149,7 +147,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
     const myTeamIds = myTeams.map((t) => t.id);
 
     // Fetch user's registered teams in this tournament for document submission
-    let userRegisteredTeams: UserRegisteredTeam[] = (allTournamentTeams || [])
+    const userRegisteredTeams: UserRegisteredTeam[] = (allTournamentTeams || [])
         .filter((tt: any) => {
             const teamId = tt.team?.id || tt.team_id;
             return teamId && myTeamIds.includes(teamId);
@@ -180,65 +178,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
             };
         });
 
-    // Fallback: If no user teams found from ApiClient, try Supabase directly
-    if (userRegisteredTeams.length === 0 && myTeamIds.length > 0) {
-        try {
-            const { data: rawUserTeams } = await supabase
-                .from("tournament_teams")
-                .select(`
-                    id,
-                    contact_name,
-                    contact_phone,
-                    team:teams (
-                        id,
-                        name,
-                        logo_img
-                    ),
-                    tournament_categories (
-                        id,
-                        tournament_id,
-                        gender_type,
-                        age_categories (
-                            category_name
-                        )
-                    )
-                `)
-                .in("team_id", myTeamIds)
-                .is("deleted_at", null);
 
-            const filtered = (rawUserTeams || []).filter((item: any) => {
-                const cat = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
-                return String(cat?.tournament_id) === String(id);
-            });
-
-            if (filtered.length > 0) {
-                userRegisteredTeams = filtered.map((item: any) => {
-                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
-                    const catData = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
-                    const ageCatData = (catData && Array.isArray(catData.age_categories) ? catData.age_categories[0] : catData?.age_categories || null) as { category_name: string | null } | null;
-                    return {
-                        id: item.id,
-                        contact_name: item.contact_name || "",
-                        contact_phone: item.contact_phone || "",
-                        team: teamData ? {
-                            id: teamData.id,
-                            name: teamData.name,
-                            logo_img: teamData.logo_img
-                        } : null,
-                        tournament_categories: catData ? {
-                            id: catData.id,
-                            gender_type: catData.gender_type,
-                            age_categories: ageCatData ? {
-                                category_name: ageCatData.category_name
-                            } : null
-                        } : null
-                    };
-                });
-            }
-        } catch {
-            // Ignore fallback error
-        }
-    }
 
     const sportName = tournament.sport_name || settings.sport_name || "Sport";
     const coverImg = tournament.banner_url || tournament.cover_img || settings.cover_img || settings.banner_url || null;

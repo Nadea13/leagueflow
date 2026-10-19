@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
 import { ApiClient } from "@/lib/api-client";
 import { RegistrationForm } from "@/features/registrations/registration-form";
 import { RegistrationTourButton } from "@/features/registrations/registration-tour-button";
@@ -44,9 +43,8 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     const activeTab = resolvedSearchParams?.tab === "documents" ? "documents" : "registration";
     const initialTeamId = resolvedSearchParams?.team;
     const tournamentCategoryId = typeof categoryParam === "string" ? categoryParam : undefined;
-    const supabase = await createClient();
 
-    // 1. Fetch tournament details & categories via Go API with fallback to Supabase
+    // 1. Fetch tournament details & categories via Go API
     let tournament: any = null;
     let categories: any[] = [];
     try {
@@ -54,45 +52,15 @@ export default async function DashboardRegistrationPage({ params, searchParams }
         tournament = resp?.tournament;
         categories = resp?.categories || [];
     } catch {
-        // Fallback to Supabase below
+        notFound();
     }
 
     if (!tournament) {
-        const { data: sbTournament, error } = await supabase
-            .from("tournaments")
-            .select(`
-                id, name, description, status, start_date, end_date,
-                is_registration_open, bank_account_number, bank_name, bank_account_name,
-                location_name, google_map_url, document_deadline, logo_img, cover_img,
-                sports:sport_id(sport_name),
-                settings
-            `)
-            .eq("id", id)
-            .is("deleted_at", null)
-            .single();
-
-        if (error || !sbTournament) {
-            notFound();
-        }
-        tournament = sbTournament;
+        notFound();
     }
 
-    // 2. Fetch categories if not returned from ApiClient
-    if (!categories || categories.length === 0) {
-        const { data: sbCategories } = await supabase
-            .from("tournament_categories")
-            .select(`
-                id,
-                gender_type,
-                max_teams,
-                registration_fee,
-                age_categories (
-                    category_name
-                )
-            `)
-            .eq("tournament_id", id)
-            .is("deleted_at", null);
-        categories = sbCategories || [];
+    if (!categories) {
+        categories = [];
     }
 
     const settings = typeof tournament.settings === "object" && tournament.settings !== null ? tournament.settings : {};
@@ -178,7 +146,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     const myTeamIds = myTeams.map((t) => t.id);
 
     // Fetch user's registered teams in this tournament for document submission
-    let userRegisteredTeams: UserRegisteredTeam[] = (allTournamentTeams || [])
+    const userRegisteredTeams: UserRegisteredTeam[] = (allTournamentTeams || [])
         .filter((tt: any) => {
             const teamId = tt.team?.id || tt.team_id;
             return teamId && myTeamIds.includes(teamId);
@@ -209,65 +177,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
             };
         });
 
-    // Fallback: If no user teams found from ApiClient, try Supabase directly
-    if (userRegisteredTeams.length === 0 && myTeamIds.length > 0) {
-        try {
-            const { data: rawUserTeams } = await supabase
-                .from("tournament_teams")
-                .select(`
-                    id,
-                    contact_name,
-                    contact_phone,
-                    team:teams (
-                        id,
-                        name,
-                        logo_img
-                    ),
-                    tournament_categories (
-                        id,
-                        tournament_id,
-                        gender_type,
-                        age_categories (
-                            category_name
-                        )
-                    )
-                `)
-                .in("team_id", myTeamIds)
-                .is("deleted_at", null);
 
-            const filtered = (rawUserTeams || []).filter((item: any) => {
-                const cat = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
-                return String(cat?.tournament_id) === String(id);
-            });
-
-            if (filtered.length > 0) {
-                userRegisteredTeams = filtered.map((item: any) => {
-                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
-                    const catData = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
-                    const ageCatData = (catData && Array.isArray(catData.age_categories) ? catData.age_categories[0] : catData?.age_categories || null) as { category_name: string | null } | null;
-                    return {
-                        id: item.id,
-                        contact_name: item.contact_name || "",
-                        contact_phone: item.contact_phone || "",
-                        team: teamData ? {
-                            id: teamData.id,
-                            name: teamData.name,
-                            logo_img: teamData.logo_img
-                        } : null,
-                        tournament_categories: catData ? {
-                            id: catData.id,
-                            gender_type: catData.gender_type,
-                            age_categories: ageCatData ? {
-                                category_name: ageCatData.category_name
-                            } : null
-                        } : null
-                    };
-                });
-            }
-        } catch {
-            // Ignore fallback error
-        }
-    }
 
     const sportsData = (Array.isArray(tournament.sports) ? tournament.sports[0] : tournament.sports) as unknown as { sport_name: string | null } | null;
     const sportName = tournament.sport_name || settings.sport_name || sportsData?.sport_name || "Sport";

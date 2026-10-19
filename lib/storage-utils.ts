@@ -40,8 +40,8 @@ export function resolveStorageUrl(url: string | null | undefined): string | null
         return trimmed;
     }
 
-    // Handle Supabase Storage public URL if needed
-    // e.g. https://xxxx.supabase.co/storage/v1/object/public/logos/team.png
+    // Handle legacy storage public URL if needed
+    // e.g. /storage/v1/object/public/logos/team.png
     if (trimmed.includes("/storage/v1/object/public/")) {
         const parts = trimmed.split("/storage/v1/object/public/");
         if (parts.length > 1) {

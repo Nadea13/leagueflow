@@ -3,18 +3,14 @@
 import React, { useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useBracketStore } from "@/lib/stores/bracket-store";
-import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, HelpCircle, MoreVertical, Pencil } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, HelpCircle, MoreVertical, Pencil, Minus, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "@/i18n/routing";
 import { useParams } from "next/navigation";
 import { getSponsors, updateSponsorsOrder, deleteSponsor, Sponsor } from "@/actions/tournaments/sponsor";
 import { updateTournament } from "@/actions/tournaments/general";
-import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { ApiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -25,16 +21,9 @@ import {
     ActionMenuTrigger,
 } from "@/components/ui/action-menu";
 
-type MatchItem = {
-    id: string;
-    placeholderA: string;
-    placeholderB: string;
-    match_date?: string;
-    match_time?: string;
-    dbId?: string;
-    matchId?: string;
-};
-import { Match, Tournament } from "@/types";
+import { Match, Tournament, TournamentStatus } from "@/types";
+import { RankingNodeSettings } from "./ranking-node-settings";
+import { MatchNodeSettings } from "./match-node-settings";
 import {
     Select,
     SelectContent,
@@ -50,20 +39,23 @@ import { Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { Header } from "@/components/ui/header";
 
-export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode, selectNode, setActiveNodeId, teams, fetchTeams, activeNodeId, activeCategoryId, getCanvasData } = useBracketStore();
+export interface NodeSettingsProps {
+    currentTournamentStatus?: string;
+    onStatusChange?: (status: TournamentStatus) => void;
+}
+
+export function NodeSettings({ currentTournamentStatus, onStatusChange }: NodeSettingsProps = {}) {
+    const { nodes, updateNodeData, deleteNode, selectNode, setActiveNodeId, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
     const params = useParams();
-    const router = useRouter();
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const [isAddAnnouncementOpen, setIsAddAnnouncementOpen] = React.useState(false);
-    const [isCreatingConsoleId, setIsCreatingConsoleId] = React.useState<string | null>(null);
     const tSponsors = useTranslations("Sponsors");
     const locale = useLocale();
     const { toast } = useToast();
-    const _supabase = React.useMemo(() => createClient(), []);
 
     // Sponsors state
     const [sponsorsList, setSponsorsList] = React.useState<Sponsor[]>([]);
@@ -101,7 +93,7 @@ export function NodeSettings() {
                                 max_teams: cat ? (cat.max_teams || cat.team_limit || 8) : 8,
                                 registration_fee: cat ? Number(cat.registration_fee || 0) : 0,
                             });
-                            setRegOpen(tour.settings?.is_registration_open ?? (tour.status === 'registration_open'));
+                            setRegOpen(Boolean(tour.is_registration_open ?? tour.settings?.is_registration_open));
                             setRegFee(cat ? Number(cat.registration_fee || 0) : "");
                             setBankNumber(tour.settings?.bank_account_number || "");
                             setBankName(tour.settings?.bank_name || "PromptPay");
@@ -422,191 +414,159 @@ export function NodeSettings() {
         }
     }, [activeNodeId, nodeType, startNodeTutorial]);
 
-    if ((!selectedNode && activeNodeId !== "registration-setting-node" && activeNodeId !== "announcement-setting-node" && activeNodeId !== "sponsor-setting-node") || !activeNodeId) {
+    if ((!selectedNode && activeNodeId !== "registration-setting-node" && activeNodeId !== "announcement-setting-node" && activeNodeId !== "sponsor-setting-node" && activeNodeId !== "ranking-setting-node") || !activeNodeId) {
         return null;
     }
 
     const isPseudoRegistration = activeNodeId === "registration-setting-node" && !selectedNode;
     const isPseudoAnnouncement = activeNodeId === "announcement-setting-node" && !selectedNode;
     const isPseudoSponsor = activeNodeId === "sponsor-setting-node" && !selectedNode;
-    const isPseudoNode = isPseudoRegistration || isPseudoAnnouncement || isPseudoSponsor;
-    const id = selectedNode?.id || (isPseudoAnnouncement ? "announcement-setting-node" : isPseudoSponsor ? "sponsor-setting-node" : "registration-setting-node");
-    const type = selectedNode?.type || (isPseudoAnnouncement ? "announcementNode" : isPseudoSponsor ? "sponsorNode" : "registrationNode");
+    const isPseudoRanking = activeNodeId === "ranking-setting-node" && !selectedNode;
+    const isPseudoNode = isPseudoRegistration || isPseudoAnnouncement || isPseudoSponsor || isPseudoRanking;
+    const id = selectedNode?.id || (isPseudoAnnouncement ? "announcement-setting-node" : isPseudoSponsor ? "sponsor-setting-node" : isPseudoRanking ? "ranking-setting-node" : "registration-setting-node");
+    const type = selectedNode?.type || (isPseudoAnnouncement ? "announcementNode" : isPseudoSponsor ? "sponsorNode" : isPseudoRanking ? "rankingNode" : "registrationNode");
     const data = selectedNode?.data || {
         label: isPseudoAnnouncement
             ? (locale === "th" ? "ประกาศ" : "Announcements")
             : isPseudoSponsor
                 ? (locale === "th" ? "ผู้สนับสนุน" : "Sponsors")
-                : (locale === "th" ? "การลงทะเบียน" : "Registration")
-    };
-
-    // Resolve live teams from edges or database assignments
-    const getResolvedTeam = (targetId: string, handleId: string, dbMatch: Match | undefined, slot: 'a' | 'b') => {
-        // 1. If we have a database match with a team ID assigned, use it
-        if (dbMatch) {
-            const teamId = slot === 'a' ? dbMatch.home_team_id : dbMatch.away_team_id;
-            if (teamId) {
-                const team = teams.find(t => String(t.team_id || t.id) === String(teamId));
-                if (team) return team.name;
-            }
-        }
-
-        // 2. Fall back to resolved placeholder/ranking/label from edge connections
-        const edge = edges.find(e => e.target === targetId && e.targetHandle === handleId);
-        if (!edge) return null;
-
-        const sourceNode = nodes.find(n => n.id === edge.source);
-        if (!sourceNode) return null;
-
-        // Handle TeamListNode propagation
-        if (sourceNode.type === 'teamListNode') {
-            const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
-            if (teamIdMatch) {
-                const teamId = teamIdMatch[1];
-                const team = teams.find(t => String(t.id) === String(teamId) || String(t.team_id) === String(teamId));
-                return team?.name || null;
-            }
-        }
-
-        // Handle StandingNode/GroupNode propagation
-        if (sourceNode.type === 'standingNode' || sourceNode.type === 'groupNode') {
-            const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
-            if (rankMatch) {
-                const rankIndex = parseInt(rankMatch[1], 10);
-                const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
-                if (rankings[rankIndex]) return rankings[rankIndex];
-
-                const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
-                return `${rankSuffix} Place (${sourceNode.data.label})`;
-            }
-        }
-
-        // Handle MatchNode propagation (Winner / Loser)
-        if (sourceNode.type === 'matchNode') {
-            const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
-            if (winnerMatch) {
-                const winnerIndex = parseInt(winnerMatch[1], 10);
-                return `Winner (Match ${winnerIndex + 1})`;
-            }
-            const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
-            if (loserMatch) {
-                const loserIndex = parseInt(loserMatch[1], 10);
-                return `Loser (Match ${loserIndex + 1})`;
-            }
-        }
-
-        return null;
+                : isPseudoRanking
+                    ? (locale === "th" ? "อันดับการแข่งขัน" : "Tournament Rankings")
+                    : (locale === "th" ? "การลงทะเบียน" : "Registration")
     };
 
     return (
-        <aside className="w-full md:w-[512px] absolute inset-0 md:relative md:inset-auto z-40 md:z-auto border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
-            <div className="p-2 md:p-4 border-b flex items-center justify-between">
+        <aside className={cn(
+            "w-full md:w-[512px] absolute inset-0 md:relative md:inset-auto z-40 md:z-auto border-l bg-card flex flex-col shrink-0 animate-in slide-in-from-right h-full max-h-full min-h-0 overflow-hidden"
+        )}>
+            {/* ── Header based on type ── */}
+            <div className="p-2 md:p-4 border-b flex items-center justify-between gap-2 md:gap-4 shrink-0 bg-card z-10">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                    <div className={`size-9 rounded-sm flex items-center justify-center shrink-0 ${type === 'groupNode' ? 'bg-node-5/10' :
+                        type === 'matchNode' ? 'bg-node-2/10' :
+                            type === 'standingNode' ? 'bg-node-1/10' :
+                                type === 'teamListNode' ? 'bg-node-3/10' :
+                                    type === 'sponsorNode' ? 'bg-red-500/10' :
+                                        type === 'registrationNode' ? 'bg-violet-500/10' :
+                                            type === 'rankingNode' ? 'bg-amber-500/10' : 'bg-node-4/10'
+                        }`}>
+                        {type === 'groupNode' ? <LayoutGrid className="size-4 text-node-5" /> :
+                            type === 'matchNode' ? <span className="text-sm font-bold text-node-2 select-none">VS</span> :
+                                type === 'standingNode' ? <ListOrdered className="size-4 text-node-1" /> :
+                                    type === 'teamListNode' ? <Users className="size-4 text-node-3" /> :
+                                        type === 'sponsorNode' ? <Heart className="size-4 text-red-500" /> :
+                                            type === 'registrationNode' ? <ClipboardEdit className="size-4 text-violet-500" /> :
+                                                type === 'rankingNode' ? <Trophy className="size-4 text-amber-500" /> :
+                                                    <Megaphone className="size-4 text-node-4" />}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <Header level={6} className="truncate">
+                            {data.label as string}
+                        </Header>
+                        <p className="text-xs text-muted-foreground">
+                            {type === 'rankingNode' ? (locale === 'th' ? "ตารางอันดับ" : "Standings") : type?.replace('Node', '')}
+                        </p>
+                    </div>
+
+                    <div className="flex items-center -ml-2 shrink-0">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={startNodeTutorial}
+                            className="text-muted-foreground"
+                            title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
+                        >
+                            <HelpCircle className="size-4 text-muted-foreground" />
+                        </Button>
+                        {!isRegistrationMode && !isPseudoNode && (
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => deleteNode(id)}
+                                className="text-muted-foreground hover:text-destructive"
+                                title={locale === "th" ? "ลบโหนด" : "Delete node"}
+                            >
+                                <Trash2 className="size-4" />
+                            </Button>
+                        )}
+                        {isRegistrationMode && (
+                            <div className="flex items-center gap-2 ml-1" id="node-settings-reg-status">
+                                <Switch
+                                    id="is_reg_open"
+                                    checked={regOpen}
+                                    onCheckedChange={setRegOpen}
+                                    className="data-[state=checked]:bg-violet-500"
+                                />
+                            </div>
+                        )}
+                        {type === "announcementNode" && (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setIsAddAnnouncementOpen(true)}
+                                className="bg-node-4 text-background hover:bg-node-4/90 h-8 text-xs px-2.5 gap-1 shrink-0 ml-1"
+                            >
+                                <Plus className="size-4" />
+                                {locale === "th" ? "เพิ่มประกาศใหม่" : "New Announcement"}
+                            </Button>
+                        )}
+                        {type === "sponsorNode" && (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setIsAddSponsorOpen(true)}
+                                className="bg-red-500 text-white hover:bg-red-600 h-8 text-xs px-2.5 gap-1 shrink-0 ml-1"
+                            >
+                                <Plus className="size-4" />
+                                {locale === "th" ? "เพิ่มผู้สนับสนุนใหม่" : "New Sponsor"}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
                 <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={startNodeTutorial}
-                    className="text-muted-foreground hover:text-primary"
-                    title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
+                    onClick={() => {
+                        setActiveNodeId(null);
+                        selectNode(null);
+                        if (typeof window !== "undefined") {
+                            const url = new URL(window.location.href);
+                            if (url.searchParams.get("tab") === "ranking") {
+                                url.searchParams.delete("tab");
+                                url.searchParams.delete("subtab");
+                                window.history.replaceState({}, "", url.toString());
+                            }
+                        }
+                    }}
+                    className="text-muted-foreground hover:text-foreground shrink-0"
+                    title={locale === "th" ? "ปิด" : "Close"}
                 >
-                    <HelpCircle className="h-4 w-4 text-primary" />
+                    <X className="size-4" />
                 </Button>
-                {!isRegistrationMode && !isPseudoNode && (
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => {
-                            setActiveNodeId(null);
-                            selectNode(null);
-                        }}
-                        className="text-muted-foreground hover:text-foreground"
-                        title={locale === "th" ? "ปิด" : "Close"}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
             </div>
 
-            <div className="p-2 md:p-4 space-y-2 md:space-y-4">
-                {/* ── Header based on type ── */}
-                <div className="flex items-center justify-between gap-2 md:gap-4">
-                    <div className="flex items-center gap-2 md:gap-4">
-                        <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5/10' :
-                            type === 'matchNode' ? 'bg-node-2/10' :
-                                type === 'standingNode' ? 'bg-node-1/10' :
-                                    type === 'teamListNode' ? 'bg-node-3/10' :
-                                        type === 'sponsorNode' ? 'bg-red-500/10' :
-                                            type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4/10'
-                            }`}>
-                            {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-node-5" /> :
-                                type === 'matchNode' ? <span className="text-sm font-bold text-node-2 select-none">VS</span> :
-                                    type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-node-1" /> :
-                                        type === 'teamListNode' ? <Users className="h-4 w-4 text-node-3" /> :
-                                            type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500" /> :
-                                                type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
-                                                    <Megaphone className="h-4 w-4 text-node-4" />}
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
-                                {type?.replace('Node', '')}
-                            </span>
-                            <span className="text-xs font-bold truncate max-w-[140px]">
-                                {data.label as string}
-                            </span>
-                        </div>
-                    </div>
-                    {isRegistrationMode && (
-                        <div className="flex items-center gap-2" id="node-settings-reg-status">
-                            <Switch
-                                id="is_reg_open"
-                                checked={regOpen}
-                                onCheckedChange={setRegOpen}
-                                className="data-[state=checked]:bg-violet-500"
-                            />
-                        </div>
-                    )}
-                    {type === "announcementNode" && (
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => setIsAddAnnouncementOpen(true)}
-                            className="bg-node-4 text-background hover:bg-node-4/90 h-8 text-xs px-2.5 gap-1 shrink-0"
-                        >
-                            <Plus className="h-4 w-4" />
-                            {locale === "th" ? "เพิ่มประกาศใหม่" : "New Announcement"}
-                        </Button>
-                    )}
-                    {type === "sponsorNode" && (
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => setIsAddSponsorOpen(true)}
-                            className="bg-red-500 text-white hover:bg-red-600 h-8 text-xs px-2.5 gap-1 shrink-0"
-                        >
-                            <Plus className="h-4 w-4" />
-                            {locale === "th" ? "เพิ่มผู้สนับสนุนใหม่" : "New Sponsor"}
-                        </Button>
-                    )}
-                    {!isRegistrationMode && !isPseudoNode && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteNode(id)}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                            title={locale === "th" ? "ลบโหนด" : "Delete node"}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    )}
+            {type === "rankingNode" ? (
+                <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                    <RankingNodeSettings
+                        tournamentId={tournamentId}
+                        categoryId={activeCategoryId || undefined}
+                        currentTournamentStatus={currentTournamentStatus}
+                        onStatusChange={onStatusChange}
+                    />
                 </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto min-h-0 p-2 md:p-4 space-y-4 md:space-y-4 custom-scrollbar">
 
                 {/* ── Common Settings ── */}
-                <div className="space-y-1 md:space-y-2">
+                <div className="space-y-4">
                     {!isPseudoNode && (
                         <div className="space-y-1" id="node-settings-label-wrapper">
                             <Label>
                                 {locale === "th" ? "ชื่อหัวข้อ" : "Label"}
                             </Label>
                             <Input
+                                size="sm"
                                 value={data.label as string}
                                 onChange={(e) => updateNodeData(id, { label: e.target.value })}
                                 placeholder={locale === "th" ? "เช่น สาย A, รอบ 8 ทีมสุดท้าย, ผู้สนับสนุน..." : "e.g. Group A, Quarter Finals, Sponsors..."}
@@ -623,7 +583,7 @@ export function NodeSettings() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             const current = Number(data.teamCount) || 0;
                                             const nextVal = Math.max(0, current - 1);
@@ -631,9 +591,10 @@ export function NodeSettings() {
                                         }}
                                         disabled={(Number(data.teamCount) || 0) <= 0}
                                     >
-                                        -
+                                        <Minus className="size-4" />
                                     </Button>
                                     <Input
+                                        size="sm"
                                         type="text"
                                         inputMode="numeric"
                                         value={data.teamCount !== undefined && data.teamCount !== null ? String(data.teamCount) : "0"}
@@ -647,7 +608,7 @@ export function NodeSettings() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             const current = Number(data.teamCount) || 0;
                                             const nextVal = Math.min(64, current + 1);
@@ -655,7 +616,7 @@ export function NodeSettings() {
                                         }}
                                         disabled={(Number(data.teamCount) || 0) >= 64}
                                     >
-                                        +
+                                        <Plus className="size-4" />
                                     </Button>
                                 </div>
                             </div>
@@ -685,14 +646,14 @@ export function NodeSettings() {
                         ];
 
                         return (
-                            <div className="space-y-1 md:space-y-2">
+                            <div className="space-y-4">
                                 <div className="space-y-1" id="node-settings-standing-advancing">
                                     <Label>{locale === "th" ? "จำนวนทีมที่เข้ารอบ" : "Advancing Teams"}</Label>
                                     <div className="flex items-center gap-1 lg:gap-2">
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            size="icon"
+                                            size="icon-sm"
                                             onClick={() => {
                                                 const current = Number(data.advancingCount) || 0;
                                                 const nextVal = Math.max(0, current - 1);
@@ -703,6 +664,7 @@ export function NodeSettings() {
                                             -
                                         </Button>
                                         <Input
+                                            size="sm"
                                             type="text"
                                             inputMode="numeric"
                                             value={data.advancingCount !== undefined && data.advancingCount !== null ? String(data.advancingCount) : "0"}
@@ -716,7 +678,7 @@ export function NodeSettings() {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            size="icon"
+                                            size="icon-sm"
                                             onClick={() => {
                                                 const current = Number(data.advancingCount) || 0;
                                                 const nextVal = Math.min(16, current + 1);
@@ -761,234 +723,18 @@ export function NodeSettings() {
                         );
                     })()}
 
-                    {type === "matchNode" && (() => {
-                        const groupEdge = edges.find(e => e.target === id && e.targetHandle === 'group-in');
-                        const connectedGroupNode = groupEdge ? nodes.find(n => n.id === groupEdge.source) : null;
-
-                        const getSelectOptions = (currentVal: string) => {
-                            const options = new Set<string>();
-                            if (connectedGroupNode) {
-                                const groupTeamCount = (connectedGroupNode.data as { teamCount?: number }).teamCount || 0;
-                                const groupTeams = (connectedGroupNode.data as { teams?: string[] }).teams || [];
-                                for (let i = 0; i < groupTeamCount; i++) {
-                                    const name = groupTeams[i];
-                                    options.add((!name || name === "TBD") ? `Team ${i + 1}` : name);
-                                }
-                            }
-                            if (currentVal && currentVal !== "TBD" && !teams.some(t => t.name === currentVal)) {
-                                options.add(currentVal);
-                            }
-                            return Array.from(options);
-                        };
-
-                        const getSelectItems = (optionsList: string[], liveTeam: string | null) => {
-                            const rendered = new Set<string>();
-                            rendered.add("TBD");
-                            if (liveTeam) {
-                                rendered.add(liveTeam);
-                            }
-                            const items: React.ReactNode[] = [];
-                            optionsList.forEach(opt => {
-                                if (!rendered.has(opt)) {
-                                    rendered.add(opt);
-                                    items.push(<SelectItem key={opt} value={opt}>{opt}</SelectItem>);
-                                }
-                            });
-                            teams.forEach(t => {
-                                if (!rendered.has(t.name)) {
-                                    rendered.add(t.name);
-                                    items.push(<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>);
-                                }
-                            });
-                            return items;
-                        };
-
-                        return (
-                            <div className="space-y-1 md:space-y-2" id="node-settings-match-schedule">
-                                <Label>{locale === "th" ? "รายการแมตช์ในโหนด" : "Matches in Node"}</Label>
-                                <div className="space-y-1 md:space-y-2">
-                                    {((data.matches as MatchItem[]) || [])
-                                        .slice()
-                                        .sort((a, b) => {
-                                            const dateA = a.match_date || "9999-12-31";
-                                            const timeA = a.match_time || "23:59";
-                                            const dateB = b.match_date || "9999-12-31";
-                                            const timeB = b.match_time || "23:59";
-                                            if (dateA !== dateB) return dateA.localeCompare(dateB);
-                                            return timeA.localeCompare(timeB);
-                                        })
-                                        .map((match, idx) => {
-                                            const updateMatch = (updates: Partial<MatchItem>) => {
-                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
-                                                const matchIdx = originalMatches.findIndex(m => m.id === match.id);
-                                                if (matchIdx !== -1) {
-                                                    originalMatches[matchIdx] = { ...originalMatches[matchIdx], ...updates };
-                                                    updateNodeData(id, { matches: originalMatches });
-                                                }
-                                            };
-
-                                            const dbMatch = dbMatches.find(m =>
-                                                (match.dbId && m.id === match.dbId) ||
-                                                (match.matchId && m.id === match.matchId) ||
-                                                (m.node_id === id && m.match_index === (idx + 1)) ||
-                                                (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
-                                            );
-                                            const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`, dbMatch, 'a');
-                                            const liveTeamB = getResolvedTeam(id, `slot-b-${idx}`, dbMatch, 'b');
-
-                                            const homeOptions = getSelectOptions(match.placeholderA);
-                                            const awayOptions = getSelectOptions(match.placeholderB);
-
-                                            const homeSelectItems = getSelectItems(homeOptions, liveTeamA);
-                                            const awaySelectItems = getSelectItems(awayOptions, liveTeamB);
-
-                                            const matchConsoleId = match.dbId || match.matchId || dbMatch?.id || (type === "matchNode" && !!data.matchId && idx === 0 ? (data.matchId as string) : undefined);
-
-                                            return (
-                                                <div key={match.id || idx} className="p-2 bg-card border rounded-sm space-y-2 relative group">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-xs font-black">
-                                                            {locale === "th" ? `แมตช์ที่ #${idx + 1}` : `Match #${idx + 1}`}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => {
-                                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
-                                                                const filtered = originalMatches.filter(m => m.id !== match.id);
-                                                                updateNodeData(id, { matches: filtered });
-                                                            }}
-                                                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                                                            title={locale === "th" ? "ลบแมตช์นี้" : "Delete match"}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-[10px]">{locale === "th" ? "ทีมเหย้า" : "Home Team"}</Label>
-                                                            <Select
-                                                                value={liveTeamA || match.placeholderA}
-                                                                onValueChange={(val) => updateMatch({ placeholderA: val })}
-                                                            >
-                                                                <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black" : ""}`}>
-                                                                    <SelectValue placeholder={locale === "th" ? "เลือกทีม" : "Select Team"} />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="TBD">TBD</SelectItem>
-                                                                    {liveTeamA && (
-                                                                        <SelectItem value={liveTeamA} disabled>
-                                                                            {liveTeamA} (Live)
-                                                                        </SelectItem>
-                                                                    )}
-                                                                    {homeSelectItems}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-[10px]">{locale === "th" ? "ทีมเยือน" : "Away Team"}</Label>
-                                                            <Select
-                                                                value={liveTeamB || match.placeholderB}
-                                                                onValueChange={(val) => updateMatch({ placeholderB: val })}
-                                                            >
-                                                                <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black" : ""}`}>
-                                                                    <SelectValue placeholder={locale === "th" ? "เลือกทีม" : "Select Team"} />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="TBD">TBD</SelectItem>
-                                                                    {liveTeamB && (
-                                                                        <SelectItem value={liveTeamB} disabled>
-                                                                            {liveTeamB} (Live)
-                                                                        </SelectItem>
-                                                                    )}
-                                                                    {awaySelectItems}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">{locale === "th" ? "วันและเวลาแข่ง" : "Date & Time"}</Label>
-                                                        <DateTimePicker
-                                                            date={match.match_date}
-                                                            time={match.match_time}
-                                                            onChange={(date, time) => {
-                                                                updateMatch({ match_date: date, match_time: time });
-                                                            }}
-                                                            placeholder={locale === "th" ? "เลือกวันและเวลาแข่ง" : "Select date & time"}
-                                                            size="sm"
-                                                        />
-                                                    </div>
-
-                                                    <Button
-                                                        variant={dbMatch?.status === 'finished' ? "outline" : "default"}
-                                                        size="sm"
-                                                        className="w-full font-bold"
-                                                        disabled={isCreatingConsoleId === `${id}-${idx}`}
-                                                        onClick={async () => {
-                                                            let targetId = matchConsoleId;
-                                                            if (!targetId) {
-                                                                setIsCreatingConsoleId(`${id}-${idx}`);
-                                                                try {
-                                                                    const canvasData = getCanvasData();
-                                                                    const res = await saveBracketCanvas(tournamentId, canvasData, activeCategoryId || undefined);
-                                                                    if (res.success && res.data) {
-                                                                        const savedNode = res.data.nodes?.find(n => n.id === id);
-                                                                        const savedMatches = (savedNode?.data as { matches?: MatchItem[] })?.matches || [];
-                                                                        const savedMatch = savedMatches[idx];
-                                                                        if (savedMatch?.dbId || savedMatch?.matchId) {
-                                                                            targetId = savedMatch.dbId || savedMatch.matchId;
-                                                                        }
-                                                                    }
-                                                                } catch (err) {
-                                                                    console.error("Error creating match console:", err);
-                                                                } finally {
-                                                                    setIsCreatingConsoleId(null);
-                                                                }
-                                                            }
-
-                                                            if (targetId) {
-                                                                router.push(`/dashboard/tournaments/${tournamentId}/matches/${targetId}`);
-                                                            } else {
-                                                                toast({
-                                                                    title: locale === "th" ? "เกิดข้อผิดพลาด" : "Error",
-                                                                    description: locale === "th" ? "ไม่สามารถสร้างห้องแข่งขันได้ กรุณาลองใหม่อีกครั้ง" : "Failed to open match console",
-                                                                    variant: "destructive"
-                                                                });
-                                                            }
-                                                        }}
-                                                    >
-                                                        {isCreatingConsoleId === `${id}-${idx}` ? (
-                                                            <>
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                                {locale === "th" ? "กำลังเปิดห้องแข่งขัน..." : "Opening Console..."}
-                                                            </>
-                                                        ) : dbMatch?.status === 'finished' ? (
-                                                            locale === "th" ? "ดูผลการแข่งขัน" : "VIEW MATCH"
-                                                        ) : (
-                                                            locale === "th" ? "จัดการการแข่งขัน" : "MATCH CONSOLE"
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            );
-                                        })}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={() => {
-                                            const next = [...((data.matches as MatchItem[]) || [])];
-                                            next.push({ id: `m-${Date.now()}-${next.length + 1}`, placeholderA: "TBD", placeholderB: "TBD" });
-                                            updateNodeData(id, { matches: next });
-                                        }}
-                                    >
-                                        <Plus />
-                                        {locale === "th" ? "เพิ่มแมตช์ใหม่ในโหนด" : "Add Match to Node"}
-                                    </Button>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                    {type === "matchNode" && (
+                        <MatchNodeSettings
+                            id={id}
+                            data={data}
+                            tournamentId={tournamentId}
+                            activeCategoryId={activeCategoryId}
+                            dbMatches={dbMatches}
+                        />
+                    )}
 
                     {type === "teamListNode" && (
-                        <div className="space-y-1 md:space-y-2" id="node-settings-teamlist-add">
+                        <div className="space-y-4" id="node-settings-teamlist-add">
                             <div className="flex justify-end">
                                 <AddTournamentTeamDialog
                                     tournamentId={tournamentId}
@@ -1003,7 +749,7 @@ export function NodeSettings() {
                                 />
                             </div>
 
-                            <div className="space-y-1 md:space-y-2">
+                            <div className="space-y-4">
                                 <div className="custom-scrollbar">
                                     <Registrations tournamentId={tournamentId} categoryId={activeCategoryId || undefined} />
                                 </div>
@@ -1012,7 +758,7 @@ export function NodeSettings() {
                     )}
 
                     {type === "sponsorNode" && (
-                        <div className="space-y-1 md:space-y-2" id="node-settings-sponsor-list">
+                        <div className="space-y-4" id="node-settings-sponsor-list">
                             <AddSponsorDialog
                                 tournamentId={tournamentId}
                                 open={isAddSponsorOpen}
@@ -1043,7 +789,7 @@ export function NodeSettings() {
                                     description={locale === "th" ? "คลิก 'New Sponsor' เพื่อเพิ่มผู้สนับสนุน" : "Click 'New Sponsor' to add a sponsor"}
                                 />
                             ) : (
-                                <div className="space-y-1 md:space-y-2">
+                                <div className="space-y-4">
                                     <p className="text-[10px] text-muted-foreground/60 italic">
                                          Drag handles to reorder sponsors. Reordering updates order_index automatically.
                                      </p>
@@ -1062,7 +808,7 @@ export function NodeSettings() {
                                             >
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
-                                                        <GripVertical className="h-4 w-4" />
+                                                        <GripVertical className="size-4" />
                                                     </div>
                                                     <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5 shrink-0">
                                                         {sponsor.logo_img ? (
@@ -1074,7 +820,7 @@ export function NodeSettings() {
                                                                 height={32}
                                                             />
                                                         ) : (
-                                                            <Heart className="h-4 w-4 text-muted-foreground/20" />
+                                                            <Heart className="size-4 text-muted-foreground/20" />
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
@@ -1088,7 +834,7 @@ export function NodeSettings() {
                                                         </div>
                                                         {sponsor.link_url && (
                                                             <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1 mt-0.5">
-                                                                <Globe className="h-4 w-4" />
+                                                                <Globe className="size-4" />
                                                                 {sponsor.link_url}
                                                             </a>
                                                         )}
@@ -1102,7 +848,7 @@ export function NodeSettings() {
                                                             size="icon-sm"
                                                             className="text-muted-foreground hover:text-foreground shrink-0"
                                                         >
-                                                            <MoreVertical className="h-4 w-4" />
+                                                            <MoreVertical className="size-4" />
                                                         </Button>
                                                     </ActionMenuTrigger>
                                                     <ActionMenuContent align="end" className="w-32 bg-card shadow-xl">
@@ -1110,14 +856,14 @@ export function NodeSettings() {
                                                             className="cursor-pointer text-xs flex items-center gap-2"
                                                             onClick={() => handleEditSponsorClick(sponsor)}
                                                         >
-                                                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                            <Pencil className="size-4 text-muted-foreground" />
                                                             <span>{tSponsors("edit")}</span>
                                                         </ActionMenuItem>
                                                         <ActionMenuItem
                                                             className="cursor-pointer text-xs flex items-center gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
                                                             onClick={() => handleDeleteSponsorClick(sponsor.id)}
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
+                                                            <Trash2 className="size-4" />
                                                             <span>{tSponsors("delete")}</span>
                                                         </ActionMenuItem>
                                                     </ActionMenuContent>
@@ -1131,7 +877,7 @@ export function NodeSettings() {
                     )}
 
                     {type === "announcementNode" && (
-                        <div className="space-y-2">
+                        <div className="space-y-4">
                             <Announcements
                                 tournamentId={tournamentId}
                                 isEditable={true}
@@ -1148,14 +894,14 @@ export function NodeSettings() {
                     )}
 
                     {type === "registrationNode" && (
-                        <div className="space-y-1 md:space-y-2">
+                        <div className="space-y-4">
                             {isRegLoading ? (
                                 <div className="flex justify-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                                 </div>
                             ) : (
-                                <form onSubmit={handleRegSave} className="space-y-1 md:space-y-2">
-                                    <div className="space-y-1 md:space-y-2" id="node-settings-reg-fee">
+                                <form onSubmit={handleRegSave} className="space-y-4">
+                                    <div className="space-y-4" id="node-settings-reg-fee">
                                         <div className="grid grid-cols-2 gap-1 md:gap-2">
                                             <div className="space-y-1">
                                                 <Label>{locale === "th" ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}</Label>
@@ -1218,7 +964,7 @@ export function NodeSettings() {
                                             className="w-full bg-violet-600 hover:bg-violet-700"
                                         >
                                             {isRegSaving && (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <Loader2 className="size-4 animate-spin" />
                                             )}
                                             {locale === "th" ? "บันทึกการตั้งค่า" : "Save Settings"}
                                         </Button>
@@ -1236,14 +982,16 @@ export function NodeSettings() {
                     )}
                 </div>
             </div>
+            )}
 
-            <div className="mt-auto p-4 border-t bg-muted/10">
-                <p className="text-[9px] text-muted-foreground font-bold leading-relaxed">
-                    ID: {id}
-                </p>
-            </div>
+            {!isPseudoRanking && (
+                <div className="shrink-0 p-3 md:p-4 border-t bg-muted/10">
+                    <p className="text-[9px] text-muted-foreground font-bold leading-relaxed">
+                        ID: {id}
+                    </p>
+                </div>
+            )}
         </aside>
     );
 }
-
 

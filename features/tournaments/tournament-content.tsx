@@ -27,7 +27,6 @@ export function TournamentContent({
     userRole
 }: TournamentContentProps) {
     // const router = useRouter();
-    // const supabase = createClient();
 
     // State
     const [tournament, setTournament] = useState(initialTournament);

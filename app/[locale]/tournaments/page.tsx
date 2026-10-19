@@ -1,21 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth-server";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { PublicTournamentsListClient } from "./public-tournaments-list-client";
-import { getPublicTournaments } from "@/actions/public";
+import { getPublicTournaments, getPublicSports } from "@/actions/public";
 import { Tournament } from "@/types";
 
 export default async function TournamentsPage() {
-    const supabase = await createClient();
     const session = await getServerSession();
     const user = session?.user || null;
 
-    // Fetch list of sports for filtering tab
-    const { data: sports } = await supabase
-        .from("sports")
-        .select("id, sport_name")
-        .order("sport_name", { ascending: true });
+    // Fetch list of sports for filtering tab from Go backend
+    const sports = await getPublicSports();
 
     // Fetch initial public tournaments on server
     const initialTournaments = (await getPublicTournaments()) as unknown as Tournament[];

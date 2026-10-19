@@ -17,8 +17,20 @@ import {
     MapPin,
     Globe,
     Loader2,
-    Upload
+    Upload,
+    Lock,
+    ShieldAlert
 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -52,11 +64,12 @@ const initialState: ActionResponse = {
 interface GeneralSettingsProps {
     tournament: Tournament;
     className?: string;
+    onNavigateDangerZone?: () => void;
 }
 
 type ActionField = 'media' | 'name' | 'status' | 'period' | 'deadline' | 'description' | 'location' | 'map';
 
-export function GeneralSettings({ tournament, className }: GeneralSettingsProps) {
+export function GeneralSettings({ tournament, className, onNavigateDangerZone }: GeneralSettingsProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const locale = useLocale();
@@ -81,6 +94,9 @@ export function GeneralSettings({ tournament, className }: GeneralSettingsProps)
     // Form states
     const [name, setName] = useState(initialName);
     const [status, setStatus] = useState<string>(initialStatus);
+    const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+    const isStatusLocked = initialStatus === 'completed' || initialStatus === 'cancelled';
     const [locationName, setLocationName] = useState(initialLocationName);
     const [googleMapUrl, setGoogleMapUrl] = useState(initialGoogleMapUrl);
     const [description, setDescription] = useState(initialDescription);
@@ -423,17 +439,22 @@ export function GeneralSettings({ tournament, className }: GeneralSettingsProps)
                             </p>
                         </div>
                     </div>
-                    <div className="sm:w-2/3 space-y-1">
+                    <div className="sm:w-2/3 space-y-2">
                         <Select
                             name="status"
                             value={status}
+                            disabled={isStatusLocked}
                             onValueChange={(val) => {
-                                setStatus(val);
-                                setLastModifiedField('status');
+                                if (val === status) return;
+                                setPendingStatus(val);
+                                setStatusConfirmOpen(true);
                             }}
                         >
-                            <SelectTrigger size="sm" className="w-full">
-                                <SelectValue />
+                            <SelectTrigger size="sm" className={cn("w-full", isStatusLocked && "opacity-80 cursor-not-allowed bg-muted/40")}>
+                                <div className="flex items-center gap-2">
+                                    {isStatusLocked && <Lock className="size-3.5 text-warning shrink-0" />}
+                                    <SelectValue />
+                                </div>
                             </SelectTrigger>
                             <SelectContent className="bg-card">
                                 <SelectItem value="draft" className="text-muted-foreground font-semibold text-xs cursor-pointer">
@@ -450,7 +471,36 @@ export function GeneralSettings({ tournament, className }: GeneralSettingsProps)
                                 </SelectItem>
                             </SelectContent>
                         </Select>
-                        {activeActionField === 'status' && renderActionButtons()}
+
+                        {isStatusLocked && (
+                            <div className="flex items-start gap-2.5 p-3 rounded-sm bg-muted/40 border border-border text-xs text-muted-foreground mt-2">
+                                <Lock className="size-4 text-warning shrink-0 mt-0.5" />
+                                <div className="space-y-1.5 flex-1">
+                                    <p className="font-semibold text-foreground">
+                                        {isThai ? "สถานะการแข่งขันถูกล็อค" : "Tournament Status Locked"}
+                                    </p>
+                                    <p className="text-[11px] leading-relaxed">
+                                        {isThai
+                                            ? `ทัวร์นาเมนต์นี้มีสถานะเป็น "${status === 'completed' ? 'เสร็จสิ้น (Completed)' : 'ยกเลิก (Cancelled)'}" แล้ว จึงไม่สามารถเปลี่ยนสถานะได้จากส่วนนี้ หากต้องการเปลี่ยนสถานะ กรุณาไปที่เมนู "พื้นที่อันตราย (Danger Zone)" เพื่อยื่นคำขอเปลี่ยนสถานะ`
+                                            : `This tournament is '${status === 'completed' ? 'Completed' : 'Cancelled'}' and locked. To change status, please go to 'Danger Zone' to submit a change request.`}
+                                    </p>
+                                    {onNavigateDangerZone && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={onNavigateDangerZone}
+                                            className="mt-1 text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/10"
+                                        >
+                                            <ShieldAlert className="size-3.5 mr-1 text-destructive" />
+                                            {isThai ? "ไปยังพื้นที่อันตราย (Danger Zone)" : "Go to Danger Zone"}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {!isStatusLocked && activeActionField === 'status' && renderActionButtons()}
                     </div>
                 </div>
 
@@ -631,6 +681,69 @@ export function GeneralSettings({ tournament, className }: GeneralSettingsProps)
                     </div>
                 </div>
             </form>
+
+            {/* Status Change Confirmation Dialog */}
+            <AlertDialog open={statusConfirmOpen} onOpenChange={setStatusConfirmOpen}>
+                <AlertDialogContent className="rounded-sm">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="p-2 lg:p-4 border-b">
+                            <Header level={4}>
+                                {isThai ? "ยืนยันการเปลี่ยนสถานะการแข่งขัน" : "Confirm Status Change"}
+                            </Header>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="p-2 lg:p-4 text-xs text-foreground/80 space-y-2">
+                            <p>
+                                {pendingStatus === 'draft' && (isThai
+                                    ? "คุณต้องการเปลี่ยนสถานะเป็น \"แบบร่าง (Draft)\" ใช่หรือไม่? ข้อมูลและการตั้งค่าต่างๆ จะยังคงอยู่"
+                                    : "Are you sure you want to change status to 'Draft'?")}
+                                {pendingStatus === 'ongoing' && (isThai
+                                    ? "คุณต้องการเปลี่ยนสถานะเป็น \"กำลังแข่งขัน (Ongoing)\" ใช่หรือไม่? ทัวร์นาเมนต์จะเปิดใช้งานและดำเนินการแข่งขัน"
+                                    : "Are you sure you want to change status to 'Ongoing'?")}
+                                {pendingStatus === 'completed' && (isThai
+                                    ? "คุณต้องการเปลี่ยนสถานะเป็น \"เสร็จสิ้น (Completed)\" ใช่หรือไม่? เมื่อเสร็จสิ้นแล้ว จะไม่สามารถเปลี่ยนสถานะกลับจากหน้านี้ได้โดยตรง (ต้องไปที่พื้นที่อันตรายในการตั้งค่า)"
+                                    : "Are you sure you want to change status to 'Completed'? Once completed, you will not be able to revert the status directly from here.")}
+                                {pendingStatus === 'cancelled' && (isThai
+                                    ? "คุณต้องการเปลี่ยนสถานะเป็น \"ยกเลิก (Cancelled)\" ใช่หรือไม่? การแข่งขันและระบบรับสมัครจะถูกปิด และจะไม่สามารถเปลี่ยนสถานะกลับจากหน้านี้ได้โดยตรง"
+                                    : "Are you sure you want to cancel this tournament? This status cannot be reverted directly from here.")}
+                            </p>
+                            {(pendingStatus === 'completed' || pendingStatus === 'cancelled') && (
+                                <p className="text-destructive font-medium text-[11px]">
+                                    {isThai
+                                        ? "*หมายเหตุ: สถานะนี้จะล็อคการเปลี่ยนสถานะทั่วไป หากต้องการเปลี่ยนกลับจะต้องดำเนินการผ่านพื้นที่อันตราย (Danger Zone)"
+                                        : "*Note: This status will lock standard status changes. Any revert must be done via Danger Zone."}
+                                </p>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="p-2 lg:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setPendingStatus(null);
+                                setStatusConfirmOpen(false);
+                            }}
+                            className="mt-0"
+                        >
+                            {isThai ? "ยกเลิก" : "Cancel"}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                if (pendingStatus) {
+                                    setStatus(pendingStatus);
+                                    setLastModifiedField('status');
+                                }
+                                setStatusConfirmOpen(false);
+                                setPendingStatus(null);
+                            }}
+                            className={cn(
+                                pendingStatus === 'cancelled' && "bg-destructive hover:bg-destructive/90",
+                                pendingStatus === 'completed' && "bg-primary hover:bg-primary/90"
+                            )}
+                        >
+                            {isThai ? "ยืนยันเปลี่ยนสถานะ" : "Confirm"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

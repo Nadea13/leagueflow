@@ -20,7 +20,8 @@ export function TournamentSettings({
     userPlan,
     activeCategoryId,
     onCategoryUpdated,
-    userRole
+    userRole,
+    onTabChange
 }: {
     tournament: Tournament;
     hasFixtures: boolean;
@@ -30,6 +31,7 @@ export function TournamentSettings({
     activeCategoryId?: string | null;
     onCategoryUpdated?: () => void;
     userRole?: string | null;
+    onTabChange?: (tab: 'general' | 'categories' | 'location' | 'staff' | 'danger') => void;
 }) {
     const tournamentId = tournament.id;
 
@@ -61,7 +63,10 @@ export function TournamentSettings({
     return (
         <div>
             {activeTab === 'general' &&
-                <GeneralSettings tournament={tournament} />
+                <GeneralSettings
+                    tournament={tournament}
+                    onNavigateDangerZone={() => onTabChange?.('danger')}
+                />
             }
 
             {activeTab === 'categories' &&
@@ -80,6 +85,7 @@ export function TournamentSettings({
                     tournamentName={tournament.name}
                     activeCategoryId={activeCategoryId}
                     tournamentStatus={tournament.status}
+                    tournamentSettings={(tournament as any).settings}
                 />
             )}
         </div>

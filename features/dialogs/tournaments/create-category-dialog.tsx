@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { createTournamentCategory, getOrCreateAgeCategory } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,20 +100,17 @@ export function CreateCategoryForm({
             return;
         }
         if (!tournamentId) return;
-        const supabase = createClient();
         async function fetchSport() {
-            const { data } = await supabase
-                .from("tournaments")
-                .select("name, sport, sports(sport_name)")
-                .eq("id", tournamentId)
-                .maybeSingle();
+            try {
+                const data = await ApiClient.fetch<{ tournament?: { name?: string; sport?: string }; sport?: string; name?: string }>(`/tournaments/${tournamentId}`);
+                const rawSport = data?.tournament?.sport || data?.sport ||
+                    (data?.tournament?.name?.toLowerCase().includes("volleyball") || data?.name?.toLowerCase().includes("volleyball") || data?.tournament?.name?.includes("วอลเลย์บอล") || data?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
 
-            const rawSport = (data as unknown as { sport?: string; sports?: { sport_name?: string } })?.sport ||
-                (data as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
-                (data?.name?.toLowerCase().includes("volleyball") || data?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
-
-            if (rawSport) {
-                setSport(rawSport.toLowerCase());
+                if (rawSport) {
+                    setSport(rawSport.toLowerCase());
+                }
+            } catch {
+                // Ignore error
             }
         }
         fetchSport();
@@ -188,20 +185,17 @@ export function CreateCategoryForm({
             const isEventPlan = activePlan === "event" || activePlan === "monthly" || activePlan === "pro" || activePlan === "manager_pro";
 
             if (!isUnlimitedPlan) {
-                const supabase = createClient();
-                const { count: categoryCount, error: categoryCountError } = await supabase
-                    .from("tournament_categories")
-                    .select("id", { count: "exact", head: true })
-                    .eq("tournament_id", tournamentId)
-                    .is("deleted_at", null);
-
-                if (categoryCountError) {
+                let categoryCount = 0;
+                try {
+                    const categories = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/categories`);
+                    categoryCount = Array.isArray(categories) ? categories.length : 0;
+                } catch (categoryCountError) {
                     console.error("Error counting categories:", categoryCountError);
                 }
 
                 const maxAllowedCategories = isCupPlan ? Infinity : isEventPlan ? 3 : 1;
 
-                if (categoryCount && categoryCount >= maxAllowedCategories) {
+                if (categoryCount >= maxAllowedCategories) {
                     toast({
                         title: isThai ? "เกิดข้อผิดพลาด" : "Error",
                         description: isThai
@@ -260,19 +254,17 @@ export function CreateCategoryForm({
                     description: isThai ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
                 });
 
-                const supabase = createClient();
-                const { data } = await supabase
-                    .from("tournament_categories")
-                    .select("id")
-                    .eq("tournament_id", tournamentId)
-                    .eq("age_category_id", targetAgeCategoryId)
-                    .eq("gender_type", genderType)
-                    .is("deleted_at", null)
-                    .single();
-
-                if (data) {
-                    onSuccess(data.id);
-                } else {
+                try {
+                    const categories = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/categories`);
+                    const found = categories?.find(
+                        (c: any) => c.age_category_id === targetAgeCategoryId && c.gender_type === genderType
+                    );
+                    if (found) {
+                        onSuccess(found.id);
+                    } else {
+                        onSuccess("");
+                    }
+                } catch {
                     onSuccess("");
                 }
                 onOpenChange(false);

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Shield, ArrowRight, Settings, Plus, Minus, RotateCcw, LayoutGrid, Play, Pause, Copy, ExternalLink, ChevronRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { updateBroadcastSettings } from "@/actions/tournaments/general";
@@ -156,7 +156,6 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const isInitialLoadedRef = useRef(false);
-    const supabase = createClient();
 
     // Timer Ticking Effect
     useEffect(() => {
@@ -211,63 +210,53 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                 // 1. Fetch Match details (if matchId is provided or find the latest match in tournament)
                 let activeMatchId = matchId;
                 if (!activeMatchId && tournamentId) {
-                    const { data: firstMatch } = await supabase
-                        .from("matches")
-                        .select("id")
-                        .eq("tournament_id", tournamentId)
-                        .is("deleted_at", null)
-                        .order("created_at", { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-
-                    if (firstMatch) {
-                        activeMatchId = firstMatch.id;
+                    try {
+                        const matches = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/matches`);
+                        if (Array.isArray(matches) && matches.length > 0) {
+                            activeMatchId = matches[0].id;
+                        }
+                    } catch {
+                        // ignore error
                     }
                 }
 
                 if (activeMatchId) {
-                    const { data: matchData } = await supabase
-                        .from("matches")
-                        .select(`
-                            id,
-                            home_score,
-                            away_score,
-                            home_team:tournament_teams!matches_home_team_id_fkey(id, name, logo_url, team:teams(name, logo_img)),
-                            away_team:tournament_teams!matches_away_team_id_fkey(id, name, logo_url, team:teams(name, logo_img))
-                        `)
-                        .eq("id", activeMatchId)
-                        .maybeSingle();
+                    try {
+                        const matchData = await ApiClient.fetch<any>(`/matches/${activeMatchId}`);
+                        if (matchData) {
+                            const home = matchData.home_team;
+                            const away = matchData.away_team;
 
-                    if (matchData) {
-                        const home = Array.isArray(matchData.home_team) ? matchData.home_team[0] : matchData.home_team;
-                        const away = Array.isArray(matchData.away_team) ? matchData.away_team[0] : matchData.away_team;
-                        const homeRel = Array.isArray(home?.team) ? home.team[0] : home?.team;
-                        const awayRel = Array.isArray(away?.team) ? away.team[0] : away?.team;
-                        
-                        fetchedNameHome = homeRel?.name || home?.name || "";
-                        fetchedLogoHome = homeRel?.logo_img || home?.logo_url || "";
-                        fetchedNameAway = awayRel?.name || away?.name || "";
-                        fetchedLogoAway = awayRel?.logo_img || away?.logo_url || "";
+                            fetchedNameHome = home?.name || "";
+                            fetchedLogoHome = home?.logo_url || home?.logo_img || "";
+                            fetchedNameAway = away?.name || "";
+                            fetchedLogoAway = away?.logo_url || away?.logo_img || "";
 
-                        if (fetchedNameHome) setNameHome(fetchedNameHome);
-                        if (fetchedLogoHome) setLogoHome(fetchedLogoHome);
-                        if (fetchedNameAway) setNameAway(fetchedNameAway);
-                        if (fetchedLogoAway) setLogoAway(fetchedLogoAway);
+                            if (fetchedNameHome) setNameHome(fetchedNameHome);
+                            if (fetchedLogoHome) setLogoHome(fetchedLogoHome);
+                            if (fetchedNameAway) setNameAway(fetchedNameAway);
+                            if (fetchedLogoAway) setLogoAway(fetchedLogoAway);
 
-                        if (matchData.home_score !== null && matchData.home_score !== undefined) setScoreHome(String(matchData.home_score));
-                        if (matchData.away_score !== null && matchData.away_score !== undefined) setScoreAway(String(matchData.away_score));
+                            if (matchData.home_score !== null && matchData.home_score !== undefined) setScoreHome(String(matchData.home_score));
+                            if (matchData.away_score !== null && matchData.away_score !== undefined) setScoreAway(String(matchData.away_score));
+                        }
+                    } catch {
+                        // ignore error
                     }
                 }
 
                 if (tournamentId) {
-                    const { data, error } = await supabase
-                        .from("tournaments")
-                        .select("broadcast_settings")
-                        .eq("id", tournamentId)
-                        .single();
+                    let broadcastSettings: any = null;
+                    try {
+                        const tourData = await ApiClient.fetch<any>(`/tournaments/${tournamentId}`);
+                        const t = tourData?.tournament || tourData;
+                        broadcastSettings = t?.broadcast_settings;
+                    } catch {
+                        // ignore error
+                    }
 
-                    if (!error && data?.broadcast_settings) {
-                        const settings = data.broadcast_settings as Partial<CanvasSettings> & {
+                    if (broadcastSettings) {
+                        const settings = broadcastSettings as Partial<CanvasSettings> & {
                             blankCanvases?: BlankCanvas[];
                             blankDelay?: number;
                             selectedCanvasId?: string;
@@ -431,7 +420,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
             }
         };
         loadTemplate();
-    }, [active, tournamentId, matchId, supabase]);
+    }, [active, tournamentId, matchId]);
 
     // Undo / Redo History Stacks
     const historyPastRef = useRef<CanvasBlock[][]>([]);

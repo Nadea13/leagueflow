@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { uploadToR2 } from "@/lib/r2";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-server";
 import { populateTournamentRosterSubmissionsFromGlobalTeam } from "@/actions/tournaments/registration";
 
 // Zod Schema for Validation (Basic fields, slip validated conditionally)
@@ -227,8 +227,8 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         }
 
         // Fetch current authenticated user if any
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const session = await getServerSession().catch(() => null);
+        const user = session?.user;
 
         // If no existing team, create team via API
         if (!finalTeamId) {
@@ -279,17 +279,14 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             try {
                 let ttId = regResp?.id || regResp?.data?.id;
                 if (!ttId) {
-                    const adminSupabase = createAdminClient();
-                    const { data: latestTT } = await adminSupabase
-                        .from("tournament_teams")
-                        .select("id")
-                        .eq("tournament_id", tournamentId)
-                        .eq("team_id", finalTeamId)
-                        .order("created_at", { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-                    if (latestTT) {
-                        ttId = latestTT.id;
+                    try {
+                        const checkRes = await ApiClient.fetch<any[]>(`/tournaments/${tournamentId}/teams`);
+                        const found = (Array.isArray(checkRes) ? checkRes : []).find((t: any) => t.team_id === finalTeamId || t.id === finalTeamId);
+                        if (found) {
+                            ttId = found.id;
+                        }
+                    } catch {
+                        // ignore
                     }
                 }
 

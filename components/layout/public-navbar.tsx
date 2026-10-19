@@ -5,11 +5,13 @@ import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
+import { Shield } from "lucide-react";
 
 export interface NavbarUser {
     id?: string;
     email?: string;
     full_name?: string;
+    role?: string;
 }
 
 interface PublicNavbarProps {
@@ -76,9 +78,19 @@ export function PublicNavbar({ user = null }: PublicNavbarProps) {
                 {/* Right Side Actions */}
                 <div className="flex items-center gap-2">
                     {user ? (
-                        <Button asChild size="sm" variant="outline" className="font-medium">
-                            <Link href="/dashboard">{tLanding('nav_dashboard')}</Link>
-                        </Button>
+                        <>
+                            {(user.role === 'super_admin' || user.role === 'admin') && (
+                                <Button asChild size="sm" variant="outline" className="font-semibold text-primary border-primary/30 hover:bg-primary/10 gap-1.5 shadow-xs">
+                                    <Link href="/admin" target="_blank" rel="noopener noreferrer">
+                                        <Shield className="h-4 w-4" />
+                                        <span>Admin Panel</span>
+                                    </Link>
+                                </Button>
+                            )}
+                            <Button asChild size="sm" variant="outline" className="font-medium">
+                                <Link href="/dashboard">{tLanding('nav_dashboard')}</Link>
+                            </Button>
+                        </>
                     ) : isSignInPage ? (
                         <Button size="sm" asChild className="font-semibold shadow-xs">
                             <Link href="/sign-up">ลงทะเบียน</Link>

@@ -26,6 +26,15 @@ export async function saveBracketCanvas(
         return { success: false, error: access.error };
     }
 
+    return saveBracketCanvasInternal(tournamentId, canvasData, inputCategoryId);
+}
+
+export async function saveBracketCanvasInternal(
+    tournamentId: string,
+    canvasData: BracketCanvasData,
+    inputCategoryId?: string
+): Promise<ActionResponse<BracketCanvasData>> {
+
     const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
     let targetCategoryId = inputCategoryId;
     if (!targetCategoryId) {
@@ -85,8 +94,8 @@ export async function saveBracketCanvas(
             const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
-                const team = teams?.find(t => String(t.id) === String(teamId));
-                return team?.team_id || null;
+                const team = teams?.find(t => String(t.id) === String(teamId) || String(t.team_id) === String(teamId));
+                return team?.team_id || team?.id || teamId;
             }
         }
 
@@ -107,7 +116,7 @@ export async function saveBracketCanvas(
                     groupTeamIds.includes(m.away_team_id)
                 );
 
-                const isGroupFinished = groupMatches.length > 0 && groupMatches.every(m => m.status === 'finished');
+                const isGroupFinished = groupMatches.length > 0 && groupMatches.every(m => ['finished', 'completed'].includes(m.status));
                 if (isGroupFinished) {
                     const team = teams?.find(t => t.name === teamName);
                     return team?.team_id || null;
@@ -117,34 +126,35 @@ export async function saveBracketCanvas(
 
         if (sourceNode.type === 'matchNode') {
             const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
-            if (winnerMatch) {
-                const winnerIndex = parseInt(winnerMatch[1], 10);
-                const sourceMatches = (sourceNode.data as MatchNodeData).matches || [];
-                const sourceMatch = sourceMatches[winnerIndex];
-                if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
-                    const matchId = sourceMatch.dbId || sourceMatch.matchId;
-                    const dbM = activeDbMatches.find(m => m.id === matchId);
-                    if (dbM && dbM.status === 'finished') {
-                        const hScore = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: number | string }).total) || 0 : Number(dbM.home_score) || 0;
-                        const aScore = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: number | string }).total) || 0 : Number(dbM.away_score) || 0;
-                        if (hScore > aScore) return dbM.home_team_id;
-                        if (aScore > hScore) return dbM.away_team_id;
-                    }
-                }
-            }
             const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
-            if (loserMatch) {
-                const loserIndex = parseInt(loserMatch[1], 10);
+            const isWinnerHandle = !!winnerMatch;
+            const matchIdx = winnerMatch ? parseInt(winnerMatch[1], 10) : loserMatch ? parseInt(loserMatch[1], 10) : -1;
+
+            if (matchIdx !== -1) {
                 const sourceMatches = (sourceNode.data as MatchNodeData).matches || [];
-                const sourceMatch = sourceMatches[loserIndex];
-                if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
-                    const matchId = sourceMatch.dbId || sourceMatch.matchId;
-                    const dbM = activeDbMatches.find(m => m.id === matchId);
-                    if (dbM && dbM.status === 'finished') {
-                        const hScore = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: number | string }).total) || 0 : Number(dbM.home_score) || 0;
-                        const aScore = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: number | string }).total) || 0 : Number(dbM.away_score) || 0;
-                        if (hScore > aScore) return dbM.home_team_id;
-                        if (aScore < hScore) return dbM.away_team_id;
+                const sourceMatch = sourceMatches[matchIdx];
+                const matchId = sourceMatch?.dbId || sourceMatch?.matchId;
+                const dbM = activeDbMatches.find(m =>
+                    (matchId && m.id === matchId) ||
+                    (m.node_id === sourceNode.id && ((m.idx_match ?? m.match_index) === (matchIdx + 1)))
+                );
+                const isEnded = dbM && ['finished', 'completed', 'canceled', 'cancelled'].includes(dbM.status);
+                if (isEnded && dbM) {
+                    const hTeamId = dbM.home_team_id || resolveTeamId(sourceNode.id, 'a', matchIdx);
+                    const aTeamId = dbM.away_team_id || resolveTeamId(sourceNode.id, 'b', matchIdx);
+
+                    if (dbM.winner_id) {
+                        if (isWinnerHandle) return dbM.winner_id;
+                        return dbM.winner_id === hTeamId ? aTeamId : hTeamId;
+                    }
+                    const hScore = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: number | string }).total) || 0 : Number(dbM.home_score) || 0;
+                    const aScore = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: number | string }).total) || 0 : Number(dbM.away_score) || 0;
+                    if (isWinnerHandle) {
+                        if (hScore > aScore) return hTeamId;
+                        if (aScore > hScore) return aTeamId;
+                    } else {
+                        if (hScore < aScore) return hTeamId;
+                        if (aScore < hScore) return aTeamId;
                     }
                 }
             }
@@ -174,32 +184,43 @@ export async function saveBracketCanvas(
                 const resolvedAwayId = resolveTeamId(node.id, 'b', i);
                 
                 const matchId = match.dbId || match.matchId;
-                if (matchId) {
-                    validMatchIds.push(matchId);
+                const existingDbMatch = activeDbMatches.find(m =>
+                    (matchId && m.id === matchId) ||
+                    (m.node_id === node.id && ((m.idx_match ?? m.match_index) === (i + 1)))
+                );
+                const resolvedMatchId = matchId || existingDbMatch?.id;
+                if (resolvedMatchId) {
+                    validMatchIds.push(resolvedMatchId);
                 }
 
                 const scheduledAt = match.match_date && match.match_time 
                     ? `${match.match_date}T${match.match_time}:00Z` 
-                    : null;
+                    : (existingDbMatch?.scheduled_at || null);
 
                 matchesToSync.push({
-                    id: matchId || undefined,
+                    id: resolvedMatchId || undefined,
                     tournament_category_id: categoryId,
                     node_id: node.id,
                     placeholder_home: match.placeholderA || null,
                     placeholder_away: match.placeholderB || null,
                     placeholder_a: match.placeholderA || null,
                     placeholder_b: match.placeholderB || null,
-                    home_team_id: resolvedHomeId || homeTeam?.team_id || null,
-                    away_team_id: resolvedAwayId || awayTeam?.team_id || null,
+                    home_team_id: resolvedHomeId || homeTeam?.team_id || existingDbMatch?.home_team_id || null,
+                    away_team_id: resolvedAwayId || awayTeam?.team_id || existingDbMatch?.away_team_id || null,
+                    home_score: existingDbMatch?.home_score ?? 0,
+                    away_score: existingDbMatch?.away_score ?? 0,
+                    score_detail: existingDbMatch?.score_detail ?? undefined,
+                    timer_status: existingDbMatch?.timer_status || undefined,
+                    elapsed_seconds: existingDbMatch?.elapsed_seconds ?? existingDbMatch?.elapsed_before_pause ?? 0,
+                    minute: existingDbMatch?.minute ?? existingDbMatch?.current_minute ?? null,
                     scheduled_at: scheduledAt,
                     scheduled_time: scheduledAt,
-                    round: 1,
-                    round_number: 1,
+                    round: existingDbMatch?.round || 1,
+                    round_number: existingDbMatch?.round || 1,
                     stage: matches.length > 1 ? 'group' : 'knockout',
                     match_index: i + 1,
                     match_number: i + 1,
-                    status: 'scheduled',
+                    status: existingDbMatch?.status || 'scheduled',
                     is_manual: true
                 });
             }
@@ -207,6 +228,7 @@ export async function saveBracketCanvas(
     }
 
     // 3. Sync matches to Go backend API
+    let syncedMatches: any[] = [];
     try {
         const syncResp = await ApiClient.fetch<{ message: string; matches: any[] }>(`/tournaments/${tournamentId}/categories/${categoryId}/sync-matches`, {
             method: 'POST',
@@ -216,7 +238,7 @@ export async function saveBracketCanvas(
             })
         });
 
-        const syncedMatches = syncResp?.matches || [];
+        syncedMatches = syncResp?.matches || [];
 
         // Map synced match IDs back into node matches
         for (const node of updatedNodes) {
@@ -260,9 +282,151 @@ export async function saveBracketCanvas(
         return { success: false, error: err instanceof Error ? err.message : "Failed to save canvas data" };
     }
 
+    // 5. Check if tournament has determined a champion or rank 1 -> set tournament status to completed
+    try {
+        const allCurrentMatches = [...activeDbMatches];
+        for (const sm of (syncedMatches || [])) {
+            const existingIdx = allCurrentMatches.findIndex(m => m.id === sm.id || (m.node_id === sm.node_id && (m.idx_match ?? m.match_index) === sm.match_index));
+            if (existingIdx !== -1) {
+                allCurrentMatches[existingIdx] = { ...allCurrentMatches[existingIdx], ...sm };
+            } else {
+                allCurrentMatches.push(sm);
+            }
+        }
+
+        const thirdPlaceNodeIds = new Set<string>();
+        const matchNodes = updatedNodes.filter(n => n.type === 'matchNode');
+
+        matchNodes.forEach(node => {
+            const hasLoserInput = canvasData.edges.some(e => e.target === node.id && e.sourceHandle?.startsWith('loser'));
+            const labelLower = ((node.data as { label?: string })?.label || "").toLowerCase();
+            if (hasLoserInput || labelLower.includes('3rd') || labelLower.includes('third') || labelLower.includes('อันดับ 3')) {
+                thirdPlaceNodeIds.add(node.id);
+            }
+        });
+
+        const grandFinalNodeIds = new Set<string>();
+        matchNodes.forEach(node => {
+            if (thirdPlaceNodeIds.has(node.id)) return;
+            const hasOutgoingWinner = canvasData.edges.some(e =>
+                e.source === node.id &&
+                (!e.sourceHandle || e.sourceHandle.startsWith('winner')) &&
+                matchNodes.some(targetNode => targetNode.id === e.target)
+            );
+            if (!hasOutgoingWinner) {
+                grandFinalNodeIds.add(node.id);
+            }
+        });
+
+        let hasChampion = false;
+
+        // Check Grand Final nodes
+        for (const finalId of grandFinalNodeIds) {
+            const node = matchNodes.find(n => n.id === finalId);
+            const nodeMatches = (node?.data as MatchNodeData)?.matches || [];
+            for (let idx = 0; idx < nodeMatches.length; idx++) {
+                const mItem = nodeMatches[idx];
+                const matchId = mItem?.dbId || mItem?.matchId;
+                const dbM = allCurrentMatches.find(m =>
+                    (matchId && m.id === matchId) ||
+                    (m.node_id === finalId && ((m.idx_match ?? m.match_index) === (idx + 1)))
+                );
+                if (dbM) {
+                    const isEnded = ['finished', 'completed', 'canceled', 'cancelled'].includes(dbM.status) || !!dbM.winner_id;
+                    if (isEnded) {
+                        const hScore = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score
+                            ? Number((dbM.home_score as any).total) || 0
+                            : Number(dbM.home_score) || 0;
+                        const aScore = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score
+                            ? Number((dbM.away_score as any).total) || 0
+                            : Number(dbM.away_score) || 0;
+                        if (dbM.winner_id || hScore !== aScore) {
+                            hasChampion = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hasChampion) break;
+        }
+
+        // Check Round Robin / Standing nodes: if all category matches are finished
+        if (!hasChampion && allCurrentMatches.length > 0) {
+            const allMatchesFinished = allCurrentMatches.every(m => ['finished', 'completed', 'canceled', 'cancelled'].includes(m.status));
+            if (allMatchesFinished) {
+                hasChampion = true;
+            }
+        }
+
+        if (hasChampion) {
+            let isUnlocked = false;
+            try {
+                const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+                if (tourRes.ok) {
+                    const tourData = await tourRes.json();
+                    if (tourData.tournament?.settings?.status_unlocked === true && tourData.tournament?.status === 'ongoing') {
+                        isUnlocked = true;
+                    }
+                }
+            } catch (_e) {
+                // Ignore error
+            }
+
+            if (!isUnlocked) {
+                await fetch(`${apiUrl}/tournaments/${tournamentId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'completed' })
+                }).catch(e => console.error("Error setting tournament completed in saveBracketCanvas:", e));
+            }
+        }
+    } catch (statusCheckErr) {
+        console.error("Error evaluating tournament champion status:", statusCheckErr);
+    }
+
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
     revalidatePath(`/tournaments/${tournamentId}`);
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
 
     return { success: true, data: returnData };
 }
+
+export async function syncCategoryBracket(
+    tournamentId: string,
+    categoryId?: string,
+    skipAuth = false
+): Promise<ActionResponse<BracketCanvasData>> {
+    if (!skipAuth) {
+        const access = await validateTournamentAccess(tournamentId, "editor");
+        if (!access.success) {
+            return { success: false, error: access.error };
+        }
+    }
+
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    let targetCatId = categoryId;
+    let canvasData: BracketCanvasData | null = null;
+
+    try {
+        const tourRes = await fetch(`${apiUrl}/tournaments/${tournamentId}`, { cache: 'no-store' });
+        if (tourRes.ok) {
+            const tourData = await tourRes.json();
+            const categories = tourData.categories || [];
+            const cat = targetCatId ? categories.find((c: any) => c.id === targetCatId) : categories[0];
+            if (cat) {
+                targetCatId = cat.id;
+                canvasData = cat.canvas_data;
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching tournament in syncCategoryBracket:", e);
+    }
+
+    if (!targetCatId || !canvasData || !canvasData.nodes) {
+        return { success: false, error: "Bracket canvas data not found" };
+    }
+
+    return saveBracketCanvasInternal(tournamentId, canvasData, targetCatId);
+}
+
+

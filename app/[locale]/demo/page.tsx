@@ -1,26 +1,22 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { ApiClient } from "@/lib/api-client";
 
 export default async function DemoRedirectPage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const supabase = await createClient();
+  const { locale } = await params;
 
-  // Find the most recent active tournament
-  const { data: tournament } = await supabase
-    .from("tournaments")
-    .select("id")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (tournament) {
-    redirect(`/${locale}/tournaments/${tournament.id}`);
+  try {
+    const list = await ApiClient.fetch<any[]>("/tournaments?limit=1");
+    const tournaments = Array.isArray(list) ? list : (list as any)?.tournaments || [];
+    if (tournaments.length > 0 && tournaments[0]?.id) {
+      redirect(`/${locale}/tournaments/${tournaments[0].id}`);
+    }
+  } catch {
+    // Fallback to home if no tournament found
   }
 
-  // Fallback to home if no tournament found
   redirect(`/${locale}`);
 }
