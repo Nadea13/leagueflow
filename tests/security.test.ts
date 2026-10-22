@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validateTournamentAccess } from '@/lib/security';
+import type { ServerAuthUser } from '@/lib/auth-server';
 
 vi.mock('@/lib/auth-server', () => ({
     getServerSession: vi.fn(),
 }));
 
 import { getServerSession } from '@/lib/auth-server';
+
+const createMockUser = (overrides: Partial<ServerAuthUser> = {}): ServerAuthUser => ({
+    id: 'user-1',
+    email: 'user@example.com',
+    full_name: 'Test User',
+    role: 'user',
+    is_active: true,
+    ...overrides,
+});
 
 describe('validateTournamentAccess', () => {
     beforeEach(() => {
@@ -18,12 +28,14 @@ describe('validateTournamentAccess', () => {
         const result = await validateTournamentAccess('tournament-123');
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Authentication required');
+        if (!result.success) {
+            expect(result.error).toBe('Authentication required');
+        }
     });
 
     it('should grant admin role when user is the tournament organizer', async () => {
         vi.mocked(getServerSession).mockResolvedValueOnce({
-            user: { id: 'organizer-user', email: 'org@example.com' },
+            user: createMockUser({ id: 'organizer-user', email: 'org@example.com' }),
             token: 'valid-jwt',
         });
 
@@ -40,13 +52,15 @@ describe('validateTournamentAccess', () => {
         const result = await validateTournamentAccess('tournament-123');
 
         expect(result.success).toBe(true);
-        expect(result.role).toBe('admin');
-        expect(result.user?.id).toBe('organizer-user');
+        if (result.success) {
+            expect(result.role).toBe('admin');
+            expect(result.user.id).toBe('organizer-user');
+        }
     });
 
     it('should grant admin role when user is super_admin', async () => {
         vi.mocked(getServerSession).mockResolvedValueOnce({
-            user: { id: 'super-admin-user', email: 'admin@example.com', role: 'super_admin' },
+            user: createMockUser({ id: 'super-admin-user', email: 'admin@example.com', role: 'super_admin' }),
             token: 'valid-jwt',
         });
 
@@ -63,12 +77,14 @@ describe('validateTournamentAccess', () => {
         const result = await validateTournamentAccess('tournament-123');
 
         expect(result.success).toBe(true);
-        expect(result.role).toBe('admin');
+        if (result.success) {
+            expect(result.role).toBe('admin');
+        }
     });
 
     it('should grant editor role for staff / co-organizers', async () => {
         vi.mocked(getServerSession).mockResolvedValueOnce({
-            user: { id: 'staff-user', email: 'staff@example.com' },
+            user: createMockUser({ id: 'staff-user', email: 'staff@example.com' }),
             token: 'valid-jwt',
         });
 
@@ -85,12 +101,14 @@ describe('validateTournamentAccess', () => {
         const result = await validateTournamentAccess('tournament-123');
 
         expect(result.success).toBe(true);
-        expect(result.role).toBe('editor');
+        if (result.success) {
+            expect(result.role).toBe('editor');
+        }
     });
 
     it('should fallback gracefully when tournament fetch encounters an error', async () => {
         vi.mocked(getServerSession).mockResolvedValueOnce({
-            user: { id: 'user-1', email: 'u1@example.com' },
+            user: createMockUser({ id: 'user-1', email: 'u1@example.com' }),
             token: 'valid-jwt',
         });
 
@@ -99,6 +117,8 @@ describe('validateTournamentAccess', () => {
         const result = await validateTournamentAccess('tournament-123');
 
         expect(result.success).toBe(true);
-        expect(result.user?.id).toBe('user-1');
+        if (result.success) {
+            expect(result.user.id).toBe('user-1');
+        }
     });
 });

@@ -47,7 +47,7 @@ describe('Round Robin Fixture Generator', () => {
 
 describe('assignMatchTimes', () => {
     it('should distribute match schedule over hours and pitches starting from 08:00', () => {
-        const fixtures = [
+        const fixtures: Array<{ id: string; scheduled_at?: string }> = [
             { id: 'm1' },
             { id: 'm2' },
             { id: 'm3' },
