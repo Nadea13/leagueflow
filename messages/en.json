@@ -1546,7 +1546,13 @@
     "reject_confirm": "Are you sure you want to reject this payment?",
     "success_message": "Action completed successfully",
     "expires_at": "Expires At",
-    "view_slip": "View Slip"
+    "view_slip": "View Slip",
+    "tab_overview": "System Overview",
+    "tab_payment_approvals": "Payment Approvals",
+    "tab_status_requests": "Status Requests",
+    "tab_payment_history": "Payment History",
+    "tab_users_roles": "Users & Permissions",
+    "tab_master_players": "Master Players"
   },
   "BugReport": {
     "title": "Feedback",

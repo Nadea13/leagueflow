@@ -21,36 +21,41 @@ func NewMasterPlayerRepository(db *pgxpool.Pool) *MasterPlayerRepository {
 
 func (r *MasterPlayerRepository) List(ctx context.Context, userID *uuid.UUID, search string) ([]*model.MasterPlayer, error) {
 	query := `
-		SELECT id, user_id, 
-		       COALESCE(NULLIF(TRIM(CONCAT(first_name_local, ' ', CASE WHEN last_name_local = '-' THEN '' ELSE last_name_local END)), ''), NULLIF(TRIM(CONCAT(first_name_intl, ' ', CASE WHEN last_name_intl = '-' THEN '' ELSE last_name_intl END)), ''), 'Unnamed') AS name,
-		       first_name_local, middle_name_local, last_name_local, first_name_intl, middle_name_intl, last_name_intl,
-		       nickname, birthday::text, photo_url, tel, favorite_sport_id,
-		       preferred_hand, preferred_foot, created_at, updated_at
-		FROM master_players
-		WHERE deleted_at IS NULL
+		SELECT mp.id, mp.user_id, 
+		       COALESCE(NULLIF(TRIM(CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END)), ''), NULLIF(TRIM(CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END)), ''), 'Unnamed') AS name,
+		       mp.first_name_local, mp.middle_name_local, mp.last_name_local,
+		       mp.first_name_intl, mp.middle_name_intl, mp.last_name_intl,
+		       mp.first_name_th, mp.middle_name_th, mp.last_name_th,
+		       mp.first_name_en, mp.middle_name_en, mp.last_name_en,
+		       mp.nickname, mp.gender::text, mp.birthday::text, mp.photo_url, mp.profile_img, mp.tel, mp.favorite_sport_id,
+		       mp.preferred_hand, mp.preferred_foot, mp.status::text, mp.verified, mp.created_at, mp.updated_at,
+		       u.email, u.full_name
+		FROM master_players mp
+		LEFT JOIN users u ON mp.user_id = u.id
+		WHERE mp.deleted_at IS NULL
 	`
 	var args []interface{}
 	argIdx := 1
 
 	if userID != nil {
-		query += fmt.Sprintf(" AND user_id = $%d", argIdx)
+		query += fmt.Sprintf(" AND mp.user_id = $%d", argIdx)
 		args = append(args, *userID)
 		argIdx++
 	}
 
 	if search != "" {
 		query += fmt.Sprintf(` AND (
-			first_name_local ILIKE $%d OR last_name_local ILIKE $%d OR 
-			first_name_intl ILIKE $%d OR last_name_intl ILIKE $%d OR 
-			nickname ILIKE $%d OR 
-			TRIM(first_name_intl || ' ' || last_name_intl) ILIKE $%d OR 
-			TRIM(first_name_local || ' ' || last_name_local) ILIKE $%d
+			mp.first_name_local ILIKE $%d OR mp.last_name_local ILIKE $%d OR 
+			mp.first_name_intl ILIKE $%d OR mp.last_name_intl ILIKE $%d OR 
+			mp.nickname ILIKE $%d OR 
+			TRIM(mp.first_name_intl || ' ' || mp.last_name_intl) ILIKE $%d OR 
+			TRIM(mp.first_name_local || ' ' || mp.last_name_local) ILIKE $%d
 		)`, argIdx, argIdx, argIdx, argIdx, argIdx, argIdx, argIdx)
 		args = append(args, "%"+search+"%")
 		argIdx++
 	}
 
-	query += " ORDER BY created_at DESC"
+	query += " ORDER BY mp.created_at DESC"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -61,14 +66,26 @@ func (r *MasterPlayerRepository) List(ctx context.Context, userID *uuid.UUID, se
 	var list []*model.MasterPlayer
 	for rows.Next() {
 		var p model.MasterPlayer
+		var userEmail, userFullName *string
 		if err := rows.Scan(
 			&p.ID, &p.UserID, &p.Name,
 			&p.FirstNameLocal, &p.MiddleNameLocal, &p.LastNameLocal,
 			&p.FirstNameIntl, &p.MiddleNameIntl, &p.LastNameIntl,
-			&p.Nickname, &p.Birthday, &p.PhotoURL, &p.Tel, &p.FavoriteSportID,
-			&p.PreferredHand, &p.PreferredFoot, &p.CreatedAt, &p.UpdatedAt,
+			&p.FirstNameTH, &p.MiddleNameTH, &p.LastNameTH,
+			&p.FirstNameEN, &p.MiddleNameEN, &p.LastNameEN,
+			&p.Nickname, &p.Gender, &p.Birthday, &p.PhotoURL, &p.ProfileImg, &p.Tel, &p.FavoriteSportID,
+			&p.PreferredHand, &p.PreferredFoot, &p.Status, &p.Verified, &p.CreatedAt, &p.UpdatedAt,
+			&userEmail, &userFullName,
 		); err != nil {
 			return nil, err
+		}
+		if userEmail != nil {
+			p.User = &model.User{
+				Email: *userEmail,
+			}
+			if userFullName != nil {
+				p.User.FullName = *userFullName
+			}
 		}
 		list = append(list, &p)
 	}
@@ -110,27 +127,44 @@ func (r *MasterPlayerRepository) FindByName(ctx context.Context, firstName, last
 
 func (r *MasterPlayerRepository) GetByID(ctx context.Context, id uuid.UUID) (*model.MasterPlayer, error) {
 	query := `
-		SELECT id, user_id, 
-		       COALESCE(NULLIF(TRIM(CONCAT(first_name_local, ' ', last_name_local)), ''), NULLIF(TRIM(CONCAT(first_name_intl, ' ', last_name_intl)), ''), 'Unnamed') AS name,
-		       first_name_local, middle_name_local, last_name_local, first_name_intl, middle_name_intl, last_name_intl,
-		       nickname, birthday::text, photo_url, tel, favorite_sport_id,
-		       preferred_hand, preferred_foot, created_at, updated_at
-		FROM master_players
-		WHERE id = $1 AND deleted_at IS NULL
+		SELECT mp.id, mp.user_id, 
+		       COALESCE(NULLIF(TRIM(CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END)), ''), NULLIF(TRIM(CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END)), ''), 'Unnamed') AS name,
+		       mp.first_name_local, mp.middle_name_local, mp.last_name_local,
+		       mp.first_name_intl, mp.middle_name_intl, mp.last_name_intl,
+		       mp.first_name_th, mp.middle_name_th, mp.last_name_th,
+		       mp.first_name_en, mp.middle_name_en, mp.last_name_en,
+		       mp.nickname, mp.gender::text, mp.birthday::text, mp.photo_url, mp.profile_img, mp.tel, mp.favorite_sport_id,
+		       mp.preferred_hand, mp.preferred_foot, mp.status::text, mp.verified, mp.created_at, mp.updated_at,
+		       u.email, u.full_name
+		FROM master_players mp
+		LEFT JOIN users u ON mp.user_id = u.id
+		WHERE mp.id = $1 AND mp.deleted_at IS NULL
 	`
 	var p model.MasterPlayer
+	var userEmail, userFullName *string
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&p.ID, &p.UserID, &p.Name,
 		&p.FirstNameLocal, &p.MiddleNameLocal, &p.LastNameLocal,
 		&p.FirstNameIntl, &p.MiddleNameIntl, &p.LastNameIntl,
-		&p.Nickname, &p.Birthday, &p.PhotoURL, &p.Tel, &p.FavoriteSportID,
-		&p.PreferredHand, &p.PreferredFoot, &p.CreatedAt, &p.UpdatedAt,
+		&p.FirstNameTH, &p.MiddleNameTH, &p.LastNameTH,
+		&p.FirstNameEN, &p.MiddleNameEN, &p.LastNameEN,
+		&p.Nickname, &p.Gender, &p.Birthday, &p.PhotoURL, &p.ProfileImg, &p.Tel, &p.FavoriteSportID,
+		&p.PreferredHand, &p.PreferredFoot, &p.Status, &p.Verified, &p.CreatedAt, &p.UpdatedAt,
+		&userEmail, &userFullName,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
+	}
+	if userEmail != nil {
+		p.User = &model.User{
+			Email: *userEmail,
+		}
+		if userFullName != nil {
+			p.User.FullName = *userFullName
+		}
 	}
 	return &p, nil
 }

@@ -379,3 +379,27 @@ func (h *ExtraHandler) CreatePayment(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusCreated).JSON(p)
 }
+
+func (h *ExtraHandler) GetTableCounts(c *fiber.Ctx) error {
+	stats, err := h.service.GetTableCounts(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(stats)
+}
+
+func (h *ExtraHandler) GetTablePreview(c *fiber.Ctx) error {
+	table := c.Query("table")
+	if table == "" {
+		table = c.Params("table")
+	}
+	if table == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "table parameter is required"})
+	}
+
+	results, err := h.service.GetTablePreview(c.Context(), table)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(results)
+}

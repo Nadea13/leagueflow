@@ -1545,7 +1545,13 @@
     "reject_confirm": "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธการชำระเงินนี้?",
     "success_message": "ดำเนินการสำเร็จเรียบร้อยแล้ว",
     "expires_at": "วันหมดอายุ",
-    "view_slip": "ดูสลิปโอนเงิน"
+    "view_slip": "ดูสลิปโอนเงิน",
+    "tab_overview": "ภาพรวมระบบ",
+    "tab_payment_approvals": "อนุมัติการชำระเงิน",
+    "tab_status_requests": "คำขอสถานะทัวร์นาเมนต์",
+    "tab_payment_history": "ประวัติการชำระเงิน",
+    "tab_users_roles": "จัดการผู้ใช้และสิทธิ์",
+    "tab_master_players": "ฐานข้อมูลนักกีฬา"
   },
   "BugReport": {
     "title": "ข้อเสนอแนะ",

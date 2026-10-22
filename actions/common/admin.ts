@@ -143,6 +143,7 @@ export async function updateUserFields(
 export interface AdminMasterPlayer {
     id: string
     user_id: string | null
+    name?: string | null
     first_name_local?: string | null
     middle_name_local?: string | null
     last_name_local?: string | null
@@ -359,19 +360,38 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
             isAuthenticated: true
         }))
 
+        // Fetch real-time live table counts from Go backend
+        let tableCounts = {
+            users: usersList.length,
+            tournaments: 0,
+            teams: 0,
+            matches: 0,
+            payments: paymentsList.length,
+            players: masterPlayersList.length
+        }
+        try {
+            const countsRes = await fetch(`${apiUrl}/admin/table-counts`, { cache: 'no-store' })
+            if (countsRes.ok) {
+                const cData = await countsRes.json()
+                tableCounts = {
+                    users: typeof cData.users === 'number' ? cData.users : usersList.length,
+                    tournaments: typeof cData.tournaments === 'number' ? cData.tournaments : 0,
+                    teams: typeof cData.teams === 'number' ? cData.teams : 0,
+                    matches: typeof cData.matches === 'number' ? cData.matches : 0,
+                    payments: typeof cData.payments === 'number' ? cData.payments : paymentsList.length,
+                    players: typeof cData.players === 'number' ? cData.players : masterPlayersList.length
+                }
+            }
+        } catch (countsErr) {
+            console.warn("[getSystemMonitorStats] table-counts fetch error:", countsErr)
+        }
+
         return {
             success: true,
             data: {
                 dbConnected: isHealthy,
                 latencyMs,
-                tableCounts: {
-                    users: usersList.length,
-                    tournaments: 0,
-                    teams: 0,
-                    matches: 0,
-                    payments: paymentsList.length,
-                    players: masterPlayersList.length
-                },
+                tableCounts,
                 recentErrorsCount: 0,
                 services: {
                     database: isHealthy ? (latencyMs > 500 ? 'degraded' : 'operational') : 'down',
@@ -384,6 +404,33 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
         }
     } catch (e) {
         console.error("Error fetching system monitor stats:", e)
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
+    }
+}
+
+export async function getAdminTablePreview(
+    table: 'users' | 'tournaments' | 'teams' | 'matches' | 'payments' | 'players'
+): Promise<ActionResponse<Record<string, any>[]>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const session = await getServerSession()
+        const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
+        const headers: Record<string, string> = {}
+        if (session?.token) headers['Authorization'] = `Bearer ${session.token}`
+
+        const res = await fetch(`${apiUrl}/admin/table-preview?table=${table}`, {
+            cache: 'no-store',
+            headers
+        })
+        if (res.ok) {
+            const data = await res.json()
+            return { success: true, data: Array.isArray(data) ? data : [] }
+        }
+        return { success: false, error: "Failed to fetch table preview" }
+    } catch (e) {
+        console.error("Error fetching table preview:", e)
         return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
     }
 }

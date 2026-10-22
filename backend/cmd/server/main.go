@@ -39,6 +39,9 @@ func main() {
 		log.Printf("⚠️ Auto-migration error: %v", err)
 	}
 
+	// 1.2 Start Automated Soft-Deleted Records Purge Worker (every 24 hours)
+	database.StartPurgeWorker(dbPool, 24*time.Hour)
+
 	// 2. Initialize Redis
 	redisClient := database.ConnectRedis(cfg.RedisURL)
 	defer redisClient.Close()
@@ -204,6 +207,9 @@ func main() {
 	teams.Post("/:id/players", middleware.Protected(cfg), teamHandler.AddPlayer)
 	teams.Put("/:id/players/:playerId", middleware.Protected(cfg), teamHandler.UpdatePlayer)
 	teams.Delete("/:id/players/:playerId", middleware.Protected(cfg), teamHandler.DeletePlayer)
+	teams.Post("/:id/reset-roster", middleware.Protected(cfg), teamHandler.ResetRoster)
+	teams.Post("/:id/restore-roster", middleware.Protected(cfg), teamHandler.RestoreRoster)
+	teams.Get("/:id/has-deleted-players", teamHandler.HasSoftDeletedPlayers)
 
 	// Team Management Requests
 	teamRequests := api.Group("/team-management-requests")
@@ -224,10 +230,31 @@ func main() {
 	// Tournament routes
 	tournaments := api.Group("/tournaments")
 	tournaments.Get("/", edgeCache(15), tournamentHandler.List)
+	tournaments.Get("/status-requests/my", middleware.Protected(cfg), tournamentHandler.ListMyStatusRequests)
 	tournaments.Get("/:id", edgeCache(15), tournamentHandler.GetByID)
 	tournaments.Post("/", middleware.Protected(cfg), tournamentHandler.Create)
 	tournaments.Put("/:id", middleware.Protected(cfg), tournamentHandler.Update)
+	tournaments.Patch("/:id/status", tournamentHandler.UpdateStatus)
+	tournaments.Put("/:id/status", tournamentHandler.UpdateStatus)
 	tournaments.Delete("/:id", middleware.Protected(cfg), tournamentHandler.Delete)
+	tournaments.Post("/:id/status-request", middleware.Protected(cfg), tournamentHandler.RequestStatusChange)
+	tournaments.Delete("/:id/status-request", middleware.Protected(cfg), tournamentHandler.CancelStatusRequest)
+	tournaments.Get("/:id/status-request", tournamentHandler.GetStatusRequest)
+
+	// Users routes
+	api.Get("/users", authHandler.ListUsers)
+	api.Put("/users/:id", authHandler.UpdateUser)
+
+	// Admin routes
+	api.Get("/admin/table-counts", extraHandler.GetTableCounts)
+	api.Get("/admin/table-preview", extraHandler.GetTablePreview)
+	admin := api.Group("/admin", middleware.Protected(cfg))
+	admin.Get("/table-counts", extraHandler.GetTableCounts)
+	admin.Get("/table-preview", extraHandler.GetTablePreview)
+	admin.Get("/tournament-status-requests", tournamentHandler.ListAdminStatusRequests)
+	admin.Post("/tournaments/:id/status-request/approve", tournamentHandler.ApproveStatusRequest)
+	admin.Post("/tournaments/:id/status-request/reject", tournamentHandler.RejectStatusRequest)
+
 
 	// Tournament Categories
 	tournaments.Get("/:id/categories", edgeCache(15), tournamentHandler.GetCategories)
@@ -241,6 +268,7 @@ func main() {
 	tournaments.Post("/:id/categories/:categoryId/standings/recalculate", standingsHandler.Recalculate)
 	tournaments.Get("/:id/categories/:categoryId/matches", edgeCache(10), matchHandler.GetByCategory)
 	tournaments.Post("/:id/categories/:categoryId/sync-matches", matchHandler.SyncCategoryMatches)
+	tournaments.Delete("/:id/categories/:categoryId/matches", matchHandler.DeleteByCategory)
 
 	// Tournament Matches
 	tournaments.Get("/:id/matches", edgeCache(10), matchHandler.GetByTournament)
@@ -256,6 +284,7 @@ func main() {
 	tournaments.Patch("/:id/registrations/:regId/status", registrationHandler.UpdateStatus)
 	tournaments.Post("/:id/registrations/:regId/request-unlock", registrationHandler.RequestUnlock)
 	tournaments.Post("/:id/registrations/:regId/approve-unlock", registrationHandler.ApproveUnlock)
+	tournaments.Post("/:id/registrations/:regId/reject-unlock", registrationHandler.RejectUnlock)
 	tournaments.Patch("/:id/registrations/:regId/lock", registrationHandler.LockRoster)
 
 	// Tournament Roster Submissions
@@ -287,6 +316,7 @@ func main() {
 	api.Get("/tournament-teams/:id/roster", registrationHandler.GetRoster)
 	api.Post("/tournament-teams/:id/approve-roster", registrationHandler.ApproveRoster)
 	api.Post("/tournament-teams/:id/reject-roster", registrationHandler.RejectRoster)
+	api.Post("/tournament-teams/:id/reject-unlock", registrationHandler.RejectUnlock)
 	api.Post("/tournament-teams/:id/roster/batch-approve", registrationHandler.BatchApproveRosterSubmissions)
 	api.Post("/tournament-roster-submissions/:subId/approve", registrationHandler.ApproveRosterSubmission)
 	api.Post("/tournament-roster-submissions/:subId/reject", registrationHandler.RejectRosterSubmission)

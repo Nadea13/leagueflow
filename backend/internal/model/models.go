@@ -17,16 +17,27 @@ const (
 )
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	FullName     string    `json:"full_name"`
-	AvatarURL    *string   `json:"avatar_url,omitempty"`
-	Role         UserRole  `json:"role"`
-	Phone        *string   `json:"phone,omitempty"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Email         string    `json:"email"`
+	PasswordHash  string    `json:"-"`
+	FullName      string    `json:"full_name"`
+	AvatarURL     *string   `json:"avatar_url,omitempty"`
+	Role          UserRole  `json:"role"`
+	Phone         *string   `json:"phone,omitempty"`
+	IsOrganizer   bool      `json:"is_organizer"`
+	IsTeamManager bool      `json:"is_team_manager"`
+	IsActive      bool      `json:"is_active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type TableStats struct {
+	Users       int `json:"users"`
+	Tournaments int `json:"tournaments"`
+	Teams       int `json:"teams"`
+	Matches     int `json:"matches"`
+	Payments    int `json:"payments"`
+	Players     int `json:"players"`
 }
 
 type TournamentFormat string
@@ -102,6 +113,27 @@ type Tournament struct {
 	Settings           map[string]interface{} `json:"settings"`
 	CreatedAt          time.Time              `json:"created_at"`
 	UpdatedAt          time.Time              `json:"updated_at"`
+}
+
+type TournamentStatusRequest struct {
+	ID             uuid.UUID  `json:"id"`
+	TournamentID   uuid.UUID  `json:"tournament_id"`
+	RequestedBy    uuid.UUID  `json:"requested_by"`
+	PreviousStatus string     `json:"previous_status"`
+	TargetStatus   string     `json:"target_status"`
+	Reason         string     `json:"reason"`
+	Status         string     `json:"status"` // "pending", "approved", "rejected", "cancelled"
+	RejectReason   *string    `json:"reject_reason,omitempty"`
+	ReviewedBy     *uuid.UUID `json:"reviewed_by,omitempty"`
+	ReviewedAt     *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+
+	// Joined metadata
+	TournamentName *string `json:"tournament_name,omitempty"`
+	SportName      *string `json:"sport_name,omitempty"`
+	RequesterEmail *string `json:"requester_email,omitempty"`
+	RequesterName  *string `json:"requester_name,omitempty"`
 }
 
 type TournamentCategory struct {
@@ -191,15 +223,26 @@ type MasterPlayer struct {
 	FirstNameIntl   *string    `json:"first_name_intl,omitempty"`
 	MiddleNameIntl  *string    `json:"middle_name_intl,omitempty"`
 	LastNameIntl    *string    `json:"last_name_intl,omitempty"`
+	FirstNameTH     *string    `json:"first_name_th,omitempty"`
+	MiddleNameTH    *string    `json:"middle_name_th,omitempty"`
+	LastNameTH      *string    `json:"last_name_th,omitempty"`
+	FirstNameEN     *string    `json:"first_name_en,omitempty"`
+	MiddleNameEN    *string    `json:"middle_name_en,omitempty"`
+	LastNameEN      *string    `json:"last_name_en,omitempty"`
 	Nickname        *string    `json:"nickname,omitempty"`
+	Gender          string     `json:"gender"`
 	Birthday        *string    `json:"birthday,omitempty"`
 	PhotoURL        *string    `json:"photo_url,omitempty"`
+	ProfileImg      *string    `json:"profile_img,omitempty"`
 	Tel             *string    `json:"tel,omitempty"`
 	FavoriteSportID *int       `json:"favorite_sport_id,omitempty"`
 	PreferredHand   *string    `json:"preferred_hand,omitempty"`
 	PreferredFoot   *string    `json:"preferred_foot,omitempty"`
+	Status          string     `json:"status"`
+	Verified        bool       `json:"verified"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+	User            *User      `json:"user,omitempty"`
 }
 
 type Player struct {

@@ -23,7 +23,7 @@ func NewExtraRepository(db *pgxpool.Pool) *ExtraRepository {
 // ================= Sports & Age Categories =================
 
 func (r *ExtraRepository) ListSports(ctx context.Context) ([]*model.Sport, error) {
-	query := `SELECT id, sport_name, sport_type, created_at, updated_at FROM sports WHERE deleted_at IS NULL ORDER BY sport_name ASC`
+	query := `SELECT id, sport_name, sport_type, created_at, updated_at FROM sports WHERE deleted_at IS NULL AND LOWER(sport_name) IN ('football', 'volleyball') ORDER BY id ASC`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -399,3 +399,90 @@ func (r *ExtraRepository) CreatePayment(ctx context.Context, p *model.Payment) e
 
 	return nil
 }
+
+func (r *ExtraRepository) GetTableCounts(ctx context.Context) (*model.TableStats, error) {
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM users) AS users,
+			(SELECT COUNT(*) FROM tournaments) AS tournaments,
+			(SELECT COUNT(*) FROM teams) AS teams,
+			(SELECT COUNT(*) FROM matches WHERE deleted_at IS NULL) AS matches,
+			(SELECT COUNT(*) FROM payments) AS payments,
+			(SELECT COUNT(*) FROM master_players WHERE deleted_at IS NULL) AS players
+	`
+	var stats model.TableStats
+	err := r.db.QueryRow(ctx, query).Scan(
+		&stats.Users,
+		&stats.Tournaments,
+		&stats.Teams,
+		&stats.Matches,
+		&stats.Payments,
+		&stats.Players,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get table counts: %w", err)
+	}
+	return &stats, nil
+}
+
+func (r *ExtraRepository) GetTablePreview(ctx context.Context, table string) ([]map[string]interface{}, error) {
+	var query string
+	switch table {
+	case "users":
+		query = `SELECT id::text, full_name, email, role::text, created_at, deleted_at FROM users ORDER BY created_at DESC LIMIT 25`
+	case "tournaments":
+		query = `SELECT t.id::text, t.name, COALESCE(s.sport_name, 'Football') as sport_name, t.format, t.status, t.created_at, t.deleted_at FROM tournaments t LEFT JOIN sports s ON t.sport_id = s.id ORDER BY t.created_at DESC LIMIT 25`
+	case "teams":
+		query = `SELECT t.id::text, t.name, COALESCE(t.short_name, '') as short_name, COALESCE(s.sport_name, '') as sport_name, t.created_at, t.deleted_at FROM teams t LEFT JOIN sports s ON t.sport_id = s.id ORDER BY t.created_at DESC LIMIT 25`
+	case "matches":
+		query = `SELECT m.id::text, COALESCE(th.name, m.ph_home, 'TBD') as home_team, COALESCE(ta.name, m.ph_away, 'TBD') as away_team, m.home_score, m.away_score, m.status::text, m.stage, m.created_at FROM matches m LEFT JOIN teams th ON m.home_team_id = th.id LEFT JOIN teams ta ON m.away_team_id = ta.id WHERE m.deleted_at IS NULL ORDER BY m.created_at DESC LIMIT 25`
+	case "payments":
+		query = `SELECT id::text, COALESCE(transaction_id, '') as transaction_id, plan_name, amount, payment_method, payment_status, created_at FROM payments ORDER BY created_at DESC LIMIT 25`
+	case "players":
+		query = `SELECT id::text, 
+			COALESCE(
+				NULLIF(TRIM(CONCAT(first_name_local, ' ', CASE WHEN last_name_local = '-' THEN '' ELSE last_name_local END)), ''),
+				NULLIF(TRIM(CONCAT(first_name_intl, ' ', CASE WHEN last_name_intl = '-' THEN '' ELSE last_name_intl END)), ''),
+				NULLIF(TRIM(CONCAT(first_name_th, ' ', last_name_th)), ''),
+				NULLIF(TRIM(CONCAT(first_name_en, ' ', last_name_en)), ''),
+				'Unknown'
+			) as full_name,
+			gender::text as gender,
+			birthday::text as birthday,
+			COALESCE(tel, '') as tel,
+			status::text as status,
+			created_at
+		FROM master_players
+		WHERE deleted_at IS NULL
+		ORDER BY created_at DESC
+		LIMIT 25`
+	default:
+		return nil, fmt.Errorf("invalid table name")
+	}
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []map[string]interface{}
+	fieldDescriptions := rows.FieldDescriptions()
+	for rows.Next() {
+		values, err := rows.Values()
+		if err != nil {
+			return nil, err
+		}
+		item := make(map[string]interface{})
+		for i, fd := range fieldDescriptions {
+			item[string(fd.Name)] = values[i]
+		}
+		results = append(results, item)
+	}
+	if results == nil {
+		results = []map[string]interface{}{}
+	}
+	return results, nil
+}
+
+

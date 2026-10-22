@@ -101,3 +101,12 @@ func (s *ExtraService) ListPayments(ctx context.Context, userID *uuid.UUID, tour
 func (s *ExtraService) CreatePayment(ctx context.Context, p *model.Payment) error {
 	return s.repo.CreatePayment(ctx, p)
 }
+
+// Table Statistics
+func (s *ExtraService) GetTableCounts(ctx context.Context) (*model.TableStats, error) {
+	return s.repo.GetTableCounts(ctx)
+}
+
+func (s *ExtraService) GetTablePreview(ctx context.Context, table string) ([]map[string]interface{}, error) {
+	return s.repo.GetTablePreview(ctx, table)
+}
