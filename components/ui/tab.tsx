@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, ChevronRight } from "lucide-react";
 
 export interface TabOption<T extends string> {
   value: T;
@@ -25,6 +25,7 @@ interface TabProps<T extends string> {
   orientation?: "horizontal" | "vertical";
   layoutId?: string;
   size?: "sm" | "default" | "lg";
+  variant?: "default" | "sidebar";
 }
 
 export function Tab<T extends string>({
@@ -40,9 +41,11 @@ export function Tab<T extends string>({
   orientation = "horizontal",
   layoutId,
   size = "sm",
+  variant = "default",
 }: TabProps<T>) {
   const autoLayoutId = React.useId();
   const activePillId = layoutId || `tabPill-${autoLayoutId}`;
+  const isSidebar = variant === "sidebar";
 
   const sizeClasses = {
     sm: "h-8 px-3 gap-1.5 text-xs sm:text-sm",
@@ -69,6 +72,7 @@ export function Tab<T extends string>({
         const isActive = value === option.value;
         const Icon = option.icon;
         const isIconOnly = Boolean(showIcons && Icon && (!showLabels || !option.label) && option.badge === undefined);
+        const isDanger = option.value === 'danger' || option.value === 'delete';
 
         return (
           <button
@@ -77,10 +81,18 @@ export function Tab<T extends string>({
             onClick={() => onChange(option.value)}
             title={option.label}
             className={cn(
-              "relative flex items-center justify-center rounded-sm font-bold transition-all duration-300 cursor-pointer select-none tracking-tight whitespace-nowrap z-10 outline-none focus:outline-none focus-visible:outline-none",
+              "relative flex items-center justify-center rounded-sm font-medium transition-all duration-300 cursor-pointer select-none tracking-tight whitespace-nowrap z-10 outline-none focus:outline-none focus-visible:outline-none group",
               isIconOnly ? iconOnlySizeClasses[size] : sizeClasses[size],
               fullWidth && !isIconOnly ? "flex-1" : "flex-none",
-              isActive
+              isSidebar
+                ? isActive
+                  ? isDanger
+                    ? cn("bg-destructive/10 text-destructive font-semibold", activeClassName)
+                    : cn("bg-primary/10 text-primary font-semibold", activeClassName)
+                  : isDanger
+                  ? "text-destructive/80 hover:text-destructive"
+                  : "text-muted-foreground hover:text-primary"
+                : isActive
                 ? cn("text-primary-foreground shadow-md shadow-primary/20", activeClassName)
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
               itemClassName
@@ -89,17 +101,43 @@ export function Tab<T extends string>({
             {isActive && (
               <motion.div
                 layoutId={activePillId}
-                className="absolute inset-0 bg-primary rounded-sm -z-10 pointer-events-none"
+                className={cn(
+                  "absolute inset-0 rounded-sm -z-10 pointer-events-none",
+                  isSidebar
+                    ? isDanger ? "bg-destructive/10" : "bg-primary/10"
+                    : "bg-primary shadow-md shadow-primary/20"
+                )}
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
               />
             )}
-            {showIcons && Icon && <Icon className="h-4 w-4 shrink-0" />}
-            {showLabels && <span>{option.label}</span>}
+            {showIcons && Icon && (
+              <Icon className={cn(
+                "h-4 w-4 shrink-0 transition-colors",
+                isSidebar
+                  ? isActive
+                    ? isDanger ? "text-destructive" : "text-primary"
+                    : isDanger ? "text-destructive/80 group-hover:text-destructive" : "text-muted-foreground group-hover:text-primary"
+                  : ""
+              )} />
+            )}
+            {showLabels && <span className={cn(isSidebar && orientation === "vertical" ? "flex-1 text-left" : "")}>{option.label}</span>}
+            {isSidebar && orientation === "vertical" && (
+              <ChevronRight className={cn(
+                "size-4 ml-auto transition-transform hidden sm:block",
+                isActive
+                  ? isDanger ? "text-destructive opacity-100 translate-x-0.5" : "text-primary opacity-100 translate-x-0.5"
+                  : "opacity-0"
+              )} />
+            )}
             {option.badge !== undefined && (
               <span
                 className={cn(
                   "ml-1 text-[10px] font-black px-1.5 py-0.2 rounded-xs transition-colors",
-                  isActive
+                  isSidebar
+                    ? isActive
+                      ? isDanger ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                    : isActive
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-muted text-muted-foreground"
                 )}

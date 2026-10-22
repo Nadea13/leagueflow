@@ -606,11 +606,91 @@ export async function getUserSystemNotifications(): Promise<ActionResponse<Array
     title: string;
     message: string;
     type: 'invite' | 'payment' | 'system';
+    status?: 'approved' | 'rejected' | 'pending';
     link?: string | null;
     is_read: boolean;
     created_at: string;
 }>>> {
-    return { success: true, data: [] };
+    try {
+        const session = await getServerSession();
+        if (!session?.user || !session?.token) {
+            return { success: true, data: [] };
+        }
+
+        const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.token}`,
+        };
+
+        const res = await fetch(`${apiUrl}/tournaments/status-requests/my`, {
+            headers,
+            cache: 'no-store',
+        });
+
+        if (!res.ok) {
+            return { success: true, data: [] };
+        }
+
+        const json = await res.json();
+        const list = json?.data || [];
+
+        const notifs: Array<{
+            id: string;
+            title: string;
+            message: string;
+            type: 'invite' | 'payment' | 'system';
+            status?: 'approved' | 'rejected' | 'pending';
+            link?: string | null;
+            is_read: boolean;
+            created_at: string;
+        }> = [];
+
+        for (const item of list) {
+            const tourName = item.tournament_name || "ทัวร์นาเมนต์";
+            const targetStatus = item.target_status || "ongoing";
+
+            if (item.status === 'approved') {
+                notifs.push({
+                    id: item.id,
+                    title: `คำขอเปลี่ยนสถานะได้รับการอนุมัติ: ${tourName}`,
+                    message: `แอดมินได้อนุมัติคำขอเปลี่ยนสถานะเป็น "${targetStatus}" เรียบร้อยแล้ว พร้อมปลดล็อคการจัดการสายการแข่งขัน`,
+                    type: 'system',
+                    status: 'approved',
+                    link: `/dashboard/tournaments/${item.tournament_id}`,
+                    is_read: false,
+                    created_at: item.reviewed_at || item.updated_at || item.created_at || new Date().toISOString(),
+                });
+            } else if (item.status === 'rejected') {
+                notifs.push({
+                    id: item.id,
+                    title: `คำขอเปลี่ยนสถานะถูกปฏิเสธ: ${tourName}`,
+                    message: `แอดมินได้ปฏิเสธคำขอเปลี่ยนสถานะเป็น "${targetStatus}"${item.reject_reason ? ` (เหตุผล: ${item.reject_reason})` : ''}`,
+                    type: 'system',
+                    status: 'rejected',
+                    link: `/dashboard/tournaments/${item.tournament_id}`,
+                    is_read: false,
+                    created_at: item.reviewed_at || item.updated_at || item.created_at || new Date().toISOString(),
+                });
+            } else if (item.status === 'pending') {
+                notifs.push({
+                    id: item.id,
+                    title: `คำขอเปลี่ยนสถานะกำลังรอการตรวจสอบ: ${tourName}`,
+                    message: `คำขอเปลี่ยนสถานะเป็น "${targetStatus}" อยู่ระหว่างการพิจารณาตรวจสอบโดยผู้ดูแลระบบ`,
+                    type: 'system',
+                    status: 'pending',
+                    link: `/dashboard/tournaments/${item.tournament_id}`,
+                    is_read: false,
+                    created_at: item.created_at || new Date().toISOString(),
+                });
+            }
+        }
+
+        return { success: true, data: notifs };
+    } catch (e) {
+        console.error("Error fetching system notifications:", e);
+        return { success: true, data: [] };
+    }
 }
 
 /**

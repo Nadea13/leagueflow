@@ -98,12 +98,18 @@ export async function getPublicSports(): Promise<{ id: string; sport_name: strin
     try {
         const resp = await ApiClient.fetch<any>('/sports');
         const sports = Array.isArray(resp) ? resp : (resp?.data || []);
-        return sports.map((s: any) => ({
-            id: String(s.id),
-            sport_name: s.sport_name || s.name || "",
-        }));
+        const allowed = ['football', 'volleyball'];
+        return sports
+            .filter((s: any) => allowed.includes((s.sport_name || s.name || "").toLowerCase()))
+            .map((s: any) => ({
+                id: String(s.id),
+                sport_name: s.sport_name || s.name || "",
+            }));
     } catch (err) {
         console.error("Error fetching sports from Go backend:", err);
-        return [];
+        return [
+            { id: "1", sport_name: "Football" },
+            { id: "2", sport_name: "Volleyball" },
+        ];
     }
 }

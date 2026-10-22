@@ -18,7 +18,7 @@ export interface FileValidationResult {
 
 /**
  * Validates an uploaded file for security.
- * Checks MIME type and file size.
+ * Checks MIME type, extension, and file size.
  */
 export function validateUploadedFile(
     file: File,
@@ -33,7 +33,10 @@ export function validateUploadedFile(
         return { valid: false, error: "No file provided" };
     }
 
-
+    if (options?.maxSize && file.size > options.maxSize) {
+        const maxMB = (options.maxSize / (1024 * 1024)).toFixed(1);
+        return { valid: false, error: `File size exceeds maximum limit of ${maxMB}MB` };
+    }
 
     if (!allowedTypes.includes(file.type)) {
         return {

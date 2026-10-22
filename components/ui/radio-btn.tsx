@@ -48,7 +48,14 @@ export function RadioBtn({
     className,
     name,
 }: RadioBtnProps) {
-    const items = options || sports || [];
+    let items = options || sports || [];
+    if (sports && sports.length > 0) {
+        const allowed = ['football', 'volleyball'];
+        items = items.filter((item) => {
+            const name = getOptionDisplayName(item).toLowerCase();
+            return allowed.includes(name);
+        });
+    }
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);

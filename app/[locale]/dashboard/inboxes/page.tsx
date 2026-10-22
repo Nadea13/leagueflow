@@ -15,7 +15,6 @@ import {
     User,
     Bell,
     UserCheck,
-    ArrowUpRight,
     MessageSquareQuote,
     Eye,
     Receipt,
@@ -141,6 +140,7 @@ type NotificationItem =
         notification_type: 'invite' | 'payment' | 'system';
         link?: string | null;
         is_read: boolean;
+        status?: 'pending' | 'approved' | 'rejected';
         created_at: string;
     };
 
@@ -312,6 +312,7 @@ export default function InboxesPage() {
                     notification_type: item.type,
                     link: item.link,
                     is_read: item.is_read,
+                    status: item.status,
                     created_at: item.created_at,
                 })));
             }
@@ -812,7 +813,7 @@ export default function InboxesPage() {
                                 {isTh ? "หมวดหมู่ข้อความ" : "Inbox Categories"}
                             </Header>
                         </div>
-                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1 lg:gap-0 pb-1 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-0 pb-1 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {tabOptions.map((opt) => {
                                 const Icon = opt.icon;
                                 const isActive = activeTab === opt.value;
@@ -823,17 +824,22 @@ export default function InboxesPage() {
                                         type="button"
                                         onClick={() => handleTabChange(opt.value)}
                                         className={cn(
-                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full",
+                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full group",
                                             isActive
-                                                ? "bg-primary text-primary-foreground font-bold shadow-2xs"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                                ? "bg-primary/10 text-primary font-semibold"
+                                                : "text-muted-foreground hover:text-primary"
                                         )}
                                     >
-                                        {Icon && <Icon className="size-4 shrink-0" />}
+                                        {Icon && (
+                                            <Icon className={cn(
+                                                "size-4 shrink-0 transition-colors",
+                                                isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                                            )} />
+                                        )}
                                         <span className="flex-1 whitespace-nowrap lg:whitespace-normal">{opt.label}</span>
                                         <ChevronRight className={cn(
                                             "size-4 hidden lg:block transition-transform",
-                                            isActive ? "opacity-100 translate-x-0.5" : "opacity-0"
+                                            isActive ? "text-primary opacity-100 translate-x-0.5" : "opacity-0"
                                         )} />
                                     </button>
                                 );
@@ -922,18 +928,27 @@ export default function InboxesPage() {
                                 <div
                                     key={`tour-act-${item.id}-${item.action_type}`}
                                     onClick={(e) => {
+                                        const target = e.target as HTMLElement | null;
+                                        if (target?.closest('button, a, input, [role="button"], [role="menuitem"], [role="checkbox"]')) {
+                                            return;
+                                        }
                                         if (item.action_type === 'tournament_registration') {
-                                            // Check if click was on an interactive element or inside one
-                                            const target = e.target as HTMLElement | null;
-                                            if (target?.closest('button, a, input, [role="button"], [role="menuitem"], [role="checkbox"]')) {
-                                                return;
-                                            }
                                             toggleExpandDetails(item.id);
+                                        } else if (item.action_type === 'tournament_roster_submission' && hasRosterSubmissions) {
+                                            toggleExpandRoster({
+                                                id: item.id,
+                                                tournament_id: item.tournament_id,
+                                                team_name: item.team_name,
+                                                tournament_name: item.tournament_name,
+                                                min_players: item.min_players,
+                                                max_players: item.max_players,
+                                                isTeamApproved: isTeamApproved
+                                            });
                                         }
                                     }}
                                     className={cn(
-                                        "p-4 transition-colors space-y-4",
-                                        item.action_type === 'tournament_registration' && "cursor-pointer",
+                                        "p-4 transition-colors space-y-4 group",
+                                        (item.action_type === 'tournament_registration' || (item.action_type === 'tournament_roster_submission' && hasRosterSubmissions)) && "cursor-pointer",
                                         (isRosterExpanded || isDetailsExpanded) ? "" : "hover:bg-muted/30"
                                     )}
                                 >
@@ -948,7 +963,7 @@ export default function InboxesPage() {
                                                     />
                                                 )}
                                                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                    {teamInitials || <Users className="h-4 w-4" />}
+                                                    {teamInitials || <Users className="size-4" />}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div className="space-y-1.5 min-w-0 flex-1">
@@ -969,27 +984,27 @@ export default function InboxesPage() {
                                                 {/* Status/Action Tag & Timestamp */}
                                                 <div className="flex items-center gap-2 pt-0.5 flex-wrap">
                                                     {currentStatus === 'accepted' || currentStatus === 'approved' ? (
-                                                        <Badge variant="outline" className="border-primary/40 text-primary">
+                                                        <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
                                                             {isTh ? "อนุมัติแล้ว" : "Approved"}
                                                         </Badge>
                                                     ) : currentStatus === 'rejected' ? (
-                                                        <Badge variant="outline" className="border-destructive/50 text-destructive">
+                                                        <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                             {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
                                                         </Badge>
                                                     ) : currentStatus === 'error' ? (
-                                                        <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                        <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                             <span>Error occurred</span>
                                                         </Badge>
                                                     ) : item.action_type === 'tournament_registration' ? (
-                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/50">
+                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/50 bg-blue-500/10">
                                                             <span>{isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}</span>
                                                         </Badge>
                                                     ) : item.action_type === 'tournament_roster_submission' ? (
-                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/50">
+                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/50 bg-emerald-500/10">
                                                             {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50">
+                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50 bg-amber-500/10">
                                                             {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
                                                         </Badge>
                                                     )}
@@ -1013,7 +1028,7 @@ export default function InboxesPage() {
                                                             disabled={isPending}
                                                             className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                         >
-                                                            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                            {isPending && <Loader2 className="size-4 animate-spin" />}
                                                             {isTh ? "ปฏิเสธ" : "Reject"}
                                                         </Button>
                                                         <Button
@@ -1022,36 +1037,36 @@ export default function InboxesPage() {
                                                             disabled={isPending}
                                                             className="font-bold text-xs"
                                                         >
-                                                            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                            {isPending && <Loader2 className="size-4 animate-spin" />}
                                                             {isTh ? "ยอมรับเอกสาร" : "Accept Roster"}
                                                         </Button>
                                                     </div>
                                                 ) : (
                                                     item.action_type === 'tournament_registration' ? (
-                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/30">
+                                                        <Badge variant="outline" className="text-blue-600 border-blue-500/50 bg-blue-500/10">
                                                             {isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}
                                                         </Badge>
                                                     ) : item.action_type === 'tournament_roster_submission' ? (
-                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/30">
+                                                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/50 bg-emerald-500/10">
                                                             {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50 bg-amber-500/10">
                                                             {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
                                                         </Badge>
                                                     )
                                                 )
                                             ) : currentStatus === 'rejected' || currentStatus === 'error' ? (
                                                 item.action_type === 'tournament_registration' ? (
-                                                    <Badge variant="outline" className="text-blue-600 border-blue-500/30">
+                                                    <Badge variant="outline" className="text-blue-600 border-blue-500/50 bg-blue-500/10">
                                                         {isTh ? "ยืนยันทีมสมัคร" : "Team Approval"}
                                                     </Badge>
                                                 ) : item.action_type === 'tournament_roster_submission' ? (
-                                                    <Badge variant="outline" className="text-emerald-600 border-emerald-500/30">
+                                                    <Badge variant="outline" className="text-emerald-600 border-emerald-500/50 bg-emerald-500/10">
                                                         {isTh ? "ยอมรับเอกสาร/รายชื่อ" : "Roster Verification"}
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                                    <Badge variant="outline" className="text-amber-600 border-amber-500/50 bg-amber-500/10">
                                                         {isTh ? "ขอปลดล็อครายชื่อ" : "Unlock Request"}
                                                     </Badge>
                                                 )
@@ -1066,7 +1081,7 @@ export default function InboxesPage() {
                                                                 disabled={isPending}
                                                                 className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                             >
-                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                 {isTh ? "ปฏิเสธ" : "Reject"}
                                                             </Button>
                                                             <Button
@@ -1075,7 +1090,7 @@ export default function InboxesPage() {
                                                                 disabled={isPending}
                                                                 className="font-bold text-xs"
                                                             >
-                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                 {isTh ? "ยืนยันทีม" : "Approve Team"}
                                                             </Button>
                                                         </>
@@ -1089,7 +1104,7 @@ export default function InboxesPage() {
                                                                     disabled={isPending}
                                                                     className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                                 >
-                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                     {isTh ? "ปฏิเสธ" : "Reject"}
                                                                 </Button>
                                                                 <Button
@@ -1099,12 +1114,12 @@ export default function InboxesPage() {
                                                                     title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนยอมรับเอกสาร" : "Please approve team first") : undefined}
                                                                     className="font-bold text-xs disabled:opacity-50"
                                                                 >
-                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                     {isTh ? "ยอมรับเอกสาร" : "Accept Roster"}
                                                                 </Button>
                                                             </>
                                                         ) : (
-                                                            <Badge variant="outline" className="text-muted-foreground border-border">
+                                                            <Badge variant="outline" className="text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10">
                                                                 {isTh ? "ยังไม่มีการยื่นเอกสาร" : "No documents"}
                                                             </Badge>
                                                         )
@@ -1117,7 +1132,7 @@ export default function InboxesPage() {
                                                                 disabled={isPending}
                                                                 className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                             >
-                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                 {isTh ? "ปฏิเสธ" : "Reject"}
                                                             </Button>
                                                             <Button
@@ -1126,13 +1141,24 @@ export default function InboxesPage() {
                                                                 disabled={isPending}
                                                                 className="font-bold text-xs"
                                                             >
-                                                                {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                 {isTh ? "ปลดล็อค" : "Unlock"}
                                                             </Button>
                                                         </>
                                                     )}
                                                 </div>
                                             )}
+                                            {item.action_type === 'tournament_registration' ? (
+                                                <ChevronDown className={cn(
+                                                    "size-4 text-muted-foreground/60 transition-transform duration-200 shrink-0",
+                                                    isDetailsExpanded && "rotate-180 text-foreground"
+                                                )} />
+                                            ) : item.action_type === 'tournament_roster_submission' && hasRosterSubmissions ? (
+                                                <ChevronDown className={cn(
+                                                    "size-4 text-muted-foreground/60 transition-transform duration-200 shrink-0",
+                                                    isRosterExpanded && "rotate-180 text-foreground"
+                                                )} />
+                                            ) : null}
                                         </div>
                                     </div>
 
@@ -1146,7 +1172,7 @@ export default function InboxesPage() {
                                                         {isTh ? "ข้อมูลการสมัครทีม" : "Team Registration Details"}
                                                     </Header>
                                                     {item.category_name && (
-                                                        <Badge variant="outline">{item.category_name}</Badge>
+                                                        <Badge variant="outline" className="text-primary border-primary/50 bg-primary/10">{item.category_name}</Badge>
                                                     )}
                                                 </div>
 
@@ -1230,7 +1256,7 @@ export default function InboxesPage() {
                                                     <div className="md:col-span-5 lg:col-span-5 p-4 flex flex-col justify-between">
                                                         <div className="flex items-center justify-between gap-2">
                                                             {!item.slip_img && (
-                                                                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                                                                <Badge variant="outline" className="text-[10px] text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10">
                                                                     {isTh ? "ไม่มีสลิป" : "No slip"}
                                                                 </Badge>
                                                             )}
@@ -1281,7 +1307,7 @@ export default function InboxesPage() {
                                             {/* Alert banner if team registration has not been approved */}
                                             {!isTeamApproved && (
                                                 <div className="p-3 rounded-sm bg-transparent border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2">
-                                                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                                                    <AlertCircle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                                                     <span>
                                                         {isTh
                                                             ? "กรุณากดยืนยันทีม (Approve Team) ก่อน จึงจะสามารถอนุมัติรายชื่อนักกีฬาได้"
@@ -1333,17 +1359,17 @@ export default function InboxesPage() {
                                                         {/* Summary Badges & Limit Header */}
                                                         <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
                                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <Badge variant="outline">
+                                                                <Badge variant="outline" className="text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10">
                                                                     {isTh ? `ทั้งหมด ${rosterPlayers.length} คน` : `Total ${rosterPlayers.length}`}
                                                                 </Badge>
-                                                                <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
+                                                                <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 bg-emerald-500/10">
                                                                     {isTh ? `อนุมัติแล้ว ${rosterPlayers.filter(p => p.status === 'approved').length} คน` : `Approved ${rosterPlayers.filter(p => p.status === 'approved').length}`}
                                                                 </Badge>
-                                                                <Badge variant="outline" className="border-amber-500/30 text-amber-600">
+                                                                <Badge variant="outline" className="border-amber-500/50 text-amber-600 bg-amber-500/10">
                                                                     {isTh ? `รอตรวจ ${rosterPlayers.filter(p => p.status === 'pending').length} คน` : `Pending ${rosterPlayers.filter(p => p.status === 'pending').length}`}
                                                                 </Badge>
                                                                 {rosterPlayers.some(p => p.status === 'rejected') && (
-                                                                    <Badge variant="outline" className="border-destructive/30 text-destructive">
+                                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                                         {isTh ? `ไม่ผ่าน ${rosterPlayers.filter(p => p.status === 'rejected').length} คน` : `Rejected ${rosterPlayers.filter(p => p.status === 'rejected').length}`}
                                                                     </Badge>
                                                                 )}
@@ -1361,7 +1387,7 @@ export default function InboxesPage() {
                                                         {/* Search and Selection Controls */}
                                                         <div className="flex items-center gap-2 flex-col sm:flex-row">
                                                             <div className="relative group w-full flex-1">
-                                                                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-all duration-300" />
+                                                                <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50 group-focus-within:text-primary transition-all duration-300" />
                                                                 <Input
                                                                     type="text"
                                                                     size="sm"
@@ -1425,9 +1451,9 @@ export default function InboxesPage() {
                                                                                         )}
                                                                                     >
                                                                                         {isSelected ? (
-                                                                                            <CheckSquare className="h-4 w-4 text-primary" />
+                                                                                            <CheckSquare className="size-4 text-primary" />
                                                                                         ) : (
-                                                                                            <Square className="h-4 w-4 text-muted-foreground/60" />
+                                                                                            <Square className="size-4 text-muted-foreground/60" />
                                                                                         )}
                                                                                     </div>
                                                                                 ) : (
@@ -1446,7 +1472,7 @@ export default function InboxesPage() {
                                                                                     <div className="flex items-center gap-1.5 flex-wrap">
                                                                                         <span className="text-xs font-bold text-foreground truncate">{player.name}</span>
                                                                                         {player.shirt_number && (
-                                                                                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                                                                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10">
                                                                                                 #{player.shirt_number}
                                                                                             </Badge>
                                                                                         )}
@@ -1470,7 +1496,7 @@ export default function InboxesPage() {
                                                                                         )}
                                                                                     </div>
                                                                                     {player.rejection_reason && (
-                                                                                        <div className="text-[10px] text-destructive mt-0.5 font-medium bg-transparent px-1.5 py-0.5 rounded-sm border border-destructive/30 inline-block">
+                                                                                        <div className="text-[10px] text-destructive mt-0.5 font-medium bg-destructive/10 px-1.5 py-0.5 rounded-sm border border-destructive/50 inline-block">
                                                                                             {isTh ? "เหตุผล: " : "Reason: "}{player.rejection_reason}
                                                                                         </div>
                                                                                     )}
@@ -1478,11 +1504,11 @@ export default function InboxesPage() {
                                                                             </div>
                                                                             <div className="flex items-center gap-1 shrink-0">
                                                                                 {player.status === 'approved' ? (
-                                                                                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 text-[11px]">
+                                                                                    <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 bg-emerald-500/10 text-[11px]">
                                                                                         {isTh ? "อนุมัติแล้ว" : "Approved"}
                                                                                     </Badge>
                                                                                 ) : player.status === 'rejected' ? (
-                                                                                    <Badge variant="outline" className="border-destructive/40 text-destructive text-[11px]">
+                                                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10 text-[11px]">
                                                                                         {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
                                                                                     </Badge>
                                                                                 ) : (
@@ -1500,9 +1526,9 @@ export default function InboxesPage() {
                                                                                             onClick={() => handleRejectSinglePlayer(player.id)}
                                                                                         >
                                                                                             {actioningPlayerId === player.id ? (
-                                                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                                                <Loader2 className="size-4 animate-spin" />
                                                                                             ) : (
-                                                                                                <X className="h-3.5 w-3.5 text-destructive" />
+                                                                                                <X className="size-4 text-destructive" />
                                                                                             )}
                                                                                         </Button>
                                                                                         <Button
@@ -1515,9 +1541,9 @@ export default function InboxesPage() {
                                                                                             onClick={() => handleApproveSinglePlayer(player.id)}
                                                                                         >
                                                                                             {actioningPlayerId === player.id ? (
-                                                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                                                <Loader2 className="size-4 animate-spin" />
                                                                                             ) : (
-                                                                                                <Check className={cn("h-3.5 w-3.5", isTeamApproved ? "text-primary" : "text-muted-foreground/30")} />
+                                                                                                <Check className={cn("size-4", isTeamApproved ? "text-primary" : "text-muted-foreground/30")} />
                                                                                             )}
                                                                                         </Button>
                                                                                     </div>
@@ -1540,7 +1566,7 @@ export default function InboxesPage() {
                                                                     disabled={isPending || isBatchApproving}
                                                                     className="h-8 text-xs"
                                                                 >
-                                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                    {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                     {isTh ? "ปฏิเสธทั้งหมด" : "Reject All"}
                                                                 </Button>
                                                                 <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -1554,7 +1580,7 @@ export default function InboxesPage() {
                                                                             title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนอนุมัติ" : "Please approve team first") : undefined}
                                                                             className="h-8 text-xs"
                                                                         >
-                                                                            {isBatchApproving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                            {isBatchApproving && <Loader2 className="size-4 animate-spin" />}
                                                                             {isTh
                                                                                 ? `ยืนยันนักกีฬาที่เลือก (${selectedRosterIds.length})`
                                                                                 : `Confirm Selected (${selectedRosterIds.length})`}
@@ -1568,7 +1594,7 @@ export default function InboxesPage() {
                                                                         title={!isTeamApproved ? (isTh ? "กรุณายืนยันทีมก่อนอนุมัติ" : "Please approve team first") : undefined}
                                                                         className="h-8 text-xs"
                                                                     >
-                                                                        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                                        {isPending && <Loader2 className="size-4 animate-spin" />}
                                                                         {isTh ? "ยอมรับทั้งหมดและล็อครายชื่อ" : "Accept All and Lock"}
                                                                     </Button>
                                                                 </div>
@@ -1606,7 +1632,7 @@ export default function InboxesPage() {
                                                         ? (isTh ? "ซ่อนรายชื่อนักกีฬา" : "Hide Roster")
                                                         : (isTh ? `รายชื่อนักกีฬา (${item.roster_player_count})` : `Roster (${item.roster_player_count})`)}
                                                 </span>
-                                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isRosterExpanded && "rotate-180")} />
+                                                <ChevronDown className={cn("size-4 transition-transform duration-200", isRosterExpanded && "rotate-180")} />
                                             </button>
                                         </div>
                                     )}
@@ -1636,7 +1662,7 @@ export default function InboxesPage() {
                                                 />
                                             )}
                                             <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                {tournamentInitials || <Trophy className="h-4 w-4" />}
+                                                {tournamentInitials || <Trophy className="size-4" />}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="space-y-1.5 min-w-0 flex-1">
@@ -1655,19 +1681,19 @@ export default function InboxesPage() {
                                             {/* Status Badge & Timestamp */}
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {currentStatus === 'accepted' ? (
-                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                    <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
                                                         <span>{isTh ? "ตอบรับแล้ว" : "Accepted"}</span>
                                                     </Badge>
                                                 ) : currentStatus === 'rejected' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                         <span>{isTh ? "ปฏิเสธแล้ว" : "Declined"}</span>
                                                     </Badge>
                                                 ) : currentStatus === 'error' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                         <span>Error occurred</span>
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-primary border-primary/30">
+                                                    <Badge variant="outline" className="text-primary border-primary/50 bg-primary/10">
                                                         <span>{isTh ? `คำเชิญเข้าร่วมเป็น${roleLabel}` : `Invitation: ${roleLabel}`}</span>
                                                     </Badge>
                                                 )}
@@ -1683,7 +1709,7 @@ export default function InboxesPage() {
                                     <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
                                         {currentStatus === 'accepted' || currentStatus === 'rejected' || currentStatus === 'error' ? (
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <Badge variant="outline" className="text-primary border-primary/30">
+                                                <Badge variant="outline" className="text-primary border-primary/50 bg-primary/10">
                                                     <span>{isTh ? `คำเชิญเข้าร่วมเป็น${roleLabel}` : `Invitation: ${roleLabel}`}</span>
                                                 </Badge>
                                             </div>
@@ -1699,7 +1725,7 @@ export default function InboxesPage() {
                                                     disabled={isPending}
                                                     className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
                                                 >
-                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isPending && <Loader2 className="size-4 animate-spin" />}
                                                     {isTh ? "ปฏิเสธ" : "Decline"}
                                                 </Button>
                                                 <Button
@@ -1711,11 +1737,12 @@ export default function InboxesPage() {
                                                     disabled={isPending}
                                                     className="font-bold text-xs"
                                                 >
-                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+                                                    {isPending && <Loader2 className="size-4 animate-spin" />}
                                                     {isTh ? "ตอบรับ" : "Accept"}
                                                 </Button>
                                             </div>
                                         )}
+                                        <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                                     </div>
                                 </div>
                             );
@@ -1744,7 +1771,7 @@ export default function InboxesPage() {
                                                 />
                                             )}
                                             <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                {initials || <Users className="h-4 w-4" />}
+                                                {initials || <Users className="size-4" />}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="space-y-1.5 min-w-0 flex-1">
@@ -1759,15 +1786,15 @@ export default function InboxesPage() {
                                             )}
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {regStatus === 'approved' ? (
-                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                    <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
                                                         {getStatusText(regStatus)}
                                                     </Badge>
                                                 ) : regStatus === 'rejected' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                         {getStatusText(regStatus)}
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                                                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 bg-amber-500/10">
                                                         {getStatusText(regStatus)}
                                                     </Badge>
                                                 )}
@@ -1780,9 +1807,10 @@ export default function InboxesPage() {
                                     </div>
 
                                     <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
-                                        <Badge variant="outline" className="text-muted-foreground border-border">
+                                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10">
                                             {tReg("nav_team_registration") || (isTh ? "การสมัครทีม" : "Team Registration")}
                                         </Badge>
+                                        <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                                     </div>
                                 </div>
                             );
@@ -1810,7 +1838,7 @@ export default function InboxesPage() {
                                                 />
                                             )}
                                             <AvatarFallback className="bg-amber-500/10 text-amber-600 font-bold text-xs">
-                                                {teamInitials || <ShieldCheck className="h-4 w-4" />}
+                                                {teamInitials || <ShieldCheck className="size-4" />}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="space-y-1.5 min-w-0 flex-1">
@@ -1825,15 +1853,15 @@ export default function InboxesPage() {
                                             )}
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {reqStatus === 'approved' ? (
-                                                    <Badge variant="outline" className="border-primary/40 text-primary">
+                                                    <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
                                                         {getStatusText(reqStatus)}
                                                     </Badge>
                                                 ) : reqStatus === 'rejected' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
+                                                    <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
                                                         {getStatusText(reqStatus)}
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                                                    <Badge variant="outline" className="border-amber-500/50 text-amber-600 bg-amber-500/10">
                                                         {getStatusText(reqStatus)}
                                                     </Badge>
                                                 )}
@@ -1846,9 +1874,10 @@ export default function InboxesPage() {
                                     </div>
 
                                     <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
-                                        <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50 bg-amber-500/10">
                                             {isTh ? 'คำขอจัดการทีมที่ส่ง' : 'Team Request (Sent)'}
                                         </Badge>
+                                        <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                                     </div>
                                 </div>
                             );
@@ -1860,161 +1889,252 @@ export default function InboxesPage() {
                             const avatarSrc = item.requester_avatar || item.team_logo;
                             const displayInitials = getInitials(item.requester_name || item.team_name);
                             const squadViewQuery = typeof window !== "undefined" && (localStorage.getItem("squad_view_mode") === "card" || localStorage.getItem("squad_view_mode") === "grid") ? "?view=card" : "?view=list";
+                            const isDetailsExpanded = expandedDetailsTeamIds.includes(item.id);
 
                             return (
                                 <div
                                     key={`in-team-req-${item.id}`}
-                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors cursor-pointer group"
-                                    onClick={() => router.push(item.team_id ? `/${locale}/dashboard/teams/${item.team_id}${squadViewQuery}` : `/${locale}/dashboard/teams`)}
+                                    onClick={(e) => {
+                                        const target = e.target as HTMLElement | null;
+                                        if (target?.closest('button, a, input, [role="button"], [role="menuitem"], [role="checkbox"]')) {
+                                            return;
+                                        }
+                                        toggleExpandDetails(item.id);
+                                    }}
+                                    className={cn(
+                                        "p-4 transition-colors space-y-4 cursor-pointer",
+                                        isDetailsExpanded ? "" : "hover:bg-muted/30"
+                                    )}
                                 >
-                                    <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
-                                        <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
-                                            {avatarSrc && (
-                                                <AvatarImage
-                                                    src={avatarSrc}
-                                                    alt={item.requester_name}
-                                                    className="object-contain"
-                                                />
-                                            )}
-                                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                {displayInitials || <User className="h-4 w-4" />}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="space-y-1.5 min-w-0 flex-1">
-                                            {isTh ? (
-                                                <p className="text-sm font-normal leading-relaxed text-foreground">
-                                                    <span className="font-semibold text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-semibold text-foreground">{item.team_name}</span>
-                                                </p>
-                                            ) : (
-                                                <p className="text-sm font-normal leading-relaxed text-foreground">
-                                                    <span className="font-semibold text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-semibold text-foreground">{item.team_name}</span>
-                                                </p>
-                                            )}
-
-                                            {/* Contact Info & direct action links */}
-                                            <div className="flex flex-col gap-1.5 text-[12px] text-muted-foreground mt-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    {item.requester_email && (
-                                                        <a
-                                                            href={`mailto:${item.requester_email}`}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium bg-transparent border border-border px-2 py-0.5 rounded-sm transition-colors hover:border-primary"
-                                                            title={isTh ? "ส่งอีเมลหาผู้ขอสิทธิ์" : "Send Email"}
-                                                        >
-                                                            <Mail className="h-4 w-4 shrink-0" />
-                                                            <span>{item.requester_email}</span>
-                                                        </a>
-                                                    )}
-                                                    {item.contact_phone && (
-                                                        <a
-                                                            href={`tel:${item.contact_phone}`}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="inline-flex items-center gap-1 text-primary hover:underline font-medium bg-transparent border border-border px-2 py-0.5 rounded-sm transition-colors hover:border-primary"
-                                                            title={isTh ? "โทรหาผู้ขอสิทธิ์" : "Call Phone"}
-                                                        >
-                                                            <Phone className="h-4 w-4 shrink-0" />
-                                                            <span>{item.contact_phone}</span>
-                                                        </a>
-                                                    )}
-                                                </div>
-                                                {item.message && (
-                                                    <div className="bg-transparent p-3 rounded-sm italic border-l-2 border-primary/40 border border-border text-xs text-foreground/80 flex items-start gap-2">
-                                                        <MessageSquareQuote className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                                                        <span>&ldquo;{item.message}&rdquo;</span>
-                                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                                        <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                                            <Avatar className="h-10 w-10 rounded-full shrink-0 bg-muted/40 overflow-hidden">
+                                                {avatarSrc && (
+                                                    <AvatarImage
+                                                        src={avatarSrc}
+                                                        alt={item.requester_name}
+                                                        className="object-contain"
+                                                    />
                                                 )}
-                                            </div>
-
-                                            {/* Status Badge & Timestamp */}
-                                            <div className="flex items-center gap-2 pt-1 flex-wrap">
-                                                {currentStatus === 'approved' || currentStatus === 'accepted' ? (
-                                                    <Badge variant="outline" className="border-primary/40 text-primary">
-                                                        {isTh ? "อนุมัติแล้ว" : "Approved"}
-                                                    </Badge>
-                                                ) : currentStatus === 'rejected' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
-                                                        {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
-                                                    </Badge>
-                                                ) : currentStatus === 'error' ? (
-                                                    <Badge variant="outline" className="border-destructive/40 text-destructive">
-                                                        <span>Error occurred</span>
-                                                    </Badge>
+                                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                    {displayInitials || <User className="size-4" />}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="space-y-1.5 min-w-0 flex-1">
+                                                {isTh ? (
+                                                    <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                        <span className="font-semibold text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-semibold text-foreground">{item.team_name}</span>
+                                                    </p>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-purple-600 border-purple-500/30">
-                                                        {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
-                                                    </Badge>
+                                                    <p className="text-sm font-normal leading-relaxed text-foreground">
+                                                        <span className="font-semibold text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-semibold text-foreground">{item.team_name}</span>
+                                                    </p>
                                                 )}
-                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                <span className="text-[10px] text-muted-foreground/60 font-medium">
-                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
-                                                </span>
+
+                                                {/* Status Badge & Timestamp */}
+                                                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                                                    {currentStatus === 'approved' || currentStatus === 'accepted' ? (
+                                                        <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
+                                                            {isTh ? "อนุมัติแล้ว" : "Approved"}
+                                                        </Badge>
+                                                    ) : currentStatus === 'rejected' ? (
+                                                        <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
+                                                            {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
+                                                        </Badge>
+                                                    ) : currentStatus === 'error' ? (
+                                                        <Badge variant="outline" className="border-destructive/50 text-destructive bg-destructive/10">
+                                                            <span>Error occurred</span>
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-purple-600 border-purple-500/50 bg-purple-500/10">
+                                                            {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
+                                                        </Badge>
+                                                    )}
+                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                    <span className="text-[10px] text-muted-foreground/60 font-medium">
+                                                        {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
+                                                    </span>
+                                                </div>
                                             </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
+                                            {currentStatus === 'approved' || currentStatus === 'accepted' || currentStatus === 'rejected' || currentStatus === 'error' ? (
+                                                <Badge variant="outline" className="text-purple-600 border-purple-500/50 bg-purple-500/10">
+                                                    {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
+                                                </Badge>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 md:gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRejectTeamRequest(item.id);
+                                                        }}
+                                                        disabled={isPending}
+                                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                    >
+                                                        {isPending && <Loader2 className="size-4 animate-spin" />}
+                                                        {isTh ? "ปฏิเสธ" : "Reject"}
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleApproveTeamRequest(item.id);
+                                                        }}
+                                                        disabled={isPending}
+                                                        className="font-bold text-xs"
+                                                    >
+                                                        {isPending && <Loader2 className="size-4 animate-spin" />}
+                                                        {isTh ? "อนุมัติและโอนสิทธิ์" : "Approve"}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        
+                                            <ChevronDown className={cn(
+                                                "size-4 text-muted-foreground/60 transition-transform duration-200 shrink-0",
+                                                isDetailsExpanded && "rotate-180 text-foreground"
+                                            )} />
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 md:gap-2 shrink-0 self-end sm:self-center">
-                                        {currentStatus === 'approved' || currentStatus === 'accepted' || currentStatus === 'rejected' || currentStatus === 'error' ? (
-                                            <Badge variant="outline" className="text-purple-600 border-purple-500/30">
-                                                {isTh ? 'คำขอจัดการทีมที่ได้รับ' : 'Team Request (Incoming)'}
-                                            </Badge>
-                                        ) : (
-                                            <div className="flex items-center gap-1.5 md:gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleRejectTeamRequest(item.id);
-                                                    }}
-                                                    disabled={isPending}
-                                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
-                                                >
-                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                                    {isTh ? "ปฏิเสธ" : "Reject"}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleApproveTeamRequest(item.id);
-                                                    }}
-                                                    disabled={isPending}
-                                                    className="font-bold text-xs"
-                                                >
-                                                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                                                    {isTh ? "อนุมัติและโอนสิทธิ์" : "Approve"}
-                                                </Button>
+                                    {/* Inline Expandable Team Management Request Details Dropdown Section */}
+                                    {isDetailsExpanded && (
+                                        <div className="pl-0 sm:pl-[52px] animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                                            <div className="rounded-sm border border-border bg-card overflow-hidden">
+                                                {/* Header */}
+                                                <div className="p-4 flex items-center justify-between border-b border-border">
+                                                    <Header level={5}>
+                                                        {isTh ? "ข้อมูลคำขอสิทธิ์การจัดการทีม" : "Team Management Request Details"}
+                                                    </Header>
+                                                    {item.team_name && (
+                                                        item.team_id ? (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="text-primary border-primary/50 bg-primary/10 cursor-pointer hover:bg-primary/20 transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    router.push(`/${locale}/dashboard/teams/${item.team_id}${squadViewQuery}`);
+                                                                }}
+                                                            >
+                                                                {item.team_name}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-primary border-primary/50 bg-primary/10">
+                                                                {item.team_name}
+                                                            </Badge>
+                                                        )
+                                                    )}
+                                                </div>
+
+                                                {/* Information Rows */}
+                                                <div className="divide-y divide-border">
+                                                    {/* Row: Requester Name */}
+                                                    <div className="flex items-center gap-4 px-4 py-2">
+                                                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                            <User className="size-4 text-muted-foreground" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                            <Header level={6} className="text-muted-foreground">{isTh ? "ผู้ขอสิทธิ์" : "Requester"}</Header>
+                                                            <Label>{item.requester_name || (isTh ? "ไม่ระบุ" : "Not specified")}</Label>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Row: Contact Email */}
+                                                    <div className="flex items-center gap-4 px-4 py-2">
+                                                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                            <Mail className="size-4 text-muted-foreground" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                            <Header level={6} className="text-muted-foreground">{isTh ? "อีเมลติดต่อ" : "Email"}</Header>
+                                                            {item.requester_email ? (
+                                                                <Label asChild className="hover:text-primary transition-colors block truncate cursor-pointer">
+                                                                    <a href={`mailto:${item.requester_email}`} onClick={(e) => e.stopPropagation()}>
+                                                                        {item.requester_email}
+                                                                    </a>
+                                                                </Label>
+                                                            ) : (
+                                                                <Label>-</Label>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Row: Contact Phone */}
+                                                    <div className="flex items-center gap-4 px-4 py-2">
+                                                        <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center">
+                                                            <Phone className="size-4 text-muted-foreground" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                                                            <Header level={6} className="text-muted-foreground">{isTh ? "เบอร์โทรศัพท์ติดต่อ" : "Phone Number"}</Header>
+                                                            {item.contact_phone ? (
+                                                                <Label asChild className="hover:text-primary transition-colors block truncate cursor-pointer">
+                                                                    <a href={`tel:${item.contact_phone}`} onClick={(e) => e.stopPropagation()}>
+                                                                        {item.contact_phone}
+                                                                    </a>
+                                                                </Label>
+                                                            ) : (
+                                                                <Label>-</Label>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Row: Message / Reason */}
+                                                    {item.message && (
+                                                        <div className="flex items-start gap-4 px-4 py-3">
+                                                            <div className="size-9 rounded-sm bg-muted-foreground/10 flex items-center justify-center shrink-0 mt-0.5">
+                                                                <MessageSquareQuote className="size-4 text-muted-foreground" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 space-y-1">
+                                                                <Header level={6} className="text-muted-foreground">{isTh ? "ข้อความ / เหตุผลในการขอสิทธิ์" : "Message / Reason"}</Header>
+                                                                <p className="text-xs text-foreground/80 leading-relaxed italic bg-muted/20 p-2.5 rounded-sm border border-border">
+                                                                    &ldquo;{item.message}&rdquo;
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         }
 
                         // 6. SYSTEM NOTIFICATIONS
-                        const isApproved = item.title.startsWith("✅");
-                        const isRejected = item.title.startsWith("❌");
+                        const isApproved = item.status === 'approved' || item.title.startsWith("✅") || item.title.includes("อนุมัติ");
+                        const isRejected = item.status === 'rejected' || item.title.startsWith("❌") || item.title.includes("ปฏิเสธ");
+                        const targetUrl = item.link
+                            ? (item.link.startsWith(`/${locale}`) ? item.link : `/${locale}${item.link.startsWith('/') ? '' : '/'}${item.link}`)
+                            : null;
 
                         return (
                             <div
                                 key={`sys-${item.id}`}
-                                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors"
+                                className={cn(
+                                    "p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors",
+                                    targetUrl && "cursor-pointer group"
+                                )}
+                                onClick={() => {
+                                    if (targetUrl) router.push(targetUrl);
+                                }}
                             >
                                 <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
                                     <div className={cn(
-                                        "h-10 w-10 border rounded-full shrink-0 flex items-center justify-center",
+                                        "h-10 w-10 rounded-full shrink-0 flex items-center justify-center",
                                         isApproved
-                                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+                                            ? "bg-primary/10 text-primary"
                                             : isRejected
-                                            ? "border-destructive/20 bg-destructive/10 text-destructive"
-                                            : "border-border bg-primary/10 text-primary"
+                                            ? "bg-destructive/10 text-destructive"
+                                            : "bg-primary/10 text-primary"
                                     )}>
                                         {isApproved ? (
-                                            <ShieldCheck className="h-4 w-4" />
+                                            <ShieldCheck className="size-4" />
                                         ) : isRejected ? (
-                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertCircle className="size-4" />
                                         ) : (
-                                            <Bell className="h-4 w-4" />
+                                            <Bell className="size-4" />
                                         )}
                                     </div>
                                     <div className="space-y-1.5 min-w-0 flex-1">
@@ -2028,19 +2148,19 @@ export default function InboxesPage() {
                                             <Badge
                                                 variant="outline"
                                                 className={cn(
-                                                    "border-border",
+                                                    "font-bold text-xs py-0.5 px-2",
                                                     isApproved
-                                                        ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10 font-bold"
+                                                        ? "text-emerald-500 border-emerald-500/50 bg-emerald-500/10"
                                                         : isRejected
-                                                        ? "text-destructive border-destructive/30 bg-destructive/10 font-bold"
-                                                        : "text-muted-foreground"
+                                                        ? "text-destructive border-destructive/50 bg-destructive/10"
+                                                        : "text-amber-500 border-amber-500/50 bg-amber-500/10"
                                                 )}
                                             >
                                                 {isApproved
                                                     ? (isTh ? "อนุมัติแล้ว" : "Approved")
                                                     : isRejected
                                                     ? (isTh ? "ปฏิเสธคำขอ" : "Rejected")
-                                                    : (isTh ? "การแจ้งเตือนระบบ" : "System Notification")}
+                                                    : (isTh ? "รอดำเนินการ" : "Pending")}
                                             </Badge>
                                             <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                             <span className="text-[10px] text-muted-foreground/60 font-medium">
@@ -2050,21 +2170,17 @@ export default function InboxesPage() {
                                     </div>
                                 </div>
 
-                                {item.link && (
-                                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
-                                        <Button
-                                            asChild
-                                            size="sm"
-                                            variant="outline"
-                                            className="gap-1 text-xs font-bold"
-                                        >
-                                            <a href={item.link}>
-                                                <span>{isTh ? "ดูรายละเอียด" : "View"}</span>
-                                                <ArrowUpRight className="h-4 w-4" />
-                                            </a>
-                                        </Button>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-muted-foreground border-muted-foreground/50 bg-muted-foreground/10 font-semibold text-xs py-1 px-2.5 shadow-2xs"
+                                    >
+                                        {isTh ? "การแจ้งเตือนระบบ" : "System Notification"}
+                                    </Badge>
+                                    {targetUrl && (
+                                        <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
+                                    )}
+                                </div>
                             </div>
                         );
                     })}

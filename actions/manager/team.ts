@@ -113,12 +113,6 @@ export async function getSports(): Promise<ActionResponse<Sport[]>> {
         const defaultSports: Sport[] = [
             { id: 1, sport_name: "Football", created_at: new Date().toISOString() },
             { id: 2, sport_name: "Volleyball", created_at: new Date().toISOString() },
-            { id: 3, sport_name: "Basketball", created_at: new Date().toISOString() },
-            { id: 4, sport_name: "Futsal", created_at: new Date().toISOString() },
-            { id: 5, sport_name: "Badminton", created_at: new Date().toISOString() },
-            { id: 6, sport_name: "Tennis", created_at: new Date().toISOString() },
-            { id: 7, sport_name: "Sepak Takraw", created_at: new Date().toISOString() },
-            { id: 8, sport_name: "Cricket", created_at: new Date().toISOString() },
         ];
 
         try {
@@ -126,7 +120,11 @@ export async function getSports(): Promise<ActionResponse<Sport[]>> {
             if (res.ok) {
                 const data = await res.json();
                 if (Array.isArray(data) && data.length > 0) {
-                    return { success: true, data };
+                    const allowed = ['football', 'volleyball'];
+                    const filtered = data.filter((s: any) =>
+                        allowed.includes((s.sport_name || s.name || "").toLowerCase())
+                    );
+                    return { success: true, data: filtered.length > 0 ? filtered : defaultSports };
                 }
             }
         } catch (fetchErr) {

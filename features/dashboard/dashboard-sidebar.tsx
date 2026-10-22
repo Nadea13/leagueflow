@@ -105,7 +105,7 @@ export function DashboardSidebar({
                 </Link>
             </div>
 
-            <nav className="grid items-start px-4 space-y-2" id="tour-sidebar-nav">
+            <nav className="grid items-start px-4" id="tour-sidebar-nav">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                     return (
@@ -130,7 +130,7 @@ export function DashboardSidebar({
                             className={cn(
                                 "flex items-center gap-0 md:group-hover/sidebar:gap-2 p-2 rounded-sm transition-all duration-300 ease-in-out relative group tracking-wide justify-center md:justify-start",
                                 isActive
-                                    ? "bg-primary/10 text-primary"
+                                    ? "bg-primary/10 text-primary font-medium"
                                     : "text-muted-foreground hover:text-primary"
                             )}
                         >

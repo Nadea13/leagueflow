@@ -82,7 +82,7 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                 {isThai ? "เมนูการตั้งค่า" : "Settings Menu"}
                             </Header>
                         </div>
-                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1 lg:gap-0 pb-1 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-0 pb-1 lg:pb-0 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {tabOptions.map((opt) => {
                                 const Icon = opt.icon;
                                 const isActive = currentTab === opt.value;
@@ -94,21 +94,30 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                         type="button"
                                         onClick={() => handleTabChange(opt.value)}
                                         className={cn(
-                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full",
+                                            "flex items-center gap-2 px-4 py-2 rounded-sm text-xs md:text-sm font-medium transition-colors text-left shrink-0 lg:shrink lg:w-full group",
                                             isActive
                                                 ? isDanger
-                                                    ? "bg-destructive text-destructive-foreground font-bold shadow-2xs"
-                                                    : "bg-primary text-primary-foreground font-bold shadow-2xs"
+                                                    ? "bg-destructive/10 text-destructive font-semibold"
+                                                    : "bg-primary/10 text-primary font-semibold"
                                                 : isDanger
-                                                ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                                ? "text-destructive/80 hover:text-destructive"
+                                                : "text-muted-foreground hover:text-primary"
                                         )}
                                     >
-                                        {Icon && <Icon className="size-4 shrink-0" />}
+                                        {Icon && (
+                                            <Icon className={cn(
+                                                "size-4 shrink-0 transition-colors",
+                                                isActive
+                                                    ? isDanger ? "text-destructive" : "text-primary"
+                                                    : isDanger ? "text-destructive/80 group-hover:text-destructive" : "text-muted-foreground group-hover:text-primary"
+                                            )} />
+                                        )}
                                         <span className="flex-1 whitespace-nowrap lg:whitespace-normal">{opt.label}</span>
                                         <ChevronRight className={cn(
                                             "size-4 hidden lg:block transition-transform",
-                                            isActive ? "opacity-100 translate-x-0.5" : "opacity-0"
+                                            isActive
+                                                ? isDanger ? "text-destructive opacity-100 translate-x-0.5" : "text-primary opacity-100 translate-x-0.5"
+                                                : "opacity-0"
                                         )} />
                                     </button>
                                 );
