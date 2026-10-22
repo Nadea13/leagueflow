@@ -6,15 +6,21 @@ import { Handle, Position, NodeProps, Node, useUpdateNodeInternals } from "@xyfl
 import { cn } from "@/lib/utils";
 import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useMemo } from "react";
-import { Match, TournamentTeam, MatchEvent } from "@/types";
+import { Match, TournamentTeam } from "@/types";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "next-intl";
+import { ApiClient } from "@/lib/api-client";
 
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 type MatchItem = NonNullable<MatchNodeData['matches']>[number];
+
+const LIVE_STATUSES = new Set(['live', 'warmup', 'first_half', 'half_time', 'second_half', 'extra_time', 'penalties', 'in_progress']);
+const ENDED_STATUSES = new Set(['finished', 'completed', 'canceled', 'cancelled']);
+
+export const isMatchLive = (status?: string | null) => !!status && LIVE_STATUSES.has(status);
+export const isMatchEnded = (status?: string | null) => !!status && ENDED_STATUSES.has(status);
 
 export const MatchNode = memo(function MatchNode({
     id,
@@ -27,10 +33,12 @@ export const MatchNode = memo(function MatchNode({
     const nodes = useBracketStore((s) => s.nodes);
     const storeTeams = useBracketStore((s) => s.teams);
     const storeSport = useBracketStore((s) => s.sport);
+    const storeMatches = useBracketStore((s) => s.matches);
+    const setStoreMatches = useBracketStore((s) => s.setMatches);
+    const activeCategoryId = useBracketStore((s) => s.activeCategoryId);
     const params = useParams();
     const locale = useLocale();
     const tournamentId = params.id as string;
-    const supabase = useMemo(() => createClient(), []);
 
     const handleAddMatch = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -43,17 +51,13 @@ export const MatchNode = memo(function MatchNode({
         updateNodeData(id, { matches: nextMatches });
     };
 
-    const [dbMatches, setDbMatches] = useState<Match[]>([]);
-    const [dbEvents, setDbEvents] = useState<MatchEvent[]>([]);
-    const [fetchedSport, setFetchedSport] = useState<string | null>(null);
     const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
     const matches = useMemo(() => Array.isArray(data.matches) ? data.matches : [], [data.matches]);
-    const matchDbIdsKey = useMemo(() => matches.map(m => m.dbId || m.id).filter(Boolean).join(","), [matches]);
 
     const sport = useMemo(() => {
-        const s = storeSport || (data as { sport?: string })?.sport || fetchedSport || 'football';
+        const s = storeSport || (data as { sport?: string })?.sport || 'football';
         return String(s).toLowerCase();
-    }, [storeSport, data, fetchedSport]);
+    }, [storeSport, data]);
 
     // Local ticker to update the live timer every second
     useEffect(() => {
@@ -63,156 +67,106 @@ export const MatchNode = memo(function MatchNode({
         return () => clearInterval(timer);
     }, []);
 
+    // Fallback match fetching if store doesn't have matches yet
     useEffect(() => {
         let isMounted = true;
-        async function fetchScores() {
-            if (!tournamentId && !id && !matchDbIdsKey) return;
-
-            if (tournamentId && !storeSport && !(data as { sport?: string })?.sport) {
-                const { data: tourData } = await supabase
-                    .from('tournaments')
-                    .select('sport, sports(sport_name)')
-                    .eq('id', tournamentId)
-                    .maybeSingle();
-
-                if (isMounted && tourData) {
-                    const sName = tourData.sport || (tourData.sports as unknown as { sport_name?: string })?.sport_name;
-                    if (sName) setFetchedSport(sName.toLowerCase());
+        async function fetchInitialMatches() {
+            if (storeMatches.length > 0 || !tournamentId) return;
+            try {
+                const targetCatId = activeCategoryId || undefined;
+                const endpoint = targetCatId 
+                    ? `/tournaments/${tournamentId}/categories/${targetCatId}/matches`
+                    : `/tournaments/${tournamentId}/matches`;
+                const data = await ApiClient.fetch<Match[]>(endpoint);
+                if (isMounted && data && data.length > 0) {
+                    setStoreMatches(data);
                 }
-            }
-
-            const matchDbIds = matches.map(m => m.dbId).filter(Boolean) as string[];
-
-            let query = supabase
-                .from('matches')
-                .select('*')
-                .is('deleted_at', null);
-
-            if (matchDbIds.length > 0) {
-                query = query.in('id', matchDbIds);
-            } else if (id) {
-                query = query.eq('node_id', id);
-            } else {
-                return;
-            }
-
-            const { data: results } = await query;
-            
-            if (isMounted && results) {
-                setDbMatches(prev => JSON.stringify(prev) !== JSON.stringify(results) ? results : prev);
-                const fetchedIds = results.map(r => r.id);
-                if (fetchedIds.length > 0) {
-                    const { data: evs } = await supabase
-                        .from('match_events')
-                        .select('*')
-                        .in('match_id', fetchedIds);
-                    
-                    if (isMounted && evs) {
-                        setDbEvents(prev => JSON.stringify(prev) !== JSON.stringify(evs) ? (evs as MatchEvent[]) : prev);
-                    }
-                }
+            } catch {
+                // non-blocking
             }
         }
-
-        fetchScores();
-        const interval = setInterval(fetchScores, 10000);
-
-        const channel = supabase
-            .channel(`match-node-${id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchScores)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'match_events' }, fetchScores)
-            .subscribe();
-
+        fetchInitialMatches();
         return () => {
             isMounted = false;
-            clearInterval(interval);
-            supabase.removeChannel(channel);
         };
-    }, [id, tournamentId, supabase, matchDbIdsKey, storeSport]);
+    }, [tournamentId, activeCategoryId, storeMatches.length, setStoreMatches]);
 
     useEffect(() => {
         updateNodeInternals(id);
-    }, [id, matches, dbMatches, updateNodeInternals]);
+    }, [id, matches, storeMatches, updateNodeInternals]);
+
+    const findDbMatch = (item: MatchItem | undefined, index: number): Match | undefined => {
+        if (!item) return undefined;
+        return storeMatches.find(m => 
+            (item.dbId && m.id === item.dbId) || 
+            (item.matchId && m.id === item.matchId) ||
+            (m.node_id === id && ((m.idx_match ?? m.match_index) === (index + 1))) ||
+            (item.placeholderA && item.placeholderB && (
+                (m.placeholder_a === item.placeholderA && m.placeholder_b === item.placeholderB) ||
+                (m.ph_home === item.placeholderA && m.ph_away === item.placeholderB)
+            ))
+        );
+    };
 
     const renderMatchStatus = (m: MatchItem | undefined, dbM: Match | undefined) => {
         if (!m) return null;
         const matchDate = dbM?.match_date || m.match_date;
         const matchTime = dbM?.match_time || m.match_time;
 
-        if (dbM?.status === 'live') {
+        const isLive = isMatchLive(dbM?.status);
+        const isEnded = isMatchEnded(dbM?.status);
+
+        if (isLive) {
             if (sport === 'volleyball') {
-                const vballEvents = dbM ? dbEvents.filter(e => e.match_id === dbM.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
-                const setPointsMap = new Map<number, { home: number; away: number }>();
-                if (vballEvents.length > 0) {
-                    vballEvents.forEach(e => {
-                        const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
-                        const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
-                        const isHome = dbM?.home_team_id ? e.team_id === dbM.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
-                        if (isHome) current.home += 1;
-                        else current.away += 1;
-                        setPointsMap.set(setNum, current);
-                    });
-                }
-                const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
-                const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
-                let derivedHomeSets = 0;
-                let derivedAwaySets = 0;
-                for (let s = 1; s <= maxLoggedSet; s++) {
-                    const pts = setPointsMap.get(s) || { home: 0, away: 0 };
-                    const targetPts = (s === 3 || s === 5) ? 15 : 25;
-                    const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
-                    if (s < maxLoggedSet || isFinishedScore) {
-                        if (pts.home > pts.away) derivedHomeSets += 1;
-                        else if (pts.away > pts.home) derivedAwaySets += 1;
-                    }
-                }
-                const currentSetNum = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
+                const homeSets = typeof dbM?.home_score === 'number' ? dbM.home_score : 0;
+                const awaySets = typeof dbM?.away_score === 'number' ? dbM.away_score : 0;
+                const currentSetNum = (homeSets + awaySets) + 1;
                 return (
-                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                    <span className="text-[10px] font-black text-primary flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block animate-pulse"></span>
                         SET {currentSetNum}
                     </span>
                 );
             }
 
-            const elapsed = dbM.elapsed_before_pause || 0;
-            let liveSeconds = elapsed;
-            
-            // Check if half time is the latest event
-            const matchEvents = dbEvents.filter(e => e.match_id === dbM.id);
-            const lastTimerEvent = [...matchEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-            const isNodeHalfTime = lastTimerEvent?.event_type === 'half_time';
-            
-            if (isNodeHalfTime) {
+            if (dbM?.status === 'half_time') {
                 return (
-                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                    <span className="text-[10px] font-black text-amber-500 flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
                         HT
                     </span>
                 );
             }
 
-            if (dbM.timer_status === 'playing') {
-                const markers = matchEvents.filter(e => e.event_type === 'kick_off' || e.event_type === 'match_resumed');
-                const latestMarker = markers.length > 0
-                    ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-                    : null;
-                    
-                if (latestMarker) {
-                    const markerTimestamp = (latestMarker.extra_info as Record<string, unknown> | undefined)?.start_timestamp as number || new Date(latestMarker.created_at).getTime();
-                    const effectiveNow = currentTimestamp || markerTimestamp;
-                    const diffSeconds = Math.max(0, Math.floor((effectiveNow - markerTimestamp) / 1000));
-                    liveSeconds = elapsed + diffSeconds;
+            const elapsed = dbM?.elapsed_seconds ?? dbM?.elapsed_before_pause ?? (typeof dbM?.minute === 'number' ? dbM.minute * 60 : 0);
+            let liveSeconds = elapsed;
+
+            if (dbM?.timer_status === 'playing' && dbM?.updated_at) {
+                const updatedTime = new Date(dbM.updated_at).getTime();
+                if (!isNaN(updatedTime) && currentTimestamp > updatedTime) {
+                    liveSeconds += Math.floor((currentTimestamp - updatedTime) / 1000);
                 }
             }
-            
+
             const mins = Math.floor(liveSeconds / 60);
             const secs = liveSeconds % 60;
             const formattedTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            
+
             return (
-                <span className="text-[10px] font-black text-primary flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                <span className="text-[10px] font-black text-primary flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block animate-pulse"></span>
                     {formattedTime}
+                </span>
+            );
+        }
+
+        if (isEnded) {
+            const isCanceled = dbM?.status === 'canceled' || dbM?.status === 'cancelled';
+            return (
+                <span className={cn(
+                    "text-[10px] font-black px-1.5 py-0.5 rounded border uppercase",
+                    isCanceled ? "text-destructive bg-destructive/10 border-destructive/20" : "text-muted-foreground bg-muted/50 border-border"
+                )}>
+                    {isCanceled ? 'Canceled' : 'FT'}
                 </span>
             );
         }
@@ -231,12 +185,8 @@ export const MatchNode = memo(function MatchNode({
     };
 
     const singleMatch = matches[0];
-    const singleDbMatch = singleMatch ? dbMatches.find(m => 
-        (singleMatch.dbId && m.id === singleMatch.dbId) || 
-        (singleMatch.matchId && m.id === singleMatch.matchId) ||
-        (m.node_id === id && m.match_index === 1) ||
-        (m.placeholder_a === singleMatch.placeholderA && m.placeholder_b === singleMatch.placeholderB)
-    ) : undefined;
+    const singleDbMatch = findDbMatch(singleMatch, 0);
+    const _hasLiveMatch = matches.some((item, i) => isMatchLive(findDbMatch(item, i)?.status));
 
     return (
         <div
@@ -309,22 +259,19 @@ export const MatchNode = memo(function MatchNode({
                             return timeA.localeCompare(timeB);
                         })
                         .map((match, index) => {
-                            const dbMatch = dbMatches.find(m => 
-                                (match.dbId && m.id === match.dbId) || 
-                                (match.matchId && m.id === match.matchId) ||
-                                (m.node_id === id && m.match_index === (index + 1)) ||
-                                (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
-                            );
+                            const dbMatch = findDbMatch(match, index);
 
-                            // Resolve live teams from edges
+                            // Resolve live teams from edges or database assignments
                             const getResolvedTeam = (slot: 'a' | 'b') => {
                                 // 1. If we have a database match with a team ID assigned, use it
                                 if (dbMatch) {
                                     const teamId = slot === 'a' ? dbMatch.home_team_id : dbMatch.away_team_id;
                                     if (teamId) {
                                         const team = storeTeams.find(t => String(t.team_id || t.id) === String(teamId));
-                                        if (team) return team.name;
+                                        if (team?.name) return team.name;
                                     }
+                                    if (slot === 'a' && dbMatch.home_team?.name) return dbMatch.home_team.name;
+                                    if (slot === 'b' && dbMatch.away_team?.name) return dbMatch.away_team.name;
                                 }
 
                                 // 2. Fall back to resolved placeholder/ranking/label from edge connections
@@ -362,14 +309,79 @@ export const MatchNode = memo(function MatchNode({
                                 // Handle MatchNode propagation (Winner / Loser)
                                 if (sourceNode.type === 'matchNode') {
                                     const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
-                                    if (winnerMatch) {
-                                        const winnerIndex = parseInt(winnerMatch[1], 10);
-                                        return `Winner (Match ${winnerIndex + 1})`;
-                                    }
                                     const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
-                                    if (loserMatch) {
-                                        const loserIndex = parseInt(loserMatch[1], 10);
-                                        return `Loser (Match ${loserIndex + 1})`;
+                                    const isWinnerHandle = !!winnerMatch;
+                                    const matchIdx = winnerMatch ? parseInt(winnerMatch[1], 10) : loserMatch ? parseInt(loserMatch[1], 10) : -1;
+
+                                    if (matchIdx !== -1) {
+                                        const sourceMatches = Array.isArray(sourceNode.data.matches) ? (sourceNode.data.matches as any[]) : [];
+                                        const sourceMatchItem = sourceMatches[matchIdx];
+
+                                        const sourceDbMatch = storeMatches.find(m =>
+                                            (sourceMatchItem?.dbId && m.id === sourceMatchItem.dbId) ||
+                                            (sourceMatchItem?.matchId && m.id === sourceMatchItem.matchId) ||
+                                            (m.node_id === sourceNode.id && ((m.idx_match ?? m.match_index) === (matchIdx + 1))) ||
+                                            (sourceMatchItem && m.placeholder_a === sourceMatchItem.placeholderA && m.placeholder_b === sourceMatchItem.placeholderB) ||
+                                            (sourceMatchItem && m.ph_home === sourceMatchItem.placeholderA && m.ph_away === sourceMatchItem.placeholderB)
+                                        );
+
+                                        const isSourceEnded = isMatchEnded(sourceDbMatch?.status);
+
+                                        if (isSourceEnded && sourceDbMatch) {
+                                            let winnerTeamId: string | null = sourceDbMatch.winner_id || null;
+                                            let loserTeamId: string | null = null;
+
+                                            const getScoreNum = (score: unknown) => {
+                                                if (typeof score === 'object' && score !== null && 'total' in score) {
+                                                    return Number((score as { total?: number }).total) || 0;
+                                                }
+                                                return Number(score ?? 0);
+                                            };
+                                            const homeScore = getScoreNum(sourceDbMatch.home_score);
+                                            const awayScore = getScoreNum(sourceDbMatch.away_score);
+
+                                            if (!winnerTeamId) {
+                                                if (homeScore > awayScore) {
+                                                    winnerTeamId = sourceDbMatch.home_team_id;
+                                                    loserTeamId = sourceDbMatch.away_team_id;
+                                                } else if (awayScore > homeScore) {
+                                                    winnerTeamId = sourceDbMatch.away_team_id;
+                                                    loserTeamId = sourceDbMatch.home_team_id;
+                                                }
+                                            } else {
+                                                loserTeamId = winnerTeamId === sourceDbMatch.home_team_id
+                                                    ? sourceDbMatch.away_team_id
+                                                    : sourceDbMatch.home_team_id;
+                                            }
+
+                                            const targetTeamId = isWinnerHandle ? winnerTeamId : loserTeamId;
+
+                                            if (targetTeamId) {
+                                                const team = storeTeams.find(t => String(t.team_id || t.id) === String(targetTeamId));
+                                                if (team?.name) return team.name;
+
+                                                if (String(sourceDbMatch.home_team_id) === String(targetTeamId) && sourceDbMatch.home_team?.name) {
+                                                    return sourceDbMatch.home_team.name;
+                                                }
+                                                if (String(sourceDbMatch.away_team_id) === String(targetTeamId) && sourceDbMatch.away_team?.name) {
+                                                    return sourceDbMatch.away_team.name;
+                                                }
+                                            }
+
+                                            if (!targetTeamId && homeScore !== awayScore) {
+                                                const isHomeWinner = homeScore > awayScore;
+                                                const wantHome = isWinnerHandle ? isHomeWinner : !isHomeWinner;
+                                                const chosen = wantHome ? sourceMatchItem?.placeholderA : sourceMatchItem?.placeholderB;
+                                                if (chosen && chosen !== 'TBD') return chosen;
+                                            }
+                                        }
+
+                                        const labelBase = sourceNode.data.label ? `${sourceNode.data.label}` : `Match ${matchIdx + 1}`;
+                                        if (isWinnerHandle) {
+                                            return `Winner (${labelBase})`;
+                                        } else {
+                                            return `Loser (${labelBase})`;
+                                        }
                                     }
                                 }
 
@@ -397,63 +409,25 @@ export const MatchNode = memo(function MatchNode({
 
                                     <div>
                                         {(() => {
-                                            const vballEvents = dbMatch ? dbEvents.filter(e => e.match_id === dbMatch.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
-                                            const setPointsMap = new Map<number, { home: number; away: number }>();
-                                            if (vballEvents.length > 0) {
-                                                vballEvents.forEach(e => {
-                                                    const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
-                                                    const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
-                                                    const isHome = dbMatch?.home_team_id ? e.team_id === dbMatch.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
-                                                    if (isHome) current.home += 1;
-                                                    else current.away += 1;
-                                                    setPointsMap.set(setNum, current);
-                                                });
-                                            }
-
-                                            const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
-                                            const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
-
-                                            let derivedHomeSets = 0;
-                                            let derivedAwaySets = 0;
-
-                                            for (let s = 1; s <= maxLoggedSet; s++) {
-                                                const pts = setPointsMap.get(s) || { home: 0, away: 0 };
-                                                const targetPts = (s === 3 || s === 5) ? 15 : 25;
-                                                const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
-                                                const isPastSet = s < maxLoggedSet;
-                                                if (isPastSet || isFinishedScore) {
-                                                    if (pts.home > pts.away) derivedHomeSets += 1;
-                                                    else if (pts.away > pts.home) derivedAwaySets += 1;
-                                                }
-                                            }
-                                            const currentSetNumber = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
-                                            const isEnded = dbMatch?.status === 'finished' || dbMatch?.status === 'canceled';
-
-                                            const latestSetPts = setPointsMap.get(maxLoggedSet) || { home: 0, away: 0 };
-                                            const currentSetPts = setPointsMap.get(currentSetNumber) || (isEnded ? latestSetPts : { home: 0, away: 0 });
+                                            const isEnded = isMatchEnded(dbMatch?.status);
 
                                             const getScoreValue = (score: unknown) => (typeof score === 'object' && score !== null && 'total' in score ? (score as Record<string, unknown>).total : score);
 
-                                            const homeSetsWon = vballEvents.length > 0
-                                                ? derivedHomeSets
-                                                : (dbMatch?.home_score !== null && dbMatch?.home_score !== undefined ? Number(getScoreValue(dbMatch.home_score)) || 0 : 0);
-
-                                            const awaySetsWon = vballEvents.length > 0
-                                                ? derivedAwaySets
-                                                : (dbMatch?.away_score !== null && dbMatch?.away_score !== undefined ? Number(getScoreValue(dbMatch.away_score)) || 0 : 0);
+                                            const homeScoreVal = dbMatch?.home_score !== null && dbMatch?.home_score !== undefined ? Number(getScoreValue(dbMatch.home_score)) || 0 : 0;
+                                            const awayScoreVal = dbMatch?.away_score !== null && dbMatch?.away_score !== undefined ? Number(getScoreValue(dbMatch.away_score)) || 0 : 0;
 
                                             const isHomeWinner = isEnded && (
                                                 dbMatch?.winner_id
                                                     ? dbMatch.winner_id === dbMatch?.home_team_id
-                                                    : (homeSetsWon > awaySetsWon || (homeSetsWon === awaySetsWon && (currentSetPts.home > currentSetPts.away || Number(dbMatch?.home_score ?? 0) > Number(dbMatch?.away_score ?? 0))))
+                                                    : homeScoreVal > awayScoreVal
                                             );
                                             const isAwayWinner = isEnded && (
                                                 dbMatch?.winner_id
                                                     ? dbMatch.winner_id === dbMatch?.away_team_id
-                                                    : (awaySetsWon > homeSetsWon || (homeSetsWon === awaySetsWon && (currentSetPts.away > currentSetPts.home || Number(dbMatch?.away_score ?? 0) > Number(dbMatch?.home_score ?? 0))))
+                                                    : awayScoreVal > homeScoreVal
                                             );
-                                            const isHomeLoser = isEnded && !isHomeWinner && (isAwayWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.away_team_id : true));
-                                            const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : true));
+                                            const isHomeLoser = isEnded && !isHomeWinner && (isAwayWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.away_team_id : homeScoreVal < awayScoreVal));
+                                            const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : awayScoreVal < homeScoreVal));
 
                                             return (
                                                 <div className="flex flex-col divide-y divide-border">
@@ -479,9 +453,9 @@ export const MatchNode = memo(function MatchNode({
                                                         )}
                                                         <SlotRow
                                                             label={liveTeamA || match.placeholderA}
+                                                            logoUrl={dbMatch?.home_team?.logo_url}
                                                             isResolved={!!liveTeamA}
-                                                            score={sport === 'volleyball' ? homeSetsWon : dbMatch?.home_score}
-                                                            setPoints={currentSetPts.home}
+                                                            score={dbMatch?.home_score}
                                                             isWinner={isHomeWinner}
                                                             isLoser={isHomeLoser}
                                                             status={dbMatch?.status}
@@ -522,9 +496,9 @@ export const MatchNode = memo(function MatchNode({
                                                         )}
                                                         <SlotRow
                                                             label={liveTeamB || match.placeholderB}
+                                                            logoUrl={dbMatch?.away_team?.logo_url}
                                                             isResolved={!!liveTeamB}
-                                                            score={sport === 'volleyball' ? awaySetsWon : dbMatch?.away_score}
-                                                            setPoints={currentSetPts.away}
+                                                            score={dbMatch?.away_score}
                                                             isWinner={isAwayWinner}
                                                             isLoser={isAwayLoser}
                                                             status={dbMatch?.status}
@@ -558,6 +532,7 @@ export const MatchNode = memo(function MatchNode({
 
 function SlotRow({
     label,
+    logoUrl,
     score,
     setPoints,
     isWinner,
@@ -567,8 +542,10 @@ function SlotRow({
     position,
     sport = 'football',
     onDropTeam,
+    onClear: _onClear,
 }: {
     label: string;
+    logoUrl?: string | null;
     score?: unknown;
     setPoints?: number;
     isWinner?: boolean;
@@ -593,12 +570,15 @@ function SlotRow({
         return name.slice(0, 2).toUpperCase();
     };
 
+    const isEnded = isMatchEnded(status);
     const hasScore = score !== undefined && score !== null && status !== 'scheduled';
     const displayScore = hasScore
         ? (typeof score === 'object' && score !== null && 'total' in score
             ? String((score as Record<string, unknown>).total)
             : String(score))
         : "";
+
+    const displayLogo = logoUrl || team?.logo_url;
 
     return (
         <div 
@@ -622,14 +602,14 @@ function SlotRow({
                 "w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-2/50 group-hover/slot:bg-node-2/10 transition-colors overflow-hidden shrink-0",
                 isLoser && "opacity-50"
             )}>
-                {team?.logo_url ? (
+                {displayLogo ? (
                     <Image
-                                src={team.logo_url}
-                                alt={label}
-                                width={24}
-                                height={24}
-                                className="w-full h-full object-cover"
-                            />
+                        src={displayLogo}
+                        alt={label}
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                    />
                 ) : (
                     <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-node-2">
                         {team ? getInitials(team.name) : (position === "top" ? "H" : "A")}
@@ -653,13 +633,13 @@ function SlotRow({
                     {sport === 'volleyball' ? (
                         <>
                             <span className={cn(
-                                (status === 'finished' || status === 'canceled')
+                                isEnded
                                     ? "w-6 h-6 flex items-center justify-center font-black text-xs"
                                     : "text-[10px] font-extrabold tracking-tight"
                             )}>
                                 {displayScore}
                             </span>
-                            {status !== 'finished' && status !== 'canceled' && (
+                            {!isEnded && (
                                 <span className="text-xs font-black text-center">
                                     {setPoints !== undefined ? setPoints : 0}
                                 </span>

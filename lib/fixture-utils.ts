@@ -264,7 +264,7 @@ export async function initTournamentStructure(tournamentId: string): Promise<Act
     }
 }
 
-function generateRoundRobinMatches(teamIds: (string | null)[], tournamentCategoryId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {
+export function generateRoundRobinMatches(teamIds: (string | null)[], tournamentCategoryId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {
     const fixtures: Partial<Match>[] = [];
     const leagueTeams = [...teamIds];
 
@@ -331,7 +331,7 @@ function generateRoundRobinMatches(teamIds: (string | null)[], tournamentCategor
     return fixtures;
 }
 
-function assignMatchTimes(fixtures: Partial<Match>[], startDateStr: string, endDateStr: string | null | undefined, numberOfPitches: number) {
+export function assignMatchTimes(fixtures: Partial<Match>[], startDateStr: string, endDateStr: string | null | undefined, numberOfPitches: number) {
     if (!startDateStr) return;
 
     const currentDate = new Date(startDateStr);
