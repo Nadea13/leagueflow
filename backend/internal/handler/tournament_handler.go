@@ -120,6 +120,29 @@ func (h *TournamentHandler) Update(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Tournament updated successfully", "tournament": t})
 }
 
+func (h *TournamentHandler) UpdateStatus(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	var req struct {
+		Status model.TournamentStatus `json:"status"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
+	}
+
+	if req.Status == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Status is required"})
+	}
+
+	if err := h.tournamentService.UpdateStatus(c.Context(), id, req.Status); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Tournament status updated successfully", "status": req.Status})
+}
+
 func (h *TournamentHandler) Delete(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -242,4 +265,180 @@ func (h *TournamentHandler) DeleteCategory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"message": "Category deleted successfully"})
+}
+
+func (h *TournamentHandler) RequestStatusChange(c *fiber.Ctx) error {
+	tournamentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
+	}
+	userID, ok := userIDVal.(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	var req struct {
+		TargetStatus string `json:"target_status"`
+		Reason       string `json:"reason"`
+	}
+	if err := c.BodyParser(&req); err != nil || req.TargetStatus == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "target_status is required"})
+	}
+
+	tour, _, err := h.tournamentService.GetByID(c.Context(), tournamentID)
+	if err != nil || tour == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Tournament not found"})
+	}
+
+	statusReq := model.TournamentStatusRequest{
+		TournamentID:   tournamentID,
+		RequestedBy:    userID,
+		PreviousStatus: string(tour.Status),
+		TargetStatus:   req.TargetStatus,
+		Reason:         req.Reason,
+		Status:         "pending",
+	}
+
+	if err := h.tournamentService.RequestStatusChange(c.Context(), &statusReq); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    statusReq,
+	})
+}
+
+func (h *TournamentHandler) CancelStatusRequest(c *fiber.Ctx) error {
+	tournamentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
+	}
+	userID, ok := userIDVal.(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	if err := h.tournamentService.CancelStatusRequest(c.Context(), tournamentID, userID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func (h *TournamentHandler) GetStatusRequest(c *fiber.Ctx) error {
+	tournamentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	req, err := h.tournamentService.GetLatestStatusRequest(c.Context(), tournamentID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    req,
+	})
+}
+
+func (h *TournamentHandler) ListAdminStatusRequests(c *fiber.Ctx) error {
+	list, err := h.tournamentService.ListAdminStatusRequests(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if list == nil {
+		list = []*model.TournamentStatusRequest{}
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    list,
+	})
+}
+
+func (h *TournamentHandler) ListMyStatusRequests(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Authentication required"})
+	}
+	userID, ok := userIDVal.(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	list, err := h.tournamentService.ListMyStatusRequests(c.Context(), userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if list == nil {
+		list = []*model.TournamentStatusRequest{}
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    list,
+	})
+}
+
+func (h *TournamentHandler) ApproveStatusRequest(c *fiber.Ctx) error {
+	tournamentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	userIDVal := c.Locals("user_id")
+	var reviewedBy uuid.UUID
+	if uID, ok := userIDVal.(uuid.UUID); ok {
+		reviewedBy = uID
+	}
+
+	req, err := h.tournamentService.ApproveStatusRequest(c.Context(), tournamentID, reviewedBy)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    req,
+	})
+}
+
+func (h *TournamentHandler) RejectStatusRequest(c *fiber.Ctx) error {
+	tournamentID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	userIDVal := c.Locals("user_id")
+	var reviewedBy uuid.UUID
+	if uID, ok := userIDVal.(uuid.UUID); ok {
+		reviewedBy = uID
+	}
+
+	var body struct {
+		Reason string `json:"reason"`
+	}
+	_ = c.BodyParser(&body)
+
+	req, err := h.tournamentService.RejectStatusRequest(c.Context(), tournamentID, reviewedBy, body.Reason)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    req,
+	})
 }

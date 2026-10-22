@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"leagueflow-backend/internal/config"
+	"leagueflow-backend/internal/model"
 	"leagueflow-backend/internal/repository"
 	"leagueflow-backend/internal/service"
 )
@@ -301,5 +302,40 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 
 	return c.Redirect(fmt.Sprintf("%s/auth/callback?token=%s", h.cfg.FrontendURL, resp.AccessToken), fiber.StatusTemporaryRedirect)
 }
+
+func (h *AuthHandler) ListUsers(c *fiber.Ctx) error {
+	users, err := h.userRepo.ListAll(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if users == nil {
+		users = []*model.User{}
+	}
+	return c.JSON(users)
+}
+
+func (h *AuthHandler) UpdateUser(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	var req struct {
+		Role          *string `json:"role"`
+		IsOrganizer   *bool   `json:"is_organizer"`
+		IsTeamManager *bool   `json:"is_team_manager"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if err := h.userRepo.UpdateFields(c.Context(), id, req.Role, req.IsOrganizer, req.IsTeamManager); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "User updated successfully"})
+}
+
 
 

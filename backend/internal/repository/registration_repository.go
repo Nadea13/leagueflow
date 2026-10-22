@@ -247,6 +247,16 @@ func (r *RegistrationRepository) ApproveUnlock(ctx context.Context, id uuid.UUID
 	return err
 }
 
+func (r *RegistrationRepository) RejectUnlock(ctx context.Context, id uuid.UUID) error {
+	query := `
+		UPDATE tournament_teams
+		SET unlock_requested = FALSE, updated_at = NOW()
+		WHERE id = $1
+	`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
 func (r *RegistrationRepository) LockRoster(ctx context.Context, id uuid.UUID, locked bool) error {
 	query := `
 		UPDATE tournament_teams

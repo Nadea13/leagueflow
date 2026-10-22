@@ -49,6 +49,10 @@ func (s *RegistrationService) ApproveUnlock(ctx context.Context, id uuid.UUID) e
 	return s.repo.ApproveUnlock(ctx, id)
 }
 
+func (s *RegistrationService) RejectUnlock(ctx context.Context, id uuid.UUID) error {
+	return s.repo.RejectUnlock(ctx, id)
+}
+
 func (s *RegistrationService) LockRoster(ctx context.Context, id uuid.UUID, locked bool) error {
 	return s.repo.LockRoster(ctx, id, locked)
 }

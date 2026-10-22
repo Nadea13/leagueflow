@@ -101,3 +101,44 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, id uuid.UUID, fullNa
 	return &user, nil
 }
 
+func (r *UserRepository) ListAll(ctx context.Context) ([]*model.User, error) {
+	query := `
+		SELECT id, email, full_name, avatar_url, role, phone, is_organizer, is_team_manager, is_active, created_at, updated_at
+		FROM users
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []*model.User
+	for rows.Next() {
+		var u model.User
+		if err := rows.Scan(
+			&u.ID, &u.Email, &u.FullName, &u.AvatarURL, &u.Role, &u.Phone,
+			&u.IsOrganizer, &u.IsTeamManager, &u.IsActive, &u.CreatedAt, &u.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		users = append(users, &u)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) UpdateFields(ctx context.Context, id uuid.UUID, role *string, isOrganizer *bool, isTeamManager *bool) error {
+	query := `
+		UPDATE users
+		SET 
+			role = CASE WHEN $1::text IS NOT NULL AND $1::text != '' THEN $1::user_role ELSE role END,
+			is_organizer = COALESCE($2, is_organizer),
+			is_team_manager = COALESCE($3, is_team_manager),
+			updated_at = NOW()
+		WHERE id = $4
+	`
+	_, err := r.db.Exec(ctx, query, role, isOrganizer, isTeamManager, id)
+	return err
+}
+
+

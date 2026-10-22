@@ -423,6 +423,28 @@ func (r *MatchRepository) SyncCategoryMatches(ctx context.Context, categoryID uu
 	var result []*model.Match
 	activeIDsMap := make(map[uuid.UUID]bool)
 
+	preserveExistingState := func(m *model.Match, existing *model.Match) {
+		if existing == nil {
+			return
+		}
+		m.Status = existing.Status
+		m.HomeScore = existing.HomeScore
+		m.AwayScore = existing.AwayScore
+		m.TimerStatus = existing.TimerStatus
+		m.ElapsedSeconds = existing.ElapsedSeconds
+		m.Minute = existing.Minute
+		m.ScoreDetail = existing.ScoreDetail
+		if m.HomeTeamID == nil && existing.HomeTeamID != nil {
+			m.HomeTeamID = existing.HomeTeamID
+		}
+		if m.AwayTeamID == nil && existing.AwayTeamID != nil {
+			m.AwayTeamID = existing.AwayTeamID
+		}
+		if m.ScheduledAt == nil && existing.ScheduledAt != nil {
+			m.ScheduledAt = existing.ScheduledAt
+		}
+	}
+
 	for _, m := range matches {
 		m.CategoryID = &categoryID
 		m.TournamentCategoryID = &categoryID
@@ -430,10 +452,9 @@ func (r *MatchRepository) SyncCategoryMatches(ctx context.Context, categoryID uu
 			m.IdxMatch = m.MatchIndex
 		}
 		if m.ID != uuid.Nil {
-			// Check if exists
-			var exists bool
-			err := r.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM matches WHERE id = $1 AND deleted_at IS NULL)`, m.ID).Scan(&exists)
-			if err == nil && exists {
+			existing, err := r.GetByID(ctx, m.ID)
+			if err == nil && existing != nil {
+				preserveExistingState(m, existing)
 				if err := r.Update(ctx, m); err != nil {
 					return nil, err
 				}
@@ -453,6 +474,9 @@ func (r *MatchRepository) SyncCategoryMatches(ctx context.Context, categoryID uu
 			`, categoryID, *m.NodeID, m.IdxMatch).Scan(&existingID)
 			if err == nil && existingID != uuid.Nil {
 				m.ID = existingID
+				if existing, err := r.GetByID(ctx, existingID); err == nil && existing != nil {
+					preserveExistingState(m, existing)
+				}
 				if err := r.Update(ctx, m); err != nil {
 					return nil, err
 				}
@@ -561,4 +585,9 @@ func (r *MatchRepository) DeleteEvent(ctx context.Context, id uuid.UUID) (*uuid.
 		return nil, err
 	}
 	return &matchID, nil
+}
+
+func (r *MatchRepository) DeleteByCategory(ctx context.Context, categoryID uuid.UUID) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM matches WHERE tournament_category_id = $1`, categoryID)
+	return err
 }

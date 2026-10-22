@@ -148,7 +148,11 @@ func (h *RegistrationHandler) RequestUnlock(c *fiber.Ctx) error {
 }
 
 func (h *RegistrationHandler) ApproveUnlock(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("regId"))
+	idStr := c.Params("regId")
+	if idStr == "" {
+		idStr = c.Params("id")
+	}
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid registration ID"})
 	}
@@ -157,6 +161,22 @@ func (h *RegistrationHandler) ApproveUnlock(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"message": "Unlock request approved and roster unlocked"})
+}
+
+func (h *RegistrationHandler) RejectUnlock(c *fiber.Ctx) error {
+	idStr := c.Params("regId")
+	if idStr == "" {
+		idStr = c.Params("id")
+	}
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid registration ID"})
+	}
+
+	if err := h.service.RejectUnlock(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Unlock request rejected successfully"})
 }
 
 func (h *RegistrationHandler) LockRoster(c *fiber.Ctx) error {

@@ -210,3 +210,15 @@ func (h *MatchHandler) DeleteEvent(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"message": "Match event deleted successfully"})
 }
+
+func (h *MatchHandler) DeleteByCategory(c *fiber.Ctx) error {
+	catID, err := uuid.Parse(c.Params("categoryId"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid category ID"})
+	}
+
+	if err := h.matchService.DeleteByCategory(c.Context(), catID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Category matches deleted successfully", "success": true})
+}

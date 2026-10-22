@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -270,6 +271,12 @@ func (r *TournamentRepository) Update(ctx context.Context, t *model.Tournament) 
 	return err
 }
 
+func (r *TournamentRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status model.TournamentStatus) error {
+	query := `UPDATE tournaments SET status = $1, updated_at = NOW() WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, status, id)
+	return err
+}
+
 func (r *TournamentRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM tournaments WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id)
@@ -516,4 +523,238 @@ func (r *TournamentRepository) DeleteCategory(ctx context.Context, categoryID uu
 	query := `UPDATE tournament_categories SET deleted_at = NOW() WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, categoryID)
 	return err
+}
+
+func (r *TournamentRepository) CreateStatusRequest(ctx context.Context, req *model.TournamentStatusRequest) error {
+	// Cancel any existing pending requests for this tournament
+	cancelQuery := `UPDATE tournament_status_requests SET status = 'cancelled', updated_at = NOW() WHERE tournament_id = $1 AND status = 'pending'`
+	_, _ = r.db.Exec(ctx, cancelQuery, req.TournamentID)
+
+	query := `
+		INSERT INTO tournament_status_requests (
+			id, tournament_id, requested_by, previous_status, target_status, reason, status
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING created_at, updated_at
+	`
+	if req.ID == uuid.Nil {
+		req.ID = uuid.New()
+	}
+	if req.Status == "" {
+		req.Status = "pending"
+	}
+	err := r.db.QueryRow(ctx, query,
+		req.ID, req.TournamentID, req.RequestedBy, req.PreviousStatus, req.TargetStatus, req.Reason, req.Status,
+	).Scan(&req.CreatedAt, &req.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to create status request: %w", err)
+	}
+
+	// Also sync into tournaments.settings for backward compatibility
+	settingsReq := map[string]interface{}{
+		"id":              req.ID.String(),
+		"tournament_id":   req.TournamentID.String(),
+		"current_status":  req.PreviousStatus,
+		"previous_status": req.PreviousStatus,
+		"target_status":   req.TargetStatus,
+		"reason":          req.Reason,
+		"requested_by":    req.RequestedBy.String(),
+		"requested_at":    req.CreatedAt.Format(time.RFC3339),
+		"status":          req.Status,
+	}
+	settingsReqJSON, _ := json.Marshal(settingsReq)
+	syncQuery := `UPDATE tournaments SET settings = jsonb_set(COALESCE(settings, '{}'::jsonb), '{status_request}', $1::jsonb), updated_at = NOW() WHERE id = $2`
+	_, _ = r.db.Exec(ctx, syncQuery, settingsReqJSON, req.TournamentID)
+
+	return nil
+}
+
+func (r *TournamentRepository) CancelStatusRequest(ctx context.Context, tournamentID, userID uuid.UUID) error {
+	query := `
+		UPDATE tournament_status_requests
+		SET status = 'cancelled', updated_at = NOW()
+		WHERE tournament_id = $1 AND requested_by = $2 AND status = 'pending'
+	`
+	_, err := r.db.Exec(ctx, query, tournamentID, userID)
+	if err != nil {
+		return err
+	}
+
+	syncQuery := `UPDATE tournaments SET settings = jsonb_set(COALESCE(settings, '{}'::jsonb), '{status_request,status}', '"cancelled"'::jsonb), updated_at = NOW() WHERE id = $1`
+	_, _ = r.db.Exec(ctx, syncQuery, tournamentID)
+	return nil
+}
+
+func (r *TournamentRepository) GetLatestStatusRequest(ctx context.Context, tournamentID uuid.UUID) (*model.TournamentStatusRequest, error) {
+	query := `
+		SELECT r.id, r.tournament_id, r.requested_by, r.previous_status, r.target_status, r.reason,
+		       r.status, r.reject_reason, r.reviewed_by, r.reviewed_at, r.created_at, r.updated_at,
+		       t.name as tournament_name, u.full_name as requester_name, u.email as requester_email
+		FROM tournament_status_requests r
+		JOIN tournaments t ON r.tournament_id = t.id
+		JOIN users u ON r.requested_by = u.id
+		WHERE r.tournament_id = $1
+		ORDER BY r.created_at DESC
+		LIMIT 1
+	`
+	var req model.TournamentStatusRequest
+	err := r.db.QueryRow(ctx, query, tournamentID).Scan(
+		&req.ID, &req.TournamentID, &req.RequestedBy, &req.PreviousStatus, &req.TargetStatus, &req.Reason,
+		&req.Status, &req.RejectReason, &req.ReviewedBy, &req.ReviewedAt, &req.CreatedAt, &req.UpdatedAt,
+		&req.TournamentName, &req.RequesterName, &req.RequesterEmail,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &req, nil
+}
+
+func (r *TournamentRepository) ListAdminStatusRequests(ctx context.Context) ([]*model.TournamentStatusRequest, error) {
+	query := `
+		SELECT r.id, r.tournament_id, r.requested_by, r.previous_status, r.target_status, r.reason,
+		       r.status, r.reject_reason, r.reviewed_by, r.reviewed_at, r.created_at, r.updated_at,
+		       t.name as tournament_name, COALESCE(s.sport_name, '') as sport_name,
+		       u.full_name as requester_name, u.email as requester_email
+		FROM tournament_status_requests r
+		JOIN tournaments t ON r.tournament_id = t.id
+		JOIN users u ON r.requested_by = u.id
+		LEFT JOIN sports s ON t.sport_id = s.id
+		ORDER BY r.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []*model.TournamentStatusRequest
+	for rows.Next() {
+		var req model.TournamentStatusRequest
+		err := rows.Scan(
+			&req.ID, &req.TournamentID, &req.RequestedBy, &req.PreviousStatus, &req.TargetStatus, &req.Reason,
+			&req.Status, &req.RejectReason, &req.ReviewedBy, &req.ReviewedAt, &req.CreatedAt, &req.UpdatedAt,
+			&req.TournamentName, &req.SportName, &req.RequesterName, &req.RequesterEmail,
+		)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, &req)
+	}
+	return list, nil
+}
+
+func (r *TournamentRepository) ListMyStatusRequests(ctx context.Context, userID uuid.UUID) ([]*model.TournamentStatusRequest, error) {
+	query := `
+		SELECT r.id, r.tournament_id, r.requested_by, r.previous_status, r.target_status, r.reason,
+		       r.status, r.reject_reason, r.reviewed_by, r.reviewed_at, r.created_at, r.updated_at,
+		       t.name as tournament_name, COALESCE(s.sport_name, '') as sport_name,
+		       u.full_name as requester_name, u.email as requester_email
+		FROM tournament_status_requests r
+		JOIN tournaments t ON r.tournament_id = t.id
+		JOIN users u ON r.requested_by = u.id
+		LEFT JOIN sports s ON t.sport_id = s.id
+		WHERE r.requested_by = $1 OR t.organizer_id = $1
+		ORDER BY r.updated_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []*model.TournamentStatusRequest
+	for rows.Next() {
+		var req model.TournamentStatusRequest
+		err := rows.Scan(
+			&req.ID, &req.TournamentID, &req.RequestedBy, &req.PreviousStatus, &req.TargetStatus, &req.Reason,
+			&req.Status, &req.RejectReason, &req.ReviewedBy, &req.ReviewedAt, &req.CreatedAt, &req.UpdatedAt,
+			&req.TournamentName, &req.SportName, &req.RequesterName, &req.RequesterEmail,
+		)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, &req)
+	}
+	return list, nil
+}
+
+func (r *TournamentRepository) ApproveStatusRequest(ctx context.Context, tournamentID, reviewedBy uuid.UUID) (*model.TournamentStatusRequest, error) {
+	req, err := r.GetLatestStatusRequest(ctx, tournamentID)
+	if err != nil || req == nil {
+		return nil, fmt.Errorf("no request found for tournament")
+	}
+	if req.Status != "pending" {
+		return nil, fmt.Errorf("status request is not pending")
+	}
+
+	now := time.Now()
+	updateQuery := `
+		UPDATE tournament_status_requests
+		SET status = 'approved', reviewed_by = $1, reviewed_at = $2, updated_at = $2
+		WHERE id = $3
+	`
+	if _, err := r.db.Exec(ctx, updateQuery, reviewedBy, now, req.ID); err != nil {
+		return nil, fmt.Errorf("failed to update status request: %w", err)
+	}
+
+	tourQuery := `
+		UPDATE tournaments
+		SET status = $1,
+		    settings = jsonb_set(
+		        jsonb_set(
+		            jsonb_set(COALESCE(settings, '{}'::jsonb), '{status_unlocked}', 'true'::jsonb),
+		            '{status_unlocked_at}', to_jsonb($2::text)
+		        ),
+		        '{status_request,status}', '"approved"'::jsonb
+		    ),
+		    updated_at = $3
+		WHERE id = $4
+	`
+	if _, err := r.db.Exec(ctx, tourQuery, req.TargetStatus, now.Format(time.RFC3339), now, tournamentID); err != nil {
+		return nil, fmt.Errorf("failed to update tournament: %w", err)
+	}
+
+	req.Status = "approved"
+	req.ReviewedBy = &reviewedBy
+	req.ReviewedAt = &now
+	return req, nil
+}
+
+func (r *TournamentRepository) RejectStatusRequest(ctx context.Context, tournamentID, reviewedBy uuid.UUID, rejectReason string) (*model.TournamentStatusRequest, error) {
+	req, err := r.GetLatestStatusRequest(ctx, tournamentID)
+	if err != nil || req == nil {
+		return nil, fmt.Errorf("no request found for tournament")
+	}
+	if req.Status != "pending" {
+		return nil, fmt.Errorf("status request is not pending")
+	}
+
+	now := time.Now()
+	updateQuery := `
+		UPDATE tournament_status_requests
+		SET status = 'rejected', reject_reason = $1, reviewed_by = $2, reviewed_at = $3, updated_at = $3
+		WHERE id = $4
+	`
+	if _, err := r.db.Exec(ctx, updateQuery, rejectReason, reviewedBy, now, req.ID); err != nil {
+		return nil, fmt.Errorf("failed to update status request: %w", err)
+	}
+
+	syncQuery := `
+		UPDATE tournaments
+		SET settings = jsonb_set(
+		        jsonb_set(COALESCE(settings, '{}'::jsonb), '{status_request,status}', '"rejected"'::jsonb),
+		        '{status_request,reject_reason}', to_jsonb($1::text)
+		    ),
+		    updated_at = $2
+		WHERE id = $3
+	`
+	_, _ = r.db.Exec(ctx, syncQuery, rejectReason, now, tournamentID)
+
+	req.Status = "rejected"
+	req.RejectReason = &rejectReason
+	req.ReviewedBy = &reviewedBy
+	req.ReviewedAt = &now
+	return req, nil
 }

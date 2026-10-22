@@ -239,8 +239,29 @@ func (r *TeamRepository) UpdatePlayer(ctx context.Context, p *model.Player) erro
 }
 
 func (r *TeamRepository) DeletePlayer(ctx context.Context, playerID uuid.UUID) error {
-	query := `DELETE FROM players WHERE id = $1`
+	_, _ = r.db.Exec(ctx, `UPDATE player_sports SET deleted_at = NOW() WHERE player_id = $1`, playerID)
+	_, _ = r.db.Exec(ctx, `DELETE FROM tournament_players WHERE id = $1`, playerID)
+	query := `UPDATE players SET deleted_at = NOW() WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, playerID)
 	return err
 }
+
+func (r *TeamRepository) ResetRoster(ctx context.Context, teamID uuid.UUID) error {
+	_, _ = r.db.Exec(ctx, `UPDATE player_sports SET deleted_at = NOW() WHERE team_id = $1`, teamID)
+	_, err := r.db.Exec(ctx, `UPDATE players SET deleted_at = NOW() WHERE team_id = $1`, teamID)
+	return err
+}
+
+func (r *TeamRepository) RestoreRoster(ctx context.Context, teamID uuid.UUID) error {
+	_, _ = r.db.Exec(ctx, `UPDATE player_sports SET deleted_at = NULL WHERE team_id = $1`, teamID)
+	_, err := r.db.Exec(ctx, `UPDATE players SET deleted_at = NULL WHERE team_id = $1`, teamID)
+	return err
+}
+
+func (r *TeamRepository) HasSoftDeletedPlayers(ctx context.Context, teamID uuid.UUID) (bool, error) {
+	var count int
+	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM players WHERE team_id = $1 AND deleted_at IS NOT NULL`, teamID).Scan(&count)
+	return count > 0, err
+}
+
 

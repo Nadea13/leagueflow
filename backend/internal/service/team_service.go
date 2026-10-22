@@ -143,6 +143,18 @@ func (s *TeamService) DeletePlayer(ctx context.Context, playerID uuid.UUID) erro
 	return s.teamRepo.DeletePlayer(ctx, playerID)
 }
 
+func (s *TeamService) ResetRoster(ctx context.Context, teamID uuid.UUID) error {
+	return s.teamRepo.ResetRoster(ctx, teamID)
+}
+
+func (s *TeamService) RestoreRoster(ctx context.Context, teamID uuid.UUID) error {
+	return s.teamRepo.RestoreRoster(ctx, teamID)
+}
+
+func (s *TeamService) HasSoftDeletedPlayers(ctx context.Context, teamID uuid.UUID) (bool, error) {
+	return s.teamRepo.HasSoftDeletedPlayers(ctx, teamID)
+}
+
 func isASCII(s string) bool {
 	for i := 0; i < len(s); i++ {
 		if s[i] > 127 {

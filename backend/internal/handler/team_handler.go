@@ -286,3 +286,40 @@ func (h *TeamHandler) DeletePlayer(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Player removed successfully"})
 }
 
+func (h *TeamHandler) ResetRoster(c *fiber.Ctx) error {
+	teamID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid team ID"})
+	}
+
+	if err := h.teamService.ResetRoster(c.Context(), teamID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Roster reset successfully", "success": true})
+}
+
+func (h *TeamHandler) RestoreRoster(c *fiber.Ctx) error {
+	teamID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid team ID"})
+	}
+
+	if err := h.teamService.RestoreRoster(c.Context(), teamID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Roster restored successfully", "success": true})
+}
+
+func (h *TeamHandler) HasSoftDeletedPlayers(c *fiber.Ctx) error {
+	teamID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid team ID"})
+	}
+
+	hasDeleted, err := h.teamService.HasSoftDeletedPlayers(c.Context(), teamID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"has_deleted": hasDeleted, "success": true})
+}
+

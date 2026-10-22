@@ -36,13 +36,8 @@ func (s *StandingsService) GetByCategory(ctx context.Context, categoryID uuid.UU
 	return s.RecalculateAndSave(ctx, categoryID)
 }
 
-// RecalculateAndSave calculates standings from category matches, saves into Postgres, and returns the list.
-func (s *StandingsService) RecalculateAndSave(ctx context.Context, categoryID uuid.UUID) ([]*model.Standing, error) {
-	matches, err := s.matchRepo.GetMatchesByCategory(ctx, categoryID)
-	if err != nil {
-		return nil, err
-	}
-
+// CalculateStandings computes standings table from category matches (Points -> GD -> GF).
+func CalculateStandings(categoryID uuid.UUID, matches []*model.Match) []model.Standing {
 	table := make(map[uuid.UUID]*model.Standing)
 
 	for _, m := range matches {
@@ -120,6 +115,18 @@ func (s *StandingsService) RecalculateAndSave(ctx context.Context, categoryID uu
 	for i := range computed {
 		computed[i].Rank = i + 1
 	}
+
+	return computed
+}
+
+// RecalculateAndSave calculates standings from category matches, saves into Postgres, and returns the list.
+func (s *StandingsService) RecalculateAndSave(ctx context.Context, categoryID uuid.UUID) ([]*model.Standing, error) {
+	matches, err := s.matchRepo.GetMatchesByCategory(ctx, categoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	computed := CalculateStandings(categoryID, matches)
 
 	// Persist to Postgres standings table
 	if err := s.standingsRepo.UpsertStandings(ctx, computed); err != nil {

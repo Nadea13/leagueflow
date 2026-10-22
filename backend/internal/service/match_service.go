@@ -128,3 +128,7 @@ func (s *MatchService) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+func (s *MatchService) DeleteByCategory(ctx context.Context, categoryID uuid.UUID) error {
+	return s.repo.DeleteByCategory(ctx, categoryID)
+}

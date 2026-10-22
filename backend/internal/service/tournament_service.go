@@ -108,6 +108,10 @@ func (s *TournamentService) Update(ctx context.Context, t *model.Tournament) err
 	return s.repo.Update(ctx, t)
 }
 
+func (s *TournamentService) UpdateStatus(ctx context.Context, id uuid.UUID, status model.TournamentStatus) error {
+	return s.repo.UpdateStatus(ctx, id, status)
+}
+
 func (s *TournamentService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
@@ -173,4 +177,32 @@ func (s *TournamentService) UpdateCategoryCanvas(ctx context.Context, categoryID
 
 func (s *TournamentService) DeleteCategory(ctx context.Context, categoryID uuid.UUID) error {
 	return s.repo.DeleteCategory(ctx, categoryID)
+}
+
+func (s *TournamentService) RequestStatusChange(ctx context.Context, req *model.TournamentStatusRequest) error {
+	return s.repo.CreateStatusRequest(ctx, req)
+}
+
+func (s *TournamentService) CancelStatusRequest(ctx context.Context, tournamentID, userID uuid.UUID) error {
+	return s.repo.CancelStatusRequest(ctx, tournamentID, userID)
+}
+
+func (s *TournamentService) GetLatestStatusRequest(ctx context.Context, tournamentID uuid.UUID) (*model.TournamentStatusRequest, error) {
+	return s.repo.GetLatestStatusRequest(ctx, tournamentID)
+}
+
+func (s *TournamentService) ListAdminStatusRequests(ctx context.Context) ([]*model.TournamentStatusRequest, error) {
+	return s.repo.ListAdminStatusRequests(ctx)
+}
+
+func (s *TournamentService) ListMyStatusRequests(ctx context.Context, userID uuid.UUID) ([]*model.TournamentStatusRequest, error) {
+	return s.repo.ListMyStatusRequests(ctx, userID)
+}
+
+func (s *TournamentService) ApproveStatusRequest(ctx context.Context, tournamentID, reviewedBy uuid.UUID) (*model.TournamentStatusRequest, error) {
+	return s.repo.ApproveStatusRequest(ctx, tournamentID, reviewedBy)
+}
+
+func (s *TournamentService) RejectStatusRequest(ctx context.Context, tournamentID, reviewedBy uuid.UUID, rejectReason string) (*model.TournamentStatusRequest, error) {
+	return s.repo.RejectStatusRequest(ctx, tournamentID, reviewedBy, rejectReason)
 }
