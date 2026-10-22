@@ -45,6 +45,29 @@ func RunMigrations(pool *pgxpool.Pool) error {
 		log.Printf("⚠️ Self-healing teams schema: %v", err)
 	}
 
+	ensureStatusRequestsSQL := `
+	CREATE TABLE IF NOT EXISTS tournament_status_requests (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+		requested_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		previous_status VARCHAR(50) NOT NULL,
+		target_status VARCHAR(50) NOT NULL,
+		reason TEXT NOT NULL DEFAULT '',
+		status VARCHAR(50) NOT NULL DEFAULT 'pending',
+		reject_reason TEXT,
+		reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+		reviewed_at TIMESTAMPTZ,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
+	CREATE INDEX IF NOT EXISTS idx_tournament_status_requests_tournament ON tournament_status_requests(tournament_id);
+	CREATE INDEX IF NOT EXISTS idx_tournament_status_requests_status ON tournament_status_requests(status);
+	CREATE INDEX IF NOT EXISTS idx_tournament_status_requests_requested_by ON tournament_status_requests(requested_by);
+	`
+	if _, err := pool.Exec(ctx, ensureStatusRequestsSQL); err != nil {
+		log.Printf("⚠️ Self-healing tournament_status_requests schema: %v", err)
+	}
+
 	// 2. Discover migrations directory reliably (supports Docker /app, relative, and local)
 	candidates := []string{
 		"/app/migrations",

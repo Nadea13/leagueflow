@@ -1,15 +1,32 @@
 package middleware
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"leagueflow-backend/internal/config"
 	"leagueflow-backend/internal/model"
 	"leagueflow-backend/internal/service"
 )
+
+type ContextKey string
+
+const (
+	ContextKeyUserID ContextKey = "user_id"
+	ContextKeyRole   ContextKey = "role"
+)
+
+func GetUserFromContext(ctx context.Context) (*uuid.UUID, string) {
+	if uID, ok := ctx.Value(ContextKeyUserID).(uuid.UUID); ok && uID != uuid.Nil {
+		role, _ := ctx.Value(ContextKeyRole).(string)
+		return &uID, role
+	}
+	return nil, ""
+}
 
 func Protected(cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -50,6 +67,10 @@ func Protected(cfg *config.Config) fiber.Handler {
 		c.Locals("email", claims.Email)
 		c.Locals("role", claims.Role)
 
+		userCtx := context.WithValue(c.UserContext(), ContextKeyUserID, claims.UserID)
+		userCtx = context.WithValue(userCtx, ContextKeyRole, string(claims.Role))
+		c.SetUserContext(userCtx)
+
 		return c.Next()
 	}
 }
@@ -72,6 +93,10 @@ func OptionalAuth(cfg *config.Config) fiber.Handler {
 					c.Locals("user_id", claims.UserID)
 					c.Locals("email", claims.Email)
 					c.Locals("role", claims.Role)
+
+					userCtx := context.WithValue(c.UserContext(), ContextKeyUserID, claims.UserID)
+					userCtx = context.WithValue(userCtx, ContextKeyRole, string(claims.Role))
+					c.SetUserContext(userCtx)
 				}
 			}
 		}

@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
@@ -67,3 +69,55 @@ func ConnectRedis(redisURL string) *redis.Client {
 	log.Println("⚠️ Redis connection warning: continuing without redis cache")
 	return client
 }
+
+// WithUserContext executes a database transaction with app.current_user_id and app.current_user_role set locally.
+func WithUserContext(ctx context.Context, pool *pgxpool.Pool, userID *uuid.UUID, role string, fn func(tx pgx.Tx) error) error {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if userID != nil {
+		if _, err := tx.Exec(ctx, "SELECT set_config('app.current_user_id', $1, true), set_config('app.current_user_role', $2, true)", userID.String(), role); err != nil {
+			return fmt.Errorf("failed to set user session context: %w", err)
+		}
+	}
+
+	if err := fn(tx); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// StartPurgeWorker runs app.purge_soft_deleted_records in the background periodically.
+func StartPurgeWorker(pool *pgxpool.Pool, interval time.Duration) {
+	go func() {
+		// Wait 1 minute after startup before initial run
+		time.Sleep(1 * time.Minute)
+		runPurge(pool)
+
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			runPurge(pool)
+		}
+	}()
+}
+
+func runPurge(pool *pgxpool.Pool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	var result string
+	err := pool.QueryRow(ctx, "SELECT app.purge_soft_deleted_records()::text").Scan(&result)
+	if err != nil {
+		log.Printf("⚠️ Soft-delete purge worker: %v", err)
+	} else {
+		log.Printf("🧹 Soft-delete purge executed successfully: %s", result)
+	}
+}
+
+
