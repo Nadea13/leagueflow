@@ -270,8 +270,9 @@ func main() {
 	tournaments.Post("/:id/categories/:categoryId/sync-matches", matchHandler.SyncCategoryMatches)
 	tournaments.Delete("/:id/categories/:categoryId/matches", matchHandler.DeleteByCategory)
 
-	// Tournament Matches
+	// Tournament Matches & Events
 	tournaments.Get("/:id/matches", edgeCache(10), matchHandler.GetByTournament)
+	tournaments.Get("/:id/events", edgeCache(10), matchHandler.GetEventsByTournament)
 
 	// Tournament Registrations & Teams
 	tournaments.Get("/actions/incoming", middleware.Protected(cfg), registrationHandler.ListIncomingTournamentActions)
@@ -298,6 +299,7 @@ func main() {
 	tournaments.Post("/:id/registrations/:regId/roster/batch-approve", registrationHandler.BatchApproveRosterSubmissions)
 
 	// Tournament Players (tournament_players table)
+	tournaments.Get("/:id/players", registrationHandler.GetPlayersByTournament)
 	tournaments.Get("/:id/registrations/:regId/players", registrationHandler.GetTournamentPlayers)
 	tournaments.Post("/:id/registrations/:regId/players", registrationHandler.AddTournamentPlayer)
 	tournaments.Put("/:id/registrations/:regId/players/:playerId", registrationHandler.UpdateTournamentPlayer)

@@ -321,7 +321,13 @@ func (r *RegistrationRepository) GetTournamentPlayers(ctx context.Context, tourn
 	query := `
 		SELECT tp.id, tp.tournament_team_id, tp.master_player_id, tp.shirt_number, tp.position, tp.created_at, tp.updated_at,
 		       mp.id, mp.user_id,
-		       COALESCE(NULLIF(TRIM(CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END)), ''), NULLIF(TRIM(CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END)), ''), 'Unnamed') AS name,
+		       COALESCE(
+		           NULLIF(TRIM(CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_th, ' ', CASE WHEN mp.last_name_th = '-' THEN '' ELSE mp.last_name_th END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_en, ' ', CASE WHEN mp.last_name_en = '-' THEN '' ELSE mp.last_name_en END)), ''),
+		           'Unnamed'
+		       ) AS name,
 		       mp.first_name_local, mp.middle_name_local, mp.last_name_local, mp.first_name_intl, mp.middle_name_intl, mp.last_name_intl,
 		       mp.nickname, mp.birthday::text, mp.photo_url, mp.tel, mp.favorite_sport_id,
 		       mp.preferred_hand, mp.preferred_foot, mp.created_at, mp.updated_at
@@ -336,6 +342,54 @@ func (r *RegistrationRepository) GetTournamentPlayers(ctx context.Context, tourn
 		ORDER BY tp.shirt_number ASC NULLS LAST, tp.created_at ASC
 	`
 	rows, err := r.db.Query(ctx, query, tournamentTeamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []*model.TournamentPlayer
+	for rows.Next() {
+		var tp model.TournamentPlayer
+		var mp model.MasterPlayer
+		if err := rows.Scan(
+			&tp.ID, &tp.TournamentTeamID, &tp.MasterPlayerID, &tp.ShirtNumber, &tp.Position, &tp.CreatedAt, &tp.UpdatedAt,
+			&mp.ID, &mp.UserID, &mp.Name,
+			&mp.FirstNameLocal, &mp.MiddleNameLocal, &mp.LastNameLocal,
+			&mp.FirstNameIntl, &mp.MiddleNameIntl, &mp.LastNameIntl,
+			&mp.Nickname, &mp.Birthday, &mp.PhotoURL, &mp.Tel, &mp.FavoriteSportID,
+			&mp.PreferredHand, &mp.PreferredFoot, &mp.CreatedAt, &mp.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		tp.MasterPlayer = &mp
+		list = append(list, &tp)
+	}
+	return list, nil
+}
+
+func (r *RegistrationRepository) GetPlayersByTournament(ctx context.Context, tournamentID uuid.UUID, categoryID *uuid.UUID) ([]*model.TournamentPlayer, error) {
+	query := `
+		SELECT tp.id, tp.tournament_team_id, tp.master_player_id, tp.shirt_number, tp.position, tp.created_at, tp.updated_at,
+		       mp.id, mp.user_id,
+		       COALESCE(
+		           NULLIF(TRIM(CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_th, ' ', CASE WHEN mp.last_name_th = '-' THEN '' ELSE mp.last_name_th END)), ''),
+		           NULLIF(TRIM(CONCAT(mp.first_name_en, ' ', CASE WHEN mp.last_name_en = '-' THEN '' ELSE mp.last_name_en END)), ''),
+		           'Unnamed'
+		       ) AS name,
+		       mp.first_name_local, mp.middle_name_local, mp.last_name_local, mp.first_name_intl, mp.middle_name_intl, mp.last_name_intl,
+		       mp.nickname, mp.birthday::text, mp.photo_url, mp.tel, mp.favorite_sport_id,
+		       mp.preferred_hand, mp.preferred_foot, mp.created_at, mp.updated_at
+		FROM tournament_players tp
+		JOIN tournament_teams tt ON tp.tournament_team_id = tt.id
+		JOIN master_players mp ON tp.master_player_id = mp.id
+		WHERE tt.tournament_id = $1
+		  AND ($2::uuid IS NULL OR tt.category_id = $2 OR tt.tournament_category_id = $2)
+		  AND tp.deleted_at IS NULL AND mp.deleted_at IS NULL AND tt.deleted_at IS NULL
+		ORDER BY tp.shirt_number ASC NULLS LAST, tp.created_at ASC
+	`
+	rows, err := r.db.Query(ctx, query, tournamentID, categoryID)
 	if err != nil {
 		return nil, err
 	}

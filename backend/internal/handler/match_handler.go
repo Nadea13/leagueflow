@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
@@ -61,6 +63,31 @@ func (h *MatchHandler) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid payload"})
 	}
 	m.ID = id
+
+	// Check which fields were actually present in the request body
+	// to avoid zeroing out omitted fields (e.g. elapsed_seconds, scores)
+	var rawMap map[string]interface{}
+	if err := json.Unmarshal(c.Body(), &rawMap); err == nil && rawMap != nil {
+		existing, err := h.matchService.GetByID(c.Context(), id)
+		if err == nil && existing != nil {
+			if _, hasHomeScore := rawMap["home_score"]; !hasHomeScore {
+				m.HomeScore = existing.HomeScore
+			}
+			if _, hasAwayScore := rawMap["away_score"]; !hasAwayScore {
+				m.AwayScore = existing.AwayScore
+			}
+			_, hasElapsedSeconds := rawMap["elapsed_seconds"]
+			_, hasElapsedBeforePause := rawMap["elapsed_before_pause"]
+			if !hasElapsedSeconds && !hasElapsedBeforePause {
+				m.ElapsedSeconds = existing.ElapsedSeconds
+				m.ElapsedBeforePause = existing.ElapsedBeforePause
+			}
+		}
+	}
+
+	if m.Status == "finished" || m.Status == "completed" || m.Status == model.MatchFinished {
+		m.TimerStatus = "stopped"
+	}
 
 	if err := h.matchService.Update(c.Context(), &m); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -137,6 +164,30 @@ func (h *MatchHandler) GetByTournament(c *fiber.Ctx) error {
 		matches = []*model.Match{}
 	}
 	return c.JSON(matches)
+}
+
+func (h *MatchHandler) GetEventsByTournament(c *fiber.Ctx) error {
+	tID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	var categoryID *uuid.UUID
+	catParam := c.Query("category_id")
+	if catParam != "" {
+		if parsed, err := uuid.Parse(catParam); err == nil {
+			categoryID = &parsed
+		}
+	}
+
+	events, err := h.matchService.GetEventsByTournament(c.Context(), tID, categoryID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if events == nil {
+		events = []*model.MatchEvent{}
+	}
+	return c.JSON(events)
 }
 
 func (h *MatchHandler) UpdateScore(c *fiber.Ctx) error {

@@ -189,9 +189,54 @@ export default async function PublicViewPage({
         };
     });
 
-    const allEvents: MatchEvent[] = [];
+    // 4. Fetch Tournament Events & Players
+    let rawEvents: any[] = [];
+    let rawPlayers: any[] = [];
+    try {
+        const [eventsRes, playersRes] = await Promise.all([
+            ApiClient.fetch<any[]>(`/tournaments/${id}/events?category_id=${categoryId}`).catch(() => []),
+            ApiClient.fetch<any[]>(`/tournaments/${id}/players?category_id=${categoryId}`).catch(() => [])
+        ]);
+        rawEvents = eventsRes || [];
+        rawPlayers = playersRes || [];
+    } catch {
+        // non-blocking
+    }
+
+    const allEvents: MatchEvent[] = (rawEvents || []).map((e: any) => {
+        const detailObj = e.detail || e.extra_info || {};
+        const eventType = e.type || e.event_type || 'goal';
+        return {
+            ...e,
+            type: eventType,
+            event_type: eventType,
+            detail: detailObj,
+            extra_info: detailObj,
+            player_name: e.player_name || detailObj.player_name || "Unknown Player",
+            team_name: e.team_name || detailObj.team_name,
+            team_logo: e.team_logo || detailObj.team_logo
+        };
+    });
+
+    const initialPlayers: Player[] = (rawPlayers || []).map((p: any) => {
+        const mp = p.master_player || {};
+        return {
+            ...p,
+            id: p.id,
+            name: mp.name || p.name || "Unknown Player",
+            number: p.shirt_number ? parseInt(p.shirt_number) : (p.number ?? null),
+            position: p.position || null,
+            team_id: p.tournament_team_id || p.team_id,
+            photo_url: p.photo_url || mp.photo_url || p.profile_img || mp.profile_img || null,
+            master_player_id: p.master_player_id || null,
+            master_player: mp,
+            birth_date: mp.birthday || p.birth_date || null,
+            birthday: mp.birthday || p.birthday || null,
+            created_at: p.created_at || new Date().toISOString(),
+            status: 'approved'
+        };
+    });
     const initialGoals: Goal[] = [];
-    const initialPlayers: Player[] = [];
 
     return (
         <div className="flex flex-col min-h-screen bg-background overflow-x-hidden print:pt-0">

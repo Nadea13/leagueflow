@@ -115,6 +115,10 @@ func (s *MatchService) ListEvents(ctx context.Context, matchID uuid.UUID) ([]*mo
 	return s.repo.ListEvents(ctx, matchID)
 }
 
+func (s *MatchService) GetEventsByTournament(ctx context.Context, tournamentID uuid.UUID, categoryID *uuid.UUID) ([]*model.MatchEvent, error) {
+	return s.repo.GetEventsByTournament(ctx, tournamentID, categoryID)
+}
+
 func (s *MatchService) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	matchID, err := s.repo.DeleteEvent(ctx, id)
 	if err != nil {

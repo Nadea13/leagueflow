@@ -193,9 +193,15 @@ func (r *MatchRepository) Create(ctx context.Context, m *model.Match) error {
 	}
 	if m.ElapsedSeconds == 0 && m.ElapsedBeforePause > 0 {
 		m.ElapsedSeconds = m.ElapsedBeforePause
+	} else if m.ElapsedSeconds > 0 && m.ElapsedBeforePause == 0 {
+		m.ElapsedBeforePause = m.ElapsedSeconds
 	}
 	if m.Minute == nil && m.CurrentMinute != nil {
 		m.Minute = m.CurrentMinute
+	}
+
+	if m.Status == model.MatchFinished || m.Status == "completed" || m.Status == "finished" {
+		m.TimerStatus = "stopped"
 	}
 
 	dbStatus := sanitizeMatchStatus(m.Status)
@@ -256,6 +262,8 @@ func (r *MatchRepository) Update(ctx context.Context, m *model.Match) error {
 	}
 	if m.ElapsedSeconds == 0 && m.ElapsedBeforePause > 0 {
 		m.ElapsedSeconds = m.ElapsedBeforePause
+	} else if m.ElapsedSeconds > 0 && m.ElapsedBeforePause == 0 {
+		m.ElapsedBeforePause = m.ElapsedSeconds
 	}
 	if m.Minute == nil && m.CurrentMinute != nil {
 		m.Minute = m.CurrentMinute
@@ -311,6 +319,10 @@ func (r *MatchRepository) Update(ctx context.Context, m *model.Match) error {
 
 	if m.Round <= 0 {
 		m.Round = 1
+	}
+
+	if m.Status == model.MatchFinished || m.Status == "completed" || m.Status == "finished" {
+		m.TimerStatus = "stopped"
 	}
 
 	dbStatus := sanitizeMatchStatus(m.Status)
@@ -535,6 +547,60 @@ func (r *MatchRepository) AddEvent(ctx context.Context, e *model.MatchEvent) err
 	if detailMap == nil && e.ExtraInfo != nil {
 		detailMap = e.ExtraInfo
 	}
+	if detailMap == nil {
+		detailMap = make(map[string]interface{})
+	}
+
+	// Defensively resolve team_id if a tournament_team_id was passed or verify it exists
+	if e.TeamID != nil && *e.TeamID != uuid.Nil {
+		var resolvedTeamID *uuid.UUID
+		err := r.db.QueryRow(ctx, `
+			SELECT COALESCE(
+				(SELECT id FROM teams WHERE id = $1),
+				(SELECT team_id FROM tournament_teams WHERE id = $1)
+			)
+		`, *e.TeamID).Scan(&resolvedTeamID)
+		if err == nil && resolvedTeamID != nil && *resolvedTeamID != uuid.Nil {
+			e.TeamID = resolvedTeamID
+		} else {
+			e.TeamID = nil
+		}
+	}
+
+	// Defensively verify player_id exists in players table, or resolve from tournament_players
+	if e.PlayerID != nil && *e.PlayerID != uuid.Nil {
+		origPlayerID := *e.PlayerID
+		var resolvedPlayerID *uuid.UUID
+		var resolvedName *string
+
+		_ = r.db.QueryRow(ctx, `
+			SELECT COALESCE(
+				(SELECT id FROM players WHERE id = $1),
+				(SELECT p.id FROM players p JOIN tournament_players tp ON p.master_player_id = tp.master_player_id WHERE tp.id = $1 LIMIT 1),
+				(SELECT p.id FROM players p WHERE p.master_player_id = $1 LIMIT 1)
+			),
+			COALESCE(
+				NULLIF(TRIM((SELECT first_name || ' ' || last_name FROM players WHERE id = $1)), ''),
+				NULLIF(TRIM((SELECT CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END) FROM tournament_players tp JOIN master_players mp ON tp.master_player_id = mp.id WHERE tp.id = $1)), ''),
+				NULLIF(TRIM((SELECT CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END) FROM tournament_players tp JOIN master_players mp ON tp.master_player_id = mp.id WHERE tp.id = $1)), ''),
+				NULLIF(TRIM((SELECT CONCAT(mp.first_name_local, ' ', CASE WHEN mp.last_name_local = '-' THEN '' ELSE mp.last_name_local END) FROM master_players mp WHERE mp.id = $1)), ''),
+				NULLIF(TRIM((SELECT CONCAT(mp.first_name_intl, ' ', CASE WHEN mp.last_name_intl = '-' THEN '' ELSE mp.last_name_intl END) FROM master_players mp WHERE mp.id = $1)), '')
+			)
+		`, origPlayerID).Scan(&resolvedPlayerID, &resolvedName)
+
+		if resolvedPlayerID != nil && *resolvedPlayerID != uuid.Nil {
+			e.PlayerID = resolvedPlayerID
+		} else {
+			e.PlayerID = nil
+		}
+
+		if detailMap["player_id"] == nil || detailMap["player_id"] == "" {
+			detailMap["player_id"] = origPlayerID.String()
+		}
+		if (detailMap["player_name"] == nil || detailMap["player_name"] == "" || detailMap["player_name"] == "Unknown") && resolvedName != nil && *resolvedName != "" {
+			detailMap["player_name"] = *resolvedName
+		}
+	}
 
 	query := `
 		INSERT INTO match_events (match_id, team_id, player_id, type, minute, detail)
@@ -542,9 +608,25 @@ func (r *MatchRepository) AddEvent(ctx context.Context, e *model.MatchEvent) err
 		RETURNING id, created_at
 	`
 	detailBytes, _ := json.Marshal(detailMap)
-	return r.db.QueryRow(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		e.MatchID, e.TeamID, e.PlayerID, eventType, e.Minute, detailBytes,
 	).Scan(&e.ID, &e.CreatedAt)
+	if err != nil {
+		return err
+	}
+
+	e.Detail = detailMap
+	e.ExtraInfo = detailMap
+	if pn, ok := detailMap["player_name"].(string); ok && pn != "" {
+		e.PlayerName = &pn
+	}
+	if tn, ok := detailMap["team_name"].(string); ok && tn != "" {
+		e.TeamName = &tn
+	}
+	if tl, ok := detailMap["team_logo"].(string); ok && tl != "" {
+		e.TeamLogo = &tl
+	}
+	return nil
 }
 
 func (r *MatchRepository) ListEvents(ctx context.Context, matchID uuid.UUID) ([]*model.MatchEvent, error) {
@@ -572,6 +654,89 @@ func (r *MatchRepository) ListEvents(ctx context.Context, matchID uuid.UUID) ([]
 			_ = json.Unmarshal(detailBytes, &e.Detail)
 			e.ExtraInfo = e.Detail
 		}
+		events = append(events, &e)
+	}
+	return events, nil
+}
+
+func (r *MatchRepository) GetEventsByTournament(ctx context.Context, tournamentID uuid.UUID, categoryID *uuid.UUID) ([]*model.MatchEvent, error) {
+	query := `
+		SELECT me.id, me.match_id, me.team_id, me.player_id, me.type, me.minute, me.detail, me.created_at,
+		       COALESCE(
+		           NULLIF(me.detail->>'player_name', ''),
+		           NULLIF(TRIM(p.first_name || ' ' || p.last_name), ''),
+		           NULLIF(TRIM(CONCAT(mp_tp.first_name_local, ' ', CASE WHEN mp_tp.last_name_local = '-' THEN '' ELSE mp_tp.last_name_local END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_tp.first_name_intl, ' ', CASE WHEN mp_tp.last_name_intl = '-' THEN '' ELSE mp_tp.last_name_intl END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_tp.first_name_th, ' ', CASE WHEN mp_tp.last_name_th = '-' THEN '' ELSE mp_tp.last_name_th END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_tp.first_name_en, ' ', CASE WHEN mp_tp.last_name_en = '-' THEN '' ELSE mp_tp.last_name_en END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_direct.first_name_local, ' ', CASE WHEN mp_direct.last_name_local = '-' THEN '' ELSE mp_direct.last_name_local END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_direct.first_name_intl, ' ', CASE WHEN mp_direct.last_name_intl = '-' THEN '' ELSE mp_direct.last_name_intl END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_direct.first_name_th, ' ', CASE WHEN mp_direct.last_name_th = '-' THEN '' ELSE mp_direct.last_name_th END)), ''),
+		           NULLIF(TRIM(CONCAT(mp_direct.first_name_en, ' ', CASE WHEN mp_direct.last_name_en = '-' THEN '' ELSE mp_direct.last_name_en END)), '')
+		       ) AS player_name,
+		       COALESCE(t.name, tt_team.name) AS team_name,
+		       COALESCE(t.logo_url, tt_team.logo_url) AS team_logo
+		FROM match_events me
+		JOIN matches m ON me.match_id = m.id
+		JOIN tournament_categories tc ON m.category_id = tc.id
+		LEFT JOIN players p ON me.player_id = p.id
+		LEFT JOIN tournament_players tp ON (
+			me.player_id = tp.id OR
+			(p.master_player_id IS NOT NULL AND tp.master_player_id = p.master_player_id)
+		)
+		LEFT JOIN master_players mp_tp ON tp.master_player_id = mp_tp.id
+		LEFT JOIN master_players mp_direct ON me.player_id = mp_direct.id
+		LEFT JOIN teams t ON me.team_id = t.id
+		LEFT JOIN tournament_teams tt ON me.team_id = tt.id
+		LEFT JOIN teams tt_team ON tt.team_id = tt_team.id
+		WHERE tc.tournament_id = $1
+		  AND me.deleted_at IS NULL
+		  AND ($2::uuid IS NULL OR m.category_id = $2)
+		ORDER BY me.minute ASC, me.created_at ASC
+	`
+	rows, err := r.db.Query(ctx, query, tournamentID, categoryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tournament events: %w", err)
+	}
+	defer rows.Close()
+
+	var events []*model.MatchEvent
+	for rows.Next() {
+		var e model.MatchEvent
+		var detailBytes []byte
+		var playerName *string
+		var teamName *string
+		var teamLogo *string
+		if err := rows.Scan(&e.ID, &e.MatchID, &e.TeamID, &e.PlayerID, &e.Type, &e.Minute, &detailBytes, &e.CreatedAt, &playerName, &teamName, &teamLogo); err != nil {
+			return nil, err
+		}
+		e.EventType = e.Type
+		if len(detailBytes) > 0 {
+			_ = json.Unmarshal(detailBytes, &e.Detail)
+		}
+		if e.Detail == nil {
+			e.Detail = make(map[string]interface{})
+		}
+		e.PlayerName = playerName
+		e.TeamName = teamName
+		e.TeamLogo = teamLogo
+
+		if playerName != nil && *playerName != "" {
+			if e.Detail["player_name"] == nil || e.Detail["player_name"] == "" {
+				e.Detail["player_name"] = *playerName
+			}
+		}
+		if teamName != nil && *teamName != "" {
+			if e.Detail["team_name"] == nil || e.Detail["team_name"] == "" {
+				e.Detail["team_name"] = *teamName
+			}
+		}
+		if teamLogo != nil && *teamLogo != "" {
+			if e.Detail["team_logo"] == nil || e.Detail["team_logo"] == "" {
+				e.Detail["team_logo"] = *teamLogo
+			}
+		}
+		e.ExtraInfo = e.Detail
 		events = append(events, &e)
 	}
 	return events, nil

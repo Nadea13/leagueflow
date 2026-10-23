@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { Trophy, Calendar, ArrowLeft, Award, Pin, MapPin, Users, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
 import { Standings } from "@/features/tournaments/ranking/standings";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
-import { Match, MatchEvent, Team, Goal, Tournament, Player, Announcement } from "@/types";
+import { Match, MatchEvent, EventType, Team, Goal, Tournament, Player, Announcement } from "@/types";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -22,6 +21,22 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
+import { useMatchWebSocket } from "@/hooks/use-match-websocket";
+import { PlayerStatModal, PlayerStatDetail } from "./player-stat-modal";
+import { PlayerAvatar } from "@/components/shared/player-avatar";
+
+function parsePlayerAge(bDateStr: string | null | undefined): number | undefined {
+    if (!bDateStr) return undefined;
+    try {
+        const d = new Date(bDateStr);
+        if (isNaN(d.getTime())) return undefined;
+        const now = new Date();
+        const age = now.getFullYear() - d.getFullYear();
+        return age >= 0 ? age : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 interface PublicTournamentShellProps {
     tournament: Tournament;
@@ -53,6 +68,7 @@ export function PublicTournamentShell({
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
+    const [selectedPlayerForModal, setSelectedPlayerForModal] = useState<PlayerStatDetail | null>(null);
 
     useEffect(() => {
         setMatches(initialMatches);
@@ -65,6 +81,55 @@ export function PublicTournamentShell({
     useEffect(() => {
         setTournament(initialTournament);
     }, [initialTournament]);
+
+    // 100% Realtime WebSocket Connection for Tournament Matches & Events
+    useMatchWebSocket("all", {
+        onMatchEvent: ({ event }) => {
+            if (!event || !event.match_id) return;
+            const belongsToTournament = matches.some(m => m.id === event.match_id);
+            if (!belongsToTournament) return;
+
+            const eventType = event.type || event.event_type || 'goal';
+            const detailObj = event.detail || event.extra_info || {};
+            const normalizedEvent: MatchEvent = {
+                ...event,
+                type: eventType as EventType,
+                event_type: eventType as EventType,
+                detail: detailObj,
+                extra_info: detailObj,
+                player_name: String(event.player_name || detailObj.player_name || "Unknown Player"),
+                team_name: (event as any).team_name || detailObj.team_name,
+                team_logo: (event as any).team_logo || detailObj.team_logo
+            };
+
+            setEvents(prev => {
+                const exists = prev.some(e => e.id === normalizedEvent.id);
+                if (exists) return prev;
+                return [...prev, normalizedEvent];
+            });
+        },
+        onMatchEventDelete: ({ event_id, match_id }) => {
+            if (!match_id) return;
+            const belongsToTournament = matches.some(m => m.id === match_id);
+            if (!belongsToTournament) return;
+
+            setEvents(prev => prev.filter(e => e.id !== event_id));
+        },
+        onScoreUpdate: ({ match_id, home_score, away_score, status }) => {
+            if (!match_id) return;
+            setMatches(prev => prev.map(m => {
+                if (m.id === match_id) {
+                    return {
+                        ...m,
+                        home_score,
+                        away_score,
+                        status: (status || m.status) as any
+                    };
+                }
+                return m;
+            }));
+        }
+    });
 
     const router = useRouter();
     const pathname = usePathname();
@@ -124,15 +189,6 @@ export function PublicTournamentShell({
             );
         });
     }, [matches, matchFilterTeam, initialTeams]);
-
-    const marqueeTeams = (() => {
-        if (initialTeams.length === 0) return [];
-        let list = [...initialTeams];
-        while (list.length < 12) {
-            list = [...list, ...initialTeams];
-        }
-        return list;
-    })();
 
     const canvasStandings = useMemo(() => {
         if (!tournament.canvas_data || !tournament.canvas_data.nodes) return null;
@@ -290,82 +346,234 @@ export function PublicTournamentShell({
     }, [initialTeams]);
 
     const playerStats = useMemo(() => {
-        const playersMap = new Map<string, {
-            id: string;
-            name: string;
-            teamName: string;
-            teamLogo: string | null;
-            goals: number;
-            assists: number;
-            yellowCards: number;
-            redCards: number;
-            saves: number;
-            injuries: number;
-        }>();
+        const playersMap = new Map<string, PlayerStatDetail>();
 
-        const getOrCreatePlayer = (playerId: string, playerName: string, teamId: string | null) => {
+        const getOrCreatePlayer = (playerId: string, playerName: string, teamId: string | null, fallbackTeamName?: string, fallbackTeamLogo?: string | null) => {
             if (!playersMap.has(playerId)) {
                 const team = resolveTeam(teamId);
-                const teamName = team?.name || "Unknown Team";
-                const teamLogo = team?.logo_url || null;
+                const teamName = team?.name || fallbackTeamName || "Unknown Team";
+                const teamLogo = team?.logo_url || fallbackTeamLogo || null;
+                const matchedPlayer = initialPlayers.find(p => p.id === playerId || p.master_player_id === playerId || p.name === playerName);
+                const birthDate = matchedPlayer?.birth_date || (matchedPlayer as any)?.birthday || matchedPlayer?.master_player?.birthday || null;
+                const age = birthDate ? (() => {
+                    try {
+                        const d = new Date(birthDate);
+                        if (isNaN(d.getTime())) return null;
+                        const diff = Date.now() - d.getTime();
+                        return Math.abs(new Date(diff).getUTCFullYear() - 1970);
+                    } catch { return null; }
+                })() : null;
+
                 playersMap.set(playerId, {
                     id: playerId,
                     name: playerName,
+                    teamId: team?.id || (team as any)?.team_id || teamId || matchedPlayer?.team_id || null,
                     teamName,
                     teamLogo,
                     goals: 0,
                     assists: 0,
+                    fouls: 0,
+                    foulsDrawn: 0,
                     yellowCards: 0,
                     redCards: 0,
                     saves: 0,
-                    injuries: 0
+                    injuries: 0,
+                    subIn: 0,
+                    subOut: 0,
+                    ownGoals: 0,
+                    penaltiesScored: 0,
+                    number: matchedPlayer?.number ?? (matchedPlayer as any)?.shirt_number ?? null,
+                    position: matchedPlayer?.position ?? null,
+                    photo_url: matchedPlayer?.photo_url || (matchedPlayer as any)?.profile_img || (matchedPlayer as any)?.master_player?.profile_img || (matchedPlayer as any)?.global_player?.photo_url || (matchedPlayer as any)?.global_player?.profile_img || null,
+                    birthDate,
+                    age,
+                    nickname: (matchedPlayer as any)?.master_player?.nickname || (matchedPlayer as any)?.nickname || null,
+                    preferredFoot: (matchedPlayer as any)?.master_player?.preferred_foot || null,
+                    gender: (matchedPlayer as any)?.master_player?.gender || null,
+                    matchesPlayed: 0
                 });
             }
-            return playersMap.get(playerId)!;
+            const existing = playersMap.get(playerId)!;
+            if ((existing.name === "Unknown Player" || existing.name === "Unknown") && playerName && playerName !== "Unknown Player" && playerName !== "Unknown") {
+                existing.name = playerName;
+            }
+            if (existing.teamName === "Unknown Team") {
+                const team = resolveTeam(teamId);
+                if (team?.name) {
+                    existing.teamName = team.name;
+                    existing.teamLogo = team.logo_url || null;
+                    if (!existing.teamId) existing.teamId = team.id || (team as any).team_id || null;
+                } else if (fallbackTeamName && fallbackTeamName !== "Unknown Team") {
+                    existing.teamName = fallbackTeamName;
+                    existing.teamLogo = fallbackTeamLogo || null;
+                }
+            }
+            if (!existing.photo_url || existing.number === undefined || existing.number === null) {
+                const matchedPlayer = initialPlayers.find(p => p.id === playerId || p.master_player_id === playerId || p.name === playerName);
+                if (matchedPlayer) {
+                    if (!existing.photo_url) {
+                        existing.photo_url = matchedPlayer.photo_url || (matchedPlayer as any)?.profile_img || (matchedPlayer as any)?.master_player?.profile_img || (matchedPlayer as any)?.global_player?.photo_url || (matchedPlayer as any)?.global_player?.profile_img || null;
+                    }
+                    if (existing.number === undefined || existing.number === null) {
+                        existing.number = matchedPlayer.number ?? (matchedPlayer as any)?.shirt_number ?? null;
+                    }
+                    if (!existing.position) existing.position = matchedPlayer.position ?? null;
+                    if (!existing.birthDate) {
+                        const bDate = matchedPlayer.birth_date || (matchedPlayer as any).birthday || matchedPlayer.master_player?.birthday || null;
+                        existing.birthDate = bDate;
+                        if (bDate) {
+                            const calculatedAge = parsePlayerAge(bDate);
+                            if (calculatedAge !== undefined) existing.age = calculatedAge;
+                        }
+                    }
+                    if (!existing.nickname) existing.nickname = (matchedPlayer as any).master_player?.nickname || null;
+                    if (!existing.preferredFoot) existing.preferredFoot = (matchedPlayer as any).master_player?.preferred_foot || null;
+                    if (!existing.gender) existing.gender = (matchedPlayer as any).master_player?.gender || null;
+                }
+            }
+            return existing;
         };
 
         events.forEach(event => {
-            if (!event.player_id) return;
-            const playerId = event.player_id;
-            const playerName = event.player_name || "Unknown Player";
+            const rawPlayerId = event.player_id || (event.extra_info?.player_id as string) || (event.detail?.player_id as string);
+            const extraName = (event.extra_info?.player_name as string) || (event.detail?.player_name as string) || (event as any).player_name;
+            const matchedPlayer = rawPlayerId ? initialPlayers.find(p => p.id === rawPlayerId || p.master_player_id === rawPlayerId) : null;
+            const playerName = (extraName && extraName !== "Unknown") ? extraName : (matchedPlayer?.name || (rawPlayerId ? "Unknown Player" : null));
+
+            // Skip if no player could be identified
+            if (!rawPlayerId && !playerName) return;
+
+            const effectivePlayerId = rawPlayerId ? String(rawPlayerId) : `name-${playerName}`;
+            const effectivePlayerName = playerName || "Unknown Player";
+            const effectiveTeamId = event.team_id || matchedPlayer?.team_id || null;
+            const fallbackTeamName = (event as any).team_name || (event.extra_info?.team_name as string) || (event.detail?.team_name as string);
+            const fallbackTeamLogo = (event as any).team_logo || (event.extra_info?.team_logo as string) || (event.detail?.team_logo as string);
 
             // 1. Process Goals
-            if (event.event_type === 'goal') {
-                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
-                player.goals++;
+            if (event.event_type === 'goal' || event.event_type === 'penalty_goal' || event.event_type === 'own_goal') {
+                const isOwnGoal = event.event_type === 'own_goal' || !!(event.extra_info?.is_own_goal || event.detail?.is_own_goal);
+                const isPenalty = event.event_type === 'penalty_goal' || !!(event.extra_info?.is_penalty || event.detail?.is_penalty);
 
-                // Check for assist in goal event extra_info
-                const assistPlayerId = event.extra_info?.assist_player_id as string | undefined;
-                if (assistPlayerId && assistPlayerId !== 'none') {
-                    const assistPlayer = initialPlayers.find(p => p.id === assistPlayerId);
-                    const assistPlayerName = assistPlayer?.name || "Unknown Player";
-                    const assistPlayerObj = getOrCreatePlayer(assistPlayerId, assistPlayerName, assistPlayer?.team_id || event.team_id);
-                    assistPlayerObj.assists++;
+                if (isOwnGoal) {
+                    const ogPlayerId = (event.extra_info?.own_goal_player_id as string) || (event.detail?.own_goal_player_id as string) || effectivePlayerId;
+                    const ogPlayerName = (event.extra_info?.own_goal_player_name as string) || (event.detail?.own_goal_player_name as string) || effectivePlayerName;
+                    const player = getOrCreatePlayer(ogPlayerId, ogPlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
+                    player.ownGoals = (player.ownGoals || 0) + 1;
+                } else {
+                    const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
+                    player.goals++;
+                    if (isPenalty) {
+                        player.penaltiesScored = (player.penaltiesScored || 0) + 1;
+                    }
+
+                    // Check for assist in goal event extra_info / detail
+                    const assistPlayerId = (event.extra_info?.assist_player_id as string) || (event.detail?.assist_player_id as string);
+                    const assistPlayerName = (event.extra_info?.assist_player_name as string) || (event.detail?.assist_player_name as string);
+
+                    if ((assistPlayerId && assistPlayerId !== 'none') || (assistPlayerName && assistPlayerName !== 'none')) {
+                        const matchedAssistPlayer = assistPlayerId ? initialPlayers.find(p => p.id === assistPlayerId || p.master_player_id === assistPlayerId) : null;
+                        const aName = (assistPlayerName && assistPlayerName !== 'none') ? assistPlayerName : (matchedAssistPlayer?.name || "Unknown Player");
+                        const aId = assistPlayerId && assistPlayerId !== 'none' ? String(assistPlayerId) : `name-${aName}`;
+                        const aTeamId = matchedAssistPlayer?.team_id || effectiveTeamId;
+                        const assistPlayerObj = getOrCreatePlayer(aId, aName, aTeamId, fallbackTeamName, fallbackTeamLogo);
+                        assistPlayerObj.assists++;
+                    }
                 }
             }
             // 2. Process Yellow Cards
             else if (event.event_type === 'yellow_card') {
-                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
                 player.yellowCards++;
             }
             // 3. Process Red Cards
             else if (event.event_type === 'red_card') {
-                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
                 player.redCards++;
             }
             // 4. Process Saves
             else if (event.event_type === 'save') {
-                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
                 player.saves++;
             }
             // 5. Process Injuries
             else if (event.event_type === 'injury') {
-                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
                 player.injuries++;
+            }
+            // 6. Process Substitutions
+            else if (event.event_type === 'substitution') {
+                const outId = (event.extra_info?.out_player_id as string) || (event.detail?.out_player_id as string) || effectivePlayerId;
+                const outName = (event.extra_info?.out_player_name as string) || (event.detail?.out_player_name as string) || effectivePlayerName;
+                const inId = (event.extra_info?.in_player_id as string) || (event.detail?.in_player_id as string);
+                const inName = (event.extra_info?.in_player_name as string) || (event.detail?.in_player_name as string);
+
+                if (outId || outName) {
+                    const outPlayer = getOrCreatePlayer(outId || `name-${outName}`, outName || "Unknown Player", effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
+                    outPlayer.subOut = (outPlayer.subOut || 0) + 1;
+                }
+                if (inId || inName) {
+                    const inPlayer = getOrCreatePlayer(inId || `name-${inName}`, inName || "Unknown Player", effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
+                    inPlayer.subIn = (inPlayer.subIn || 0) + 1;
+                }
+            }
+            // 7. Process Fouls (Committed, Cards, and Fouls Drawn / เรียกฟาวล์)
+            else if (event.event_type === 'foul') {
+                const player = getOrCreatePlayer(effectivePlayerId, effectivePlayerName, effectiveTeamId, fallbackTeamName, fallbackTeamLogo);
+                player.fouls++;
+
+                const foulCard = ((event.extra_info as Record<string, unknown> | null)?.card_type || (event.detail as Record<string, unknown> | null)?.card_type) as string | undefined;
+                if (foulCard === 'yellow') {
+                    player.yellowCards++;
+                } else if (foulCard === 'red') {
+                    player.redCards++;
+                }
+
+                // Check for fouled opponent player (เรียกฟาวล์)
+                const fouledPlayerId = (event.extra_info?.fouled_player_id as string) || (event.detail?.fouled_player_id as string);
+                const fouledPlayerName = (event.extra_info?.fouled_player_name as string) || (event.detail?.fouled_player_name as string);
+                if ((fouledPlayerId && fouledPlayerId !== 'none') || (fouledPlayerName && fouledPlayerName !== 'none')) {
+                    const matchedFouledPlayer = fouledPlayerId ? initialPlayers.find(p => p.id === fouledPlayerId || p.master_player_id === fouledPlayerId) : null;
+                    const fName = (fouledPlayerName && fouledPlayerName !== 'none') ? fouledPlayerName : (matchedFouledPlayer?.name || "Unknown Player");
+                    const fId = fouledPlayerId && fouledPlayerId !== 'none' ? String(fouledPlayerId) : `name-${fName}`;
+                    const fTeamId = matchedFouledPlayer?.team_id || null;
+                    const fouledPlayerObj = getOrCreatePlayer(fId, fName, fTeamId);
+                    fouledPlayerObj.foulsDrawn = (fouledPlayerObj.foulsDrawn || 0) + 1;
+                }
             }
         });
 
         const allStats = Array.from(playersMap.values());
+
+        // Calculate matches played for each player
+        allStats.forEach(p => {
+            let count = 0;
+            matches.forEach(m => {
+                const isTeamMatch = (m.status === 'finished' || m.status === 'live') && (
+                    (p.teamId && (m.home_team_id === p.teamId || m.away_team_id === p.teamId)) ||
+                    (p.teamName && (m.home_team?.name === p.teamName || m.away_team?.name === p.teamName))
+                );
+                const hasPlayerEvent = events.some(e => e.match_id === m.id && (
+                    e.player_id === p.id ||
+                    (e.extra_info?.player_id as string) === p.id ||
+                    (e.detail?.player_id as string) === p.id ||
+                    (e.extra_info?.player_name as string) === p.name ||
+                    (e.detail?.player_name as string) === p.name ||
+                    (e.extra_info?.assist_player_id as string) === p.id ||
+                    (e.detail?.assist_player_id as string) === p.id ||
+                    (e.extra_info?.assist_player_name as string) === p.name ||
+                    (e.extra_info?.fouled_player_id as string) === p.id ||
+                    (e.extra_info?.fouled_player_name as string) === p.name ||
+                    (e.extra_info?.in_player_id as string) === p.id ||
+                    (e.extra_info?.in_player_name as string) === p.name ||
+                    (e.extra_info?.out_player_id as string) === p.id ||
+                    (e.extra_info?.out_player_name as string) === p.name
+                ));
+                if (isTeamMatch || hasPlayerEvent) {
+                    count++;
+                }
+            });
+            p.matchesPlayed = count;
+        });
 
         const scorers = [...allStats]
             .filter(p => p.goals > 0)
@@ -458,44 +666,40 @@ export function PublicTournamentShell({
     }, [hasStandings, t]);
 
     return (
-        <main className="container mx-auto px-2 md:px-0 pb-2 md:pb-4 max-w-7xl">
+        <main className="container mx-auto px-2 md:px-0 pb-2 md:pb-4 max-w-7xl space-y-4">
             {/* Unified Header Block - Styled like squad-management */}
             <div className="flex md:items-center justify-between">
                 <div className="flex items-center gap-1 md:gap-2">
                     <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon-sm"
                         asChild
-                        className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                        className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                     >
                         <Link href="/">
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="size-4" />
                         </Link>
                     </Button>
                     <div className="flex flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-1 md:gap-2">
                             <Header level={2}>{tournament?.name}</Header>
-                            {tournament?.status && (
-                                <div className="flex flex-wrap items-center gap-1 md:gap-2">
-                                    <Badge className={cn(
-                                        tournament?.status === 'ongoing' && "bg-primary hover:bg-primary/80",
-                                        tournament?.status === 'completed' && "bg-muted-foreground hover:bg-muted-foreground/80",
-                                        tournament?.status === 'cancelled' && "bg-destructive hover:bg-destructive/80 text-white",
-                                        (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
-                                    )}>
-                                        {tTournament(tournament?.status || 'draft')}
-                                    </Badge>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-1 lg:gap-2 shrink-0 self-end md:self-auto">
+                    {/* Public Navigation */}
+                    <Tab
+                        value={currentTab}
+                        onChange={handleTabChange}
+                        className="w-full"
+                        itemClassName="flex-1 md:flex-none"
+                        options={tabOptions}
+                    />
                     {categories.length > 0 && (
                         <div className="flex items-center gap-2 w-fit md:w-auto max-w-[280px]">
                             <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
-                                <SelectTrigger className="bg-card border h-9 text-xs">
+                                <SelectTrigger size="sm" className="bg-card border h-9 text-xs">
                                     <SelectValue placeholder={tTournament("select_category")} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card">
@@ -510,76 +714,6 @@ export function PublicTournamentShell({
                     )}
                 </div>
             </div>
-
-
-            {/* Teams Block (Marquee) */}
-            <div className="space-y-2 md:space-y-4 overflow-hidden relative py-2 md:py-4">
-                {initialTeams.length > 0 ? (
-                    <div className="relative w-full overflow-hidden">
-                        <style>{`
-                            @keyframes marquee {
-                                0% { transform: translateX(0); }
-                                100% { transform: translateX(-50%); }
-                            }
-                            .animate-marquee {
-                                display: flex;
-                                width: max-content;
-                                animation: marquee 25s linear infinite;
-                            }
-                            .animate-marquee:hover {
-                                animation-play-state: paused;
-                            }
-                        `}</style>
-                        <div className="animate-marquee">
-                            {/* First Group */}
-                            {marqueeTeams.map((team, index) => (
-                                <div
-                                    key={`team-1-${team.id}-${index}`}
-                                    className="w-16 h-16 md:w-24 md:h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
-                                    title={team.name}
-                                >
-                                    {team.logo_url ? (
-                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2 rounded-full" alt={team.name} width={96} height={96} />
-                                    ) : (
-                                        <span className="font-black text-3xl text-muted-foreground">
-                                            {getInitials(team.name)}
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                            {/* Duplicate Group for Infinite Scroll Effect */}
-                            {marqueeTeams.map((team, index) => (
-                                <div
-                                    key={`team-2-${team.id}-${index}`}
-                                    className="w-16 h-16 md:w-24 md:h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
-                                    title={team.name}
-                                >
-                                    {team.logo_url ? (
-                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2 rounded-full" alt={team.name} width={96} height={96} />
-                                    ) : (
-                                        <span className="font-black text-3xl text-muted-foreground">
-                                            {getInitials(team.name)}
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    <p className="text-xs text-muted-foreground/60 bg-muted/20 p-4 border border-dashed text-center rounded-sm">
-                        ยังไม่มีรายชื่อทีมที่สมัครเข้าร่วมในหมวดหมู่นี้
-                    </p>
-                )}
-            </div>
-
-            {/* Public Navigation */}
-            <Tab
-                value={currentTab}
-                onChange={handleTabChange}
-                className="w-full md:w-max mb-2 md:mb-4"
-                itemClassName="flex-1 md:flex-none"
-                options={tabOptions}
-            />
 
             {currentTab === 'overview' && (
                 <div className="space-y-2 md:space-y-4">
@@ -644,7 +778,7 @@ export function PublicTournamentShell({
                                     )}
                                 >
                                     {ann.is_pinned && (
-                                        <Pin className="absolute top-2 right-2 lg:top-4 lg:right-4 h-4 w-4 text-primary" />
+                                        <Pin className="absolute top-2 right-2 lg:top-4 lg:right-4 size-4 text-primary" />
                                     )}
                                     <Header level={4}>{ann.title}</Header>
                                     {ann.content && (
@@ -672,7 +806,7 @@ export function PublicTournamentShell({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Date range */}
                             <div className="flex items-start gap-1 lg:gap-2">
-                                <Calendar className="h-4 w-4 text-primary" />
+                                <Calendar className="size-4 text-primary" />
                                 <div className="space-y-0.5">
                                     <Label>{t("dates")}</Label>
                                     <p className="text-sm">
@@ -684,7 +818,7 @@ export function PublicTournamentShell({
 
                             {/* Location */}
                             <div className="flex items-start gap-1 md:gap-2">
-                                <MapPin className="h-4 w-4 text-primary" />
+                                <MapPin className="size-4 text-primary" />
                                 <div className="space-y-0.5">
                                     <Label>{t("location")}</Label>
                                     {tournament.location_name ? (
@@ -773,7 +907,7 @@ export function PublicTournamentShell({
                 <div className="space-y-2 md:space-y-4">
                     <div className="flex flex-col gap-1 mb-2 md:mb-4">
                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Trophy className="h-4 w-4 text-primary" />
+                            <Trophy className="size-4 text-primary" />
                             {t("league_table")}
                         </h2>
                         <p className="text-[10px] font-bold text-muted-foreground/60">{t("league_table_desc")}</p>
@@ -799,7 +933,7 @@ export function PublicTournamentShell({
             )}
 
             {currentTab === 'matches' && (
-                <div className="space-y-3 md:space-y-4">
+                <div className="space-y-4">
                     {/* Schedule Filter Bar */}
                     <div className="flex flex-wrap items-center gap-2 bg-card border p-2 md:p-3 rounded-sm">
                         {/* Date Filter */}
@@ -817,12 +951,12 @@ export function PublicTournamentShell({
                             </button>
                             <div className="flex items-center justify-between px-1 h-full gap-0.5">
                                 <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
-                                    <ChevronLeft className="h-4 w-4 md:h-4 md:w-4" />
+                                    <ChevronLeft className="size-4" />
                                 </button>
                                 <Popover open={isMatchCalendarOpen} onOpenChange={setIsMatchCalendarOpen}>
                                     <PopoverTrigger asChild>
                                         <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center">
-                                            <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+                                            <CalendarIcon className="size-4 text-primary shrink-0" />
                                             <span className="text-xs font-semibold tracking-tight truncate max-w-[120px] md:max-w-none">
                                                 {matchSelectedDate ? formatDate(matchSelectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                             </span>
@@ -831,13 +965,13 @@ export function PublicTournamentShell({
                                     <PopoverContent className="w-80 p-0 bg-card rounded-sm shadow-2xl" align="start" side="bottom" sideOffset={5}>
                                         <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                             <button onClick={() => setMatchViewDate(subMonths(matchViewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                <ChevronLeft className="h-4 w-4" />
+                                                <ChevronLeft className="size-4" />
                                             </button>
                                             <span className="text-xs font-black tracking-widest">
                                                 {matchViewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
                                             </span>
                                             <button onClick={() => setMatchViewDate(addMonths(matchViewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                <ChevronRight className="h-4 w-4" />
+                                                <ChevronRight className="size-4" />
                                             </button>
                                         </div>
                                         <div className="p-4 space-y-4">
@@ -897,7 +1031,7 @@ export function PublicTournamentShell({
                                     </PopoverContent>
                                 </Popover>
                                 <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
-                                    <ChevronRight className="h-4 w-4 md:h-4 md:w-4" />
+                                    <ChevronRight className="size-4" />
                                 </button>
                             </div>
                         </div>
@@ -917,9 +1051,9 @@ export function PublicTournamentShell({
                                 {groupNodes.map(node => {
                                     const label = (node.data as { label?: string })?.label || "Group";
                                     return (
-                                        <SelectItem 
-                                            key={node.id} 
-                                            value={label} 
+                                        <SelectItem
+                                            key={node.id}
+                                            value={label}
                                             className="font-semibold text-xs pl-4"
                                         >
                                             - {label}
@@ -969,11 +1103,7 @@ export function PublicTournamentShell({
             {currentTab === 'stats' && (
                 <div className="space-y-2 md:space-y-4 animate-in fade-in duration-200">
                     <div className="flex flex-col gap-1">
-                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Users className="h-4 w-4 text-primary" />
-                            {t("player_stats")}
-                        </h2>
-                        <p className="text-[10px] font-bold text-muted-foreground/60">สถิตินักกีฬาในการแข่งขันทั้งหมด</p>
+                        <Header level={3}>{t("player_stats")}</Header>
                     </div>
 
                     {!(playerStats.scorers.length > 0 || playerStats.assists.length > 0 || playerStats.saves.length > 0 || playerStats.yellowCards.length > 0 || playerStats.redCards.length > 0 || playerStats.injuries.length > 0) ? (
@@ -995,20 +1125,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.scorers.map((player, idx) => (
-                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.goals}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.goals}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1025,20 +1169,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.assists.map((player, idx) => (
-                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.assists}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.assists}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1055,20 +1213,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.saves.map((player, idx) => (
-                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.saves}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.saves}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1086,20 +1258,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.yellowCards.map((player, idx) => (
-                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.yellowCards}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.yellowCards}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1117,20 +1303,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.redCards.map((player, idx) => (
-                                            <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-all">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.redCards}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.redCards}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1147,20 +1347,34 @@ export function PublicTournamentShell({
                                     </div>
                                     <div className="divide-y flex-1">
                                         {playerStats.injuries.map((player, idx) => (
-                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                            <div
+                                                key={player.id}
+                                                onClick={() => setSelectedPlayerForModal(player)}
+                                                className="p-4 flex items-center justify-between hover:bg-muted/40 transition-all cursor-pointer group select-none"
+                                                title={locale === 'th' ? "คลิกเพื่อดูสถิตินักกีฬา" : "Click to view player stats"}
+                                            >
+                                                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 pr-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                                                    <PlayerAvatar
+                                                        photoUrl={player.photo_url || (player as any).profile_img}
+                                                        name={player.name}
+                                                        number={player.number}
+                                                        size="sm"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors truncate">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium truncate">
                                                             {player.teamLogo && (
-                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} unoptimized className="object-contain rounded-full shrink-0" />
                                                             )}
-                                                            {player.teamName}
+                                                            <span className="truncate">{player.teamName}</span>
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="text-sm pr-2">{player.injuries}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className="text-sm font-black text-foreground">{player.injuries}</span>
+                                                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1170,6 +1384,16 @@ export function PublicTournamentShell({
                     )}
                 </div>
             )}
+
+            {/* Player Detailed 5-Point Radar & Timeline Modal */}
+            <PlayerStatModal
+                open={!!selectedPlayerForModal}
+                onOpenChange={(op) => !op && setSelectedPlayerForModal(null)}
+                player={selectedPlayerForModal}
+                events={events}
+                matches={matches}
+                locale={locale}
+            />
         </main>
     );
 }

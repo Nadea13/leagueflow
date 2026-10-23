@@ -73,6 +73,10 @@ func (s *RegistrationService) GetTournamentPlayers(ctx context.Context, tourname
 	return s.repo.GetTournamentPlayers(ctx, tournamentTeamID)
 }
 
+func (s *RegistrationService) GetPlayersByTournament(ctx context.Context, tournamentID uuid.UUID, categoryID *uuid.UUID) ([]*model.TournamentPlayer, error) {
+	return s.repo.GetPlayersByTournament(ctx, tournamentID, categoryID)
+}
+
 type AddTournamentPlayerInput struct {
 	MasterPlayerID *uuid.UUID `json:"master_player_id"`
 	FirstName      string     `json:"first_name"`

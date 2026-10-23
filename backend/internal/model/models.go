@@ -360,17 +360,20 @@ type Match struct {
 }
 
 type MatchEvent struct {
-	ID        uuid.UUID              `json:"id"`
-	MatchID   uuid.UUID              `json:"match_id"`
-	TeamID    *uuid.UUID             `json:"team_id,omitempty"`
-	PlayerID  *uuid.UUID             `json:"player_id,omitempty"`
-	Type      string                 `json:"type"`
-	EventType string                 `json:"event_type,omitempty"` // Alias
-	Minute    int                    `json:"minute"`
-	Detail    map[string]interface{} `json:"detail,omitempty"`
-	ExtraInfo map[string]interface{} `json:"extra_info,omitempty"` // Alias
-	CreatedAt time.Time              `json:"created_at"`
-	DeletedAt *time.Time             `json:"deleted_at,omitempty"`
+	ID         uuid.UUID              `json:"id"`
+	MatchID    uuid.UUID              `json:"match_id"`
+	TeamID     *uuid.UUID             `json:"team_id,omitempty"`
+	PlayerID   *uuid.UUID             `json:"player_id,omitempty"`
+	Type       string                 `json:"type"`
+	EventType  string                 `json:"event_type,omitempty"` // Alias
+	Minute     int                    `json:"minute"`
+	Detail     map[string]interface{} `json:"detail,omitempty"`
+	ExtraInfo  map[string]interface{} `json:"extra_info,omitempty"` // Alias
+	CreatedAt  time.Time              `json:"created_at"`
+	DeletedAt  *time.Time             `json:"deleted_at,omitempty"`
+	PlayerName *string                `json:"player_name,omitempty"`
+	TeamName   *string                `json:"team_name,omitempty"`
+	TeamLogo   *string                `json:"team_logo,omitempty"`
 }
 
 type Standing struct {

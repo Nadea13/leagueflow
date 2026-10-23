@@ -274,6 +274,30 @@ func (h *RegistrationHandler) GetTournamentPlayers(c *fiber.Ctx) error {
 	return c.JSON(list)
 }
 
+func (h *RegistrationHandler) GetPlayersByTournament(c *fiber.Ctx) error {
+	tID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid tournament ID"})
+	}
+
+	var categoryID *uuid.UUID
+	catParam := c.Query("category_id")
+	if catParam != "" {
+		if parsed, err := uuid.Parse(catParam); err == nil {
+			categoryID = &parsed
+		}
+	}
+
+	list, err := h.service.GetPlayersByTournament(c.Context(), tID, categoryID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if list == nil {
+		list = []*model.TournamentPlayer{}
+	}
+	return c.JSON(list)
+}
+
 func (h *RegistrationHandler) AddTournamentPlayer(c *fiber.Ctx) error {
 	idParam := c.Params("regId")
 	if idParam == "" {
