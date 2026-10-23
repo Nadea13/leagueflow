@@ -371,8 +371,8 @@ export function RosterSelectionDialog({
                 </div>
 
                 {/* Footer Controls */}
-                <DialogFooter className="p-4 border-t border-border bg-card shrink-0 flex flex-row gap-2 items-center justify-end">
-                    {readOnly ? (
+                {!readOnly && (
+                    <DialogFooter className="p-4 border-t border-border bg-card shrink-0 flex flex-row gap-2 items-center justify-end">
                         <Button
                             type="button"
                             variant="outline"
@@ -380,30 +380,18 @@ export function RosterSelectionDialog({
                             onClick={() => onOpenChange(false)}
                             className="w-full sm:w-auto"
                         >
-                            {tCommon("close") || "Close"}
+                            {tCommon("cancel") || "Cancel"}
                         </Button>
-                    ) : (
-                        <>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onOpenChange(false)}
-                                className="w-full sm:w-auto"
-                            >
-                                {tCommon("cancel") || "Cancel"}
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                onClick={handleSave}
-                                className="w-full sm:w-auto"
-                            >
-                                {tCommon("save")}
-                            </Button>
-                        </>
-                    )}
-                </DialogFooter>
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleSave}
+                            className="w-full sm:w-auto"
+                        >
+                            {tCommon("save")}
+                        </Button>
+                    </DialogFooter>
+                )}
             </DialogContent>
         </Dialog>
     );
