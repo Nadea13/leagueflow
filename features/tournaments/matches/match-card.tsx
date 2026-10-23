@@ -286,7 +286,7 @@ export function MatchCard({
                                         {match.home_team?.name || match.placeholder_home || match.placeholder_a || (match as any).placeholderA || tMatch("tbd")}
                                     </span>
                                     {match.home_team?.logo_url ? (
-                                        <Image src={match.home_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 p-0.5 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                        <Image src={match.home_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                     ) : (
                                         <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
                                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
@@ -342,7 +342,7 @@ export function MatchCard({
                             ) : (
                                 <>
                                     {match.away_team?.logo_url ? (
-                                        <Image src={match.away_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 p-0.5 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                        <Image src={match.away_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                     ) : (
                                         <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
                                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground">

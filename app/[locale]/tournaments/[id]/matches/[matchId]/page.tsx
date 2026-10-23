@@ -143,6 +143,7 @@ export default async function MatchConsoleReadOnlyPage(props: {
                         tournamentId={id}
                         tournamentName={tournamentData?.name || undefined}
                         readOnly={true}
+                        fullWidthScoreboard={true}
                         initialEvents={formattedEvents}
                         backUrl={backUrl}
                         maxSets={maxSets}
@@ -154,6 +155,7 @@ export default async function MatchConsoleReadOnlyPage(props: {
                         tournamentId={id}
                         tournamentName={tournamentData?.name || undefined}
                         readOnly={true}
+                        fullWidthScoreboard={true}
                         initialEvents={formattedEvents}
                         backUrl={backUrl}
                         rulesConfig={rulesConfig}
