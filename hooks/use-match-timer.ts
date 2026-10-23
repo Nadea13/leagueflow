@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { Match, MatchEvent } from "@/types";
 
 export function useMatchTimer(match: Match, tournamentId: string, events: MatchEvent[], delaySeconds: number = 0) {
-    // Initialize time with strict trust in elapsed_before_pause
-    const [time, setTime] = useState(match.elapsed_before_pause || 0);
+    const getElapsedBase = (m?: Match) => m?.elapsed_before_pause ?? m?.elapsed_seconds ?? 0;
+
+    // Initialize time with strict trust in elapsed_before_pause or elapsed_seconds
+    const [time, setTime] = useState(() => getElapsedBase(match));
     const [isRunning, setIsRunning] = useState(match.timer_status === 'playing');
 
     // Sync isRunning with server state
@@ -28,8 +30,11 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
         lastStatusRef.current = isRunning ? 'playing' : 'paused';
 
         const updateTimer = () => {
+            const elapsedBase = getElapsedBase(match);
+
             if (!isRunning) {
-                setTime(match.elapsed_before_pause || 0);
+                // When paused, don't overwrite a positive local time with 0 if match state hasn't updated yet
+                setTime(prev => (prev > 0 && elapsedBase === 0 ? prev : elapsedBase));
                 return;
             }
 
@@ -50,14 +55,14 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
                 const now = Date.now() - (delaySeconds * 1000);
                 const markerTimestamp = (latestMarker.extra_info?.start_timestamp as number) || new Date(latestMarker.created_at).getTime();
                 const diffSeconds = Math.max(0, Math.floor((now - markerTimestamp) / 1000));
-                const finalTime = (match.elapsed_before_pause || 0) + diffSeconds;
+                const finalTime = elapsedBase + diffSeconds;
                 
                 setTime(prev => prev !== finalTime ? finalTime : prev);
             } else if (localStartRef.current) {
                 // 2. Fallback to local start time (optimistic UI)
                 const now = Date.now();
                 const diffSeconds = Math.max(0, Math.floor((now - localStartRef.current) / 1000));
-                const finalTime = (match.elapsed_before_pause || 0) + diffSeconds;
+                const finalTime = elapsedBase + diffSeconds;
                 
                 setTime(prev => prev !== finalTime ? finalTime : prev);
             }
@@ -69,7 +74,7 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
         // 100ms interval for high-precision responsiveness, but updateTimer uses Date.now() so it's accurate
         const interval = setInterval(updateTimer, 100);
         return () => clearInterval(interval);
-    }, [isRunning, match.id, match.elapsed_before_pause, events, delaySeconds]);
+    }, [isRunning, match.id, match.elapsed_before_pause, match.elapsed_seconds, events, delaySeconds]);
 
     return {
         time,

@@ -1,6 +1,9 @@
+"use client";
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { MatchEvent, EventType } from "@/types";
 import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/actions/tournaments/event";
+import { ApiClient } from "@/lib/api-client";
 
 export interface QueuedAction {
     id: string;
@@ -35,6 +38,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
 
     const [isLoading, setIsLoading] = useState(!initialData && events.length === 0);
     const [queue, setQueue] = useState<QueuedAction[]>([]);
+    const [isSyncing, setIsSyncing] = useState(false);
     const isSyncingRef = useRef(false);
     const queueRef = useRef<QueuedAction[]>([]);
     queueRef.current = queue;
@@ -164,11 +168,12 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         if (isSyncingRef.current || isReadOnly) return;
 
         const currentQueue = queueRef.current;
-        const pendingItems = currentQueue.filter(a => a.status === 'pending');
+        const pendingItems = currentQueue.filter(a => a.status === 'pending' || a.status === 'failed');
 
         if (pendingItems.length === 0) return;
 
         isSyncingRef.current = true;
+        setIsSyncing(true);
 
         let workingQueue = [...currentQueue];
 
@@ -181,13 +186,65 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                 let errorMsg = "";
 
                 if (action.type === 'add_event') {
-                    const res = await addMatchEvent(matchId, action.teamId, action.eventType!, action.minute!, action.playerId ?? null, action.extraInfo!, tournamentId);
-                    isSuccess = !!res.success;
-                    if (!isSuccess) errorMsg = res.error || "Unknown error";
+                    // 1. Try Next.js Server Action
+                    try {
+                        const res = await addMatchEvent(matchId, action.teamId, action.eventType!, action.minute!, action.playerId ?? null, action.extraInfo!, tournamentId);
+                        isSuccess = !!res.success;
+                        if (!isSuccess) errorMsg = res.error || "Server action failed";
+                    } catch (saErr: any) {
+                        errorMsg = saErr?.message || "Server action network error";
+                    }
+
+                    // 2. Direct API Fallback using client JWT if Server Action encountered any error
+                    if (!isSuccess) {
+                        try {
+                            const fallbackRes = await ApiClient.fetch<MatchEvent>(`/matches/${matchId}/events`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    team_id: action.teamId,
+                                    player_id: action.playerId,
+                                    type: action.eventType,
+                                    event_type: action.eventType,
+                                    minute: action.minute,
+                                    detail: action.extraInfo || {},
+                                    extra_info: action.extraInfo || {}
+                                })
+                            });
+                            if (fallbackRes && fallbackRes.id) {
+                                isSuccess = true;
+                                errorMsg = "";
+                            }
+                        } catch (fallbackErr: any) {
+                            console.error("Direct API Fallback for add_event error:", fallbackErr);
+                            errorMsg = fallbackErr?.message || errorMsg;
+                        }
+                    }
                 } else if (action.type === 'delete_event') {
-                    const res = await deleteMatchEvent(action.eventId!, tournamentId, matchId);
-                    isSuccess = !!res.success || (!!res.error && res.error.toLowerCase().includes("not found"));
-                    if (!isSuccess) errorMsg = res.error || "Unknown error";
+                    try {
+                        const res = await deleteMatchEvent(action.eventId!, tournamentId, matchId);
+                        isSuccess = !!res.success || (!!res.error && res.error.toLowerCase().includes("not found"));
+                        if (!isSuccess) errorMsg = res.error || "Delete action failed";
+                    } catch (delErr: any) {
+                        errorMsg = delErr?.message || "Delete network error";
+                    }
+
+                    if (!isSuccess) {
+                        try {
+                            await ApiClient.fetch(`/matches/${matchId}/events/${action.eventId}`, {
+                                method: 'DELETE'
+                            });
+                            isSuccess = true;
+                            errorMsg = "";
+                        } catch (fallbackErr: any) {
+                            if (String(fallbackErr?.message || "").toLowerCase().includes("not found")) {
+                                isSuccess = true;
+                                errorMsg = "";
+                            } else {
+                                console.error("Direct API Fallback for delete_event error:", fallbackErr);
+                                errorMsg = fallbackErr?.message || errorMsg;
+                            }
+                        }
+                    }
                 }
 
                 if (isSuccess) {
@@ -205,6 +262,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         }
 
         isSyncingRef.current = false;
+        setIsSyncing(false);
     }, [matchId, tournamentId, isReadOnly, persistQueue]);
 
     // Auto-sync when window becomes online
@@ -227,6 +285,13 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         playerName: string = "Unknown"
     ): Promise<{ success: boolean; error?: string }> => {
         const tempId = `temp-${Date.now()}`;
+        const finalPlayerName = playerName && playerName !== "Unknown" ? playerName : (extraInfo?.player_name as string) || "Unknown";
+        const enrichedExtraInfo: Record<string, unknown> = {
+            ...extraInfo,
+            player_name: finalPlayerName !== "Unknown" ? finalPlayerName : undefined,
+            player_id: playerId || undefined
+        };
+
         const newAction: QueuedAction = {
             id: tempId,
             type: "add_event",
@@ -235,8 +300,8 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             eventType: type,
             minute,
             playerId,
-            extraInfo,
-            playerName,
+            extraInfo: enrichedExtraInfo,
+            playerName: finalPlayerName,
             createdAt: Date.now(),
             status: "pending"
         };
@@ -309,7 +374,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         events: visibleEvents,
         rawEvents: events,
         queue,
-        isSyncing: isSyncingRef.current,
+        isSyncing,
         syncQueue,
         addEvent,
         deleteEvent,

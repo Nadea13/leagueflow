@@ -37,8 +37,10 @@ export async function addMatchEvent(
     extraInfo: Record<string, unknown> | null = null,
     tournamentId: string
 ): Promise<ActionResponse<MatchEvent>> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
+    if (tournamentId) {
+        const access = await validateTournamentAccess(tournamentId, 'editor');
+        if (!access.success) return { success: false, error: access.error };
+    }
 
     const session = await getServerSession();
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
@@ -83,8 +85,10 @@ export async function addMatchEvent(
 }
 
 export async function deleteMatchEvent(eventId: string, tournamentId: string, matchId?: string): Promise<ActionResponse> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
+    if (tournamentId) {
+        const access = await validateTournamentAccess(tournamentId, 'editor');
+        if (!access.success) return { success: false, error: access.error };
+    }
 
     const session = await getServerSession();
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';

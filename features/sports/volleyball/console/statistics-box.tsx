@@ -70,68 +70,74 @@ function StatItem({ label, home, away, homeNum, awayNum, statType = 'default' }:
     const awayFillPercent = total > 0 ? (aVal / total) * 100 : 0;
 
     return (
-        <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-xs font-bold tabular-nums">
-                <span className={cn("w-12 text-left transition-colors", colors.homeText)}>
-                    {home}
-                </span>
+        <div className="space-y-1">
+            <div className="text-center">
                 <span className="text-xs font-medium text-muted-foreground truncate px-1 tracking-tight">{label}</span>
-                <span className={cn("w-12 text-right transition-colors", colors.awayText)}>
-                    {away}
-                </span>
             </div>
 
-            {isPercentage ? (
-                /* Continuous Percentage Gauge */
-                <div className="relative w-full h-2 rounded-full overflow-hidden flex items-center bg-muted-foreground/10 border border-border/40">
-                    {/* Center 50% marker line */}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-[2px] -ml-[1px] bg-border z-10 pointer-events-none" />
+            <div className="flex items-center gap-2 sm:gap-3 text-sm font-bold tabular-nums">
+                <span className={cn("w-10 text-left shrink-0 transition-colors", colors.homeText)}>
+                    {home}
+                </span>
 
-                    {isEqual ? null : isHomeGreater ? (
-                        /* Home leads: expands from left edge past center into away territory */
-                        <div
-                            className={cn("h-full transition-all duration-500 rounded-l-full rounded-r-sm", colors.homeBar)}
-                            style={{ width: `${hVal}%` }}
-                        />
+                <div className="flex-1">
+                    {isPercentage ? (
+                        /* Continuous Percentage Gauge */
+                        <div className="relative w-full h-2 rounded-full overflow-hidden flex items-center bg-muted-foreground/10 border border-border/40">
+                            {/* Center 50% marker line */}
+                            <div className="absolute left-1/2 top-0 bottom-0 w-[2px] -ml-[1px] bg-border z-10 pointer-events-none" />
+
+                            {isEqual ? null : isHomeGreater ? (
+                                /* Home leads: expands from left edge past center into away territory */
+                                <div
+                                    className={cn("h-full transition-all duration-500 rounded-l-full rounded-r-sm", colors.homeBar)}
+                                    style={{ width: `${hVal}%` }}
+                                />
+                            ) : (
+                                /* Away leads: expands from right edge past center into home territory */
+                                <div className="w-full h-full flex justify-end">
+                                    <div
+                                        className={cn("h-full transition-all duration-500 rounded-r-full rounded-l-sm", colors.awayBar)}
+                                        style={{ width: `${aVal}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     ) : (
-                        /* Away leads: expands from right edge past center into home territory */
-                        <div className="w-full h-full flex justify-end">
-                            <div
-                                className={cn("h-full transition-all duration-500 rounded-r-full rounded-l-sm", colors.awayBar)}
-                                style={{ width: `${aVal}%` }}
-                            />
+                        /* Center-Split Gauge for Count-based Stats */
+                        <div className="relative w-full h-2 rounded-full overflow-hidden flex items-center bg-muted-foreground/10 border border-border/40">
+                            {/* Left half: Home (grows from center towards left) */}
+                            <div className="w-1/2 h-full flex justify-end">
+                                <div
+                                    className={cn(
+                                        "h-full transition-all duration-500 rounded-l-full",
+                                        total > 0 && hVal > 0 ? colors.homeBar : "bg-transparent"
+                                    )}
+                                    style={{ width: `${homeFillPercent}%` }}
+                                />
+                            </div>
+
+                            {/* Center divider mark */}
+                            <div className="w-[2px] h-full bg-border shrink-0 z-10" />
+
+                            {/* Right half: Away (grows from center towards right) */}
+                            <div className="w-1/2 h-full flex justify-start">
+                                <div
+                                    className={cn(
+                                        "h-full transition-all duration-500 rounded-r-full",
+                                        total > 0 && aVal > 0 ? colors.awayBar : "bg-transparent"
+                                    )}
+                                    style={{ width: `${awayFillPercent}%` }}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
-            ) : (
-                /* Center-Split Gauge for Count-based Stats */
-                <div className="relative w-full h-2 rounded-full overflow-hidden flex items-center bg-muted-foreground/10 border border-border/40">
-                    {/* Left half: Home (grows from center towards left) */}
-                    <div className="w-1/2 h-full flex justify-end">
-                        <div
-                            className={cn(
-                                "h-full transition-all duration-500 rounded-l-full",
-                                total > 0 && hVal > 0 ? colors.homeBar : "bg-transparent"
-                            )}
-                            style={{ width: `${homeFillPercent}%` }}
-                        />
-                    </div>
 
-                    {/* Center divider mark */}
-                    <div className="w-[2px] h-full bg-border shrink-0 z-10" />
-
-                    {/* Right half: Away (grows from center towards right) */}
-                    <div className="w-1/2 h-full flex justify-start">
-                        <div
-                            className={cn(
-                                "h-full transition-all duration-500 rounded-r-full",
-                                total > 0 && aVal > 0 ? colors.awayBar : "bg-transparent"
-                            )}
-                            style={{ width: `${awayFillPercent}%` }}
-                        />
-                    </div>
-                </div>
-            )}
+                <span className={cn("w-10 text-right shrink-0 transition-colors", colors.awayText)}>
+                    {away}
+                </span>
+            </div>
         </div>
     );
 }

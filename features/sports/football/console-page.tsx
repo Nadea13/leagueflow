@@ -26,7 +26,6 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-    Timer,
     ArrowLeft,
     Undo,
     Activity,
@@ -83,15 +82,17 @@ interface ConsolePageProps {
     backUrl: string;
     tournamentName?: string;
     rulesConfig?: Record<string, unknown> | null;
+    fullWidthScoreboard?: boolean;
 }
 
-export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName, rulesConfig }: ConsolePageProps) {
+export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName: _tournamentName, rulesConfig, fullWidthScoreboard = false }: ConsolePageProps) {
     const t = useTranslations("Console");
     const locale = useLocale();
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
     const _tPublic = useTranslations("PublicView");
     const { toast } = useToast();
+    const isFullWidth = fullWidthScoreboard || readOnly;
 
     // --- State ---
     const [match, setMatch] = useState<Match>(() => {
@@ -642,14 +643,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     // --- Handlers ---
     const handleStartMatch = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(true);
 
         try {
             await addEvent(null, 'first_half', currentMinute, null, { start_timestamp: Date.now() }, "First Half");
-            await queueMatchUpdate({ status: 'live', timer_status: 'playing', elapsed_before_pause: time, current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'playing',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("first_half") || t("match_started") || "First Half Started" });
         } catch (error) {
             console.error("Start match error:", error);
@@ -658,14 +666,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handlePauseMatch = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
             await addEvent(null, 'match_paused', currentMinute, null, {}, "Match Paused");
-            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'paused',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("match_paused") || "Match Paused" });
         } catch (error) {
             console.error("Pause match error:", error);
@@ -674,14 +689,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleHalfTime = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
             await addEvent(null, 'half_time', currentMinute, null, {}, "Half Time");
-            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'paused',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("half_time") || "Half Time" });
         } catch (error) {
             console.error("Half time error:", error);
@@ -690,14 +712,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleRegularFullTime = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
             await addEvent(null, 'full_time', currentMinute, null, {}, "End Regular Time");
-            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'paused',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("regular_full_time") || "End of Regular Time" });
         } catch (error) {
             console.error("Regular full time error:", error);
@@ -706,14 +735,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleStartExtraTime = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(true);
 
         try {
             await addEvent(null, 'extra_time', currentMinute, null, { start_timestamp: Date.now() }, "Extra Time");
-            await queueMatchUpdate({ status: 'live', timer_status: 'playing', current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'playing',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("start_extra_time") || "Extra Time Started" });
         } catch (error) {
             console.error("Start extra time error:", error);
@@ -722,14 +758,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleExtraTimeHalfTime = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(false);
 
         try {
             await addEvent(null, 'extra_time_half_time', currentMinute, null, {}, "Extra Time Half Time");
-            await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'paused',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
             toast({ title: t("pause_extra_time") || "Extra Time Break" });
         } catch (error) {
             console.error("Extra time half time error:", error);
@@ -738,7 +781,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleStartPenalties = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(false);
@@ -749,7 +793,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         try {
             if (lastPeriodEventType !== 'penalties') {
                 await addEvent(null, 'penalties', currentMinute, null, {}, "Penalty Shootout");
-                await queueMatchUpdate({ status: 'live', timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
+                await queueMatchUpdate({
+                    status: 'live',
+                    timer_status: 'paused',
+                    elapsed_before_pause: currentSeconds,
+                    elapsed_seconds: currentSeconds,
+                    current_minute: currentMinute
+                });
                 toast({ title: t("start_penalties") || "Penalty Shootout Started" });
             }
         } catch (error) {
@@ -759,7 +809,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const handleResumeMatch = async () => {
         if (readOnly) return;
-        const currentMinute = Math.floor(time / 60) + 1;
+        const currentSeconds = time;
+        const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
         // Optimistic UI Update
         setIsRunning(true);
@@ -777,7 +828,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             }
 
             await addEvent(null, eventTypeToLog, currentMinute, null, { start_timestamp: Date.now() }, eventLabel);
-            await queueMatchUpdate({ status: 'live', timer_status: 'playing', current_minute: currentMinute });
+            await queueMatchUpdate({
+                status: 'live',
+                timer_status: 'playing',
+                elapsed_before_pause: currentSeconds,
+                elapsed_seconds: currentSeconds,
+                current_minute: currentMinute
+            });
 
             const toastTitle = eventTypeToLog === 'second_half'
                 ? (t("second_half") || "Second Half Started")
@@ -798,11 +855,20 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             actionLabel: tCommon("confirm") || "Confirm",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
-                const currentMinute = Math.floor(time / 60) + 1;
+                const currentSeconds = time;
+                const currentMinute = Math.floor(currentSeconds / 60) + 1;
 
                 setIsRunning(false);
                 await addEvent(null, 'full_time', currentMinute, null, {}, "Full Time");
-                await queueMatchUpdate({ status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute });
+                await queueMatchUpdate({
+                    status: 'finished',
+                    timer_status: 'stopped',
+                    home_score: homeScore,
+                    away_score: awayScore,
+                    current_minute: currentMinute,
+                    elapsed_before_pause: currentSeconds,
+                    elapsed_seconds: currentSeconds
+                });
 
                 // Auto-advance if possible
                 await advanceStage(tournamentId);
@@ -1022,7 +1088,15 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         // Optimistic Update
         setTime(totalSeconds);
 
-        await queueMatchUpdate({ elapsed_before_pause: totalSeconds, current_minute: currentMinute });
+        if (isRunning) {
+            await addEvent(null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Time Adjusted");
+        }
+
+        await queueMatchUpdate({
+            elapsed_before_pause: totalSeconds,
+            elapsed_seconds: totalSeconds,
+            current_minute: currentMinute
+        });
         setSetTimeDialogOpen(false);
     };
 
@@ -1041,8 +1115,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         ? (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null
         : null;
 
-    // --- Unified Actions Card Component ---
-    const ActionGridsCard = () => {
+    // --- Unified Actions Card Render ---
+    const renderActionGridsCard = () => {
         const isActionDisabled = readOnly || match.status !== 'live';
         const actions = [
             { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight },
@@ -1116,45 +1190,26 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         );
     };
 
-    const matchControlsBox = (
+    const matchControlsBox = readOnly ? null : (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-timer-control">
             <div className="relative z-10 space-y-2 lg:space-y-4">
-                {readOnly ? (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament")}</span>
-                            <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
-                            <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
-                        </div>
-                        <div className="pt-4 border-t">
-                            <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
-                                <Timer className="w-6 h-6 text-primary animate-pulse" />
-                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">{t("live_updates_active").toUpperCase()}</span>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <MatchTimeControl
-                        status={match.status}
-                        isRunning={isRunning}
-                        readOnly={false}
-                        lastPeriodEventType={lastPeriodEventType}
-                        onStart={handleStartMatch}
-                        onPause={handlePauseMatch}
-                        onHalfTime={handleHalfTime}
-                        onRegularFullTime={handleRegularFullTime}
-                        onStartExtraTime={handleStartExtraTime}
-                        onExtraTimeHalfTime={handleExtraTimeHalfTime}
-                        onStartPenalties={handleStartPenalties}
-                        onResume={handleResumeMatch}
-                        onEnd={handleEndMatch}
-                        onSetTime={() => setSetTimeDialogOpen(true)}
-                        onAddTime={() => setAddTimeDialogOpen(true)}
-                    />
-                )}
+                <MatchTimeControl
+                    status={match.status}
+                    isRunning={isRunning}
+                    readOnly={false}
+                    lastPeriodEventType={lastPeriodEventType}
+                    onStart={handleStartMatch}
+                    onPause={handlePauseMatch}
+                    onHalfTime={handleHalfTime}
+                    onRegularFullTime={handleRegularFullTime}
+                    onStartExtraTime={handleStartExtraTime}
+                    onExtraTimeHalfTime={handleExtraTimeHalfTime}
+                    onStartPenalties={handleStartPenalties}
+                    onResume={handleResumeMatch}
+                    onEnd={handleEndMatch}
+                    onSetTime={() => setSetTimeDialogOpen(true)}
+                    onAddTime={() => setAddTimeDialogOpen(true)}
+                />
             </div>
         </div>
     );
@@ -1273,33 +1328,12 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     </div>
                 </header>
 
-                <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
-                    {/* Sidebar Skeleton */}
-                    <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
-                        {/* Match Controls Skeleton */}
-                        <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                        </div>
-                        {/* Quick Actions Skeleton */}
-                        <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
-                        </div>
-                    </aside>
-
-                    {/* Main Content Skeleton */}
-                    <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
-                        {/* Scoreboard Skeleton */}
+                <main className="flex-1 w-full flex flex-col gap-2 lg:gap-4">
+                    {/* Scoreboard Skeleton - Full Width */}
+                    {isFullWidth && (
                         <div className="bg-card border rounded-sm w-full">
                             <div className="p-2 lg:p-4 flex flex-col items-center justify-center w-full h-[120px] lg:h-[220px]">
-                                <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
+                                <div className="flex items-center justify-between w-full max-w-7xl px-2 lg:px-8 gap-4 lg:gap-12">
                                     <div className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 min-w-0">
                                         <Skeleton className="w-12 h-12 lg:w-24 lg:h-24 rounded-full bg-muted/60 shrink-0" />
                                         <Skeleton className="h-4 w-16 lg:h-7 lg:w-32 bg-muted/60 rounded-sm shrink-0" />
@@ -1321,6 +1355,60 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    <div className="w-full grid grid-cols-12 gap-2 lg:gap-4">
+                        {/* Sidebar Skeleton */}
+                        <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
+                            {/* Match Controls Skeleton */}
+                            {!readOnly && (
+                                <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
+                                    <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                    <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                    <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                    <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                </div>
+                            )}
+                            {/* Quick Actions Skeleton */}
+                            <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            </div>
+                        </aside>
+
+                        {/* Main Content Skeleton */}
+                        <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
+                            {/* Scoreboard Skeleton */}
+                            {!isFullWidth && (
+                                <div className="bg-card border rounded-sm w-full">
+                                    <div className="p-2 lg:p-4 flex flex-col items-center justify-center w-full h-[120px] lg:h-[220px]">
+                                        <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
+                                            <div className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 min-w-0">
+                                                <Skeleton className="w-12 h-12 lg:w-24 lg:h-24 rounded-full bg-muted/60 shrink-0" />
+                                                <Skeleton className="h-4 w-16 lg:h-7 lg:w-32 bg-muted/60 rounded-sm shrink-0" />
+                                            </div>
+
+                                            <div className="flex flex-col items-center gap-1 lg:gap-3 shrink-0">
+                                                <Skeleton className="h-4 w-12 lg:h-6 lg:w-20 bg-muted/60 rounded-sm" />
+                                                <div className="flex items-center gap-4 lg:gap-8">
+                                                    <Skeleton className="h-10 w-8 lg:h-24 lg:w-16 bg-muted/60 rounded-sm" />
+                                                    <span className="text-xl lg:text-4xl font-black text-foreground/20">-</span>
+                                                    <Skeleton className="h-10 w-8 lg:h-24 lg:w-16 bg-muted/60 rounded-sm" />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-1 flex flex-row items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 min-w-0">
+                                                <Skeleton className="w-12 h-12 lg:w-24 lg:h-24 rounded-full bg-muted/60 shrink-0" />
+                                                <Skeleton className="h-4 w-16 lg:h-7 lg:w-32 bg-muted/60 rounded-sm shrink-0" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                         {/* Team Action Grid Skeleton */}
                         {!readOnly && (
@@ -1345,7 +1433,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <Skeleton className="h-12 w-full bg-muted/60 rounded-sm" />
                         </div>
                     </div>
-                </main>
+                </div>
+            </main>
             </div>
         );
     }
@@ -1459,46 +1548,10 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 )}
             </header>
 
-            <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
-                {/* Sidebar: Admin Controls or Match Info */}
-                <aside className={cn(
-                    "col-span-12 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col",
-                    readOnly ? "lg:col-span-4" : "lg:col-span-3"
-                )}>
-                    {/* Match Controls (Desktop only) */}
-                    <div className="hidden lg:block">
-                        {matchControlsBox}
-                    </div>
-
-                    <div className="hidden lg:block">
-                        {quickActionsBox}
-                    </div>
-
-                    {readOnly && (
-                        <div className="hidden lg:block border rounded-sm overflow-hidden bg-card shadow-xs">
-                            <MatchStatisticsBox
-                                match={match}
-                                events={events}
-                                homeScore={homeScore}
-                                awayScore={awayScore}
-                                visibleStats={visibleStats}
-                            />
-                        </div>
-                    )}
-                </aside>
-
-                {/* Main Content Area */}
-                <div className={cn(
-                    "col-span-12 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4",
-                    readOnly ? "lg:col-span-8" : "lg:col-span-9"
-                )}>
-                    {/* Match Controls (Mobile only) */}
-                    <div className="block lg:hidden">
-                        {matchControlsBox}
-                    </div>
-
-                    {/* Scoreboard Section */}
-                    <section className="flex flex-col gap-2 lg:gap-4" id="console-scoreboard">
+            <main className="flex-1 w-full flex flex-col gap-2 lg:gap-4">
+                {/* Scoreboard Section (Full Width across page) */}
+                {isFullWidth && (
+                    <section className="w-full flex flex-col gap-2 lg:gap-4" id="console-scoreboard">
                         <Scoreboard
                             match={match}
                             homeScore={homeScore}
@@ -1521,30 +1574,109 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                                 lastPeriodEventType === 'penalties' ? "PSO" : null
                             }
                             addedTime={(isHalfTime || (lastPeriodEventType === 'full_time' && !isRunning) || match.status === 'finished' || lastPeriodEventType === 'penalties') ? null : addedTime}
-                            showPossession={showScoreboardPossession}
+                            showPossession={!readOnly && showScoreboardPossession}
                         />
 
                         {/* Quick Actions (Mobile only) */}
                         <div className="block lg:hidden">
                             {quickActionsBox}
                         </div>
+                    </section>
+                )}
 
-                        {!readOnly && (
-                            <ActionGridsCard />
+                <div className="w-full grid grid-cols-12 gap-2 lg:gap-4">
+                    {/* Sidebar: Admin Controls or Match Info */}
+                    <aside className={cn(
+                        "col-span-12 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col",
+                        readOnly ? "lg:col-span-4" : "lg:col-span-3"
+                    )}>
+                        {/* Match Controls (Desktop only) */}
+                        {matchControlsBox && (
+                            <div className="hidden lg:block">
+                                {matchControlsBox}
+                            </div>
                         )}
-                    </section>
 
-                    {/* Log Section */}
-                    <section className="flex flex-col gap-2 lg:gap-4" id="console-event-log">
-                        <EventLog
-                            events={events}
-                            match={match}
-                            readOnly={readOnly}
-                            onDelete={deleteEvent}
-                            players={allPlayers}
-                            visibleLogs={visibleLogs}
-                        />
-                    </section>
+                        <div className="hidden lg:block">
+                            {quickActionsBox}
+                        </div>
+
+                        {readOnly && (
+                            <div className="hidden lg:block border rounded-sm overflow-hidden bg-card shadow-xs">
+                                <MatchStatisticsBox
+                                    match={match}
+                                    events={events}
+                                    homeScore={homeScore}
+                                    awayScore={awayScore}
+                                    visibleStats={visibleStats}
+                                />
+                            </div>
+                        )}
+                    </aside>
+
+                    {/* Main Content Area */}
+                    <div className={cn(
+                        "col-span-12 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4",
+                        readOnly ? "lg:col-span-8" : "lg:col-span-9"
+                    )}>
+                        {/* Match Controls (Mobile only) */}
+                        {matchControlsBox && (
+                            <div className="block lg:hidden">
+                                {matchControlsBox}
+                            </div>
+                        )}
+
+                        {/* Scoreboard Section (When not fullWidth) */}
+                        {!isFullWidth && (
+                            <section className="flex flex-col gap-2 lg:gap-4" id="console-scoreboard">
+                                <Scoreboard
+                                    match={match}
+                                    homeScore={homeScore}
+                                    awayScore={awayScore}
+                                    events={events}
+                                    onTeamClick={(teamId) => {
+                                        if (teamId === match.home_team_id || teamId === match.home_team?.id) {
+                                            setTeamInfoTarget('home');
+                                        } else if (teamId === match.away_team_id || teamId === match.away_team?.id) {
+                                            setTeamInfoTarget('away');
+                                        }
+                                    }}
+                                    timerTime={time}
+                                    timerReadOnly={readOnly || match.status === 'finished'}
+                                    timerCustomText={
+                                        match.status === 'finished' ? "FT" :
+                                            lastPeriodEventType === 'half_time' ? "HT" :
+                                                (lastPeriodEventType === 'full_time' && !isRunning) ? "FT" :
+                                                    lastPeriodEventType === 'extra_time_half_time' ? "ET HT" :
+                                                        lastPeriodEventType === 'penalties' ? "PSO" : null
+                                    }
+                                    addedTime={(isHalfTime || (lastPeriodEventType === 'full_time' && !isRunning) || match.status === 'finished' || lastPeriodEventType === 'penalties') ? null : addedTime}
+                                    showPossession={!readOnly && showScoreboardPossession}
+                                />
+
+                                {/* Quick Actions (Mobile only) */}
+                                <div className="block lg:hidden">
+                                    {quickActionsBox}
+                                </div>
+
+                                {!readOnly && (
+                                    renderActionGridsCard()
+                                )}
+                            </section>
+                        )}
+
+                        {/* Log Section */}
+                        <section className="flex flex-col gap-2 lg:gap-4" id="console-event-log">
+                            <EventLog
+                                events={events}
+                                match={match}
+                                readOnly={readOnly}
+                                onDelete={deleteEvent}
+                                players={allPlayers}
+                                visibleLogs={visibleLogs}
+                            />
+                        </section>
+                    </div>
                 </div>
             </main>
 

@@ -31,11 +31,12 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
+        if (match.timer_status !== 'playing') return;
         const interval = setInterval(() => {
             setNow(Date.now());
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [match.timer_status]);
 
     const formatTeamName = (name: string | undefined) => {
         return name || "";
@@ -54,11 +55,13 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
         let awayTimeMs = 0;
         let currentPossessor: 'home' | 'away' | null = null;
         let lastTimestamp: number | null = null;
+        let isTimerActive = false;
 
         sortedEvents.forEach((evt) => {
             const evtTime = new Date(evt.created_at).getTime();
 
-            if (currentPossessor && lastTimestamp !== null && evtTime > lastTimestamp) {
+            // Only accumulate duration if timer was running
+            if (isTimerActive && currentPossessor && lastTimestamp !== null && evtTime > lastTimestamp) {
                 const duration = evtTime - lastTimestamp;
                 if (currentPossessor === 'home') homeTimeMs += duration;
                 if (currentPossessor === 'away') awayTimeMs += duration;
@@ -66,6 +69,30 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
 
             const isHome = evt.team_id === homeTeamId;
             const isAway = evt.team_id === awayTeamId;
+
+            // Timer start/resume events
+            if (
+                evt.event_type === 'first_half' ||
+                evt.event_type === 'second_half' ||
+                evt.event_type === 'extra_time' ||
+                evt.event_type === 'extra_time_second_half' ||
+                evt.event_type === 'kick_off' ||
+                evt.event_type === 'match_resumed'
+            ) {
+                isTimerActive = true;
+            }
+            // Timer pause/stop events
+            else if (
+                evt.event_type === 'match_paused' ||
+                evt.event_type === 'half_time' ||
+                evt.event_type === 'extra_time_half_time' ||
+                evt.event_type === 'full_time' ||
+                evt.event_type === 'penalties' ||
+                evt.event_type === 'walkover'
+            ) {
+                isTimerActive = false;
+                currentPossessor = null;
+            }
 
             // Direct possession actions
             if (evt.event_type === 'possession' || evt.event_type === 'pass' || evt.event_type === 'cross') {
@@ -85,11 +112,7 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                 evt.event_type === 'substitution' ||
                 evt.event_type === 'injury' ||
                 evt.event_type === 'corner' ||
-                evt.event_type === 'offside' ||
-                evt.event_type === 'half_time' ||
-                evt.event_type === 'full_time' ||
-                evt.event_type === 'match_paused' ||
-                evt.event_type === 'walkover'
+                evt.event_type === 'offside'
             ) {
                 currentPossessor = null;
             }
@@ -97,9 +120,9 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
             lastTimestamp = evtTime;
         });
 
-        // Accumulate live duration up to now if match timer is playing and match is live/in progress
+        // Accumulate live duration up to now ONLY IF match.timer_status === 'playing'
         const isMatchLive = match.status === 'live' || match.status === 'first_half' || match.status === 'second_half';
-        if (currentPossessor && lastTimestamp !== null && isMatchLive && match.timer_status === 'playing') {
+        if (match.timer_status === 'playing' && isMatchLive && currentPossessor && lastTimestamp !== null) {
             const currentMs = now;
             if (currentMs > lastTimestamp) {
                 const liveDuration = currentMs - lastTimestamp;
@@ -122,12 +145,12 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
     return (
         <div className="bg-card border rounded-sm relative overflow-hidden w-full group">
             <div className="p-2 lg:p-4 flex flex-col items-center justify-center relative z-10 w-full">
-                <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
+                <div className="flex items-center justify-between w-full max-w-7xl px-2 lg:px-8 gap-4 lg:gap-12">
                     <div
                         className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/home min-w-0"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full relative group/logo shrink-0">
                             {match.home_team?.logo_url ? (
                                 <Image src={match.home_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (
@@ -186,7 +209,7 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                         className="flex-1 flex flex-row items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/away min-w-0"
                         onClick={() => onTeamClick?.(match.away_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full border p-1 lg:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full relative group/logo shrink-0">
                             {match.away_team?.logo_url ? (
                                 <Image src={match.away_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (
@@ -203,7 +226,7 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
 
                 {/* Possession Gauge Bar */}
                 {showPossession && (
-                    <div className="w-full max-w-xs sm:max-w-md flex flex-col">
+                    <div className="w-full max-w-xs sm:max-w-md lg:max-w-xl flex flex-col">
                         <div className="flex justify-between items-center text-xs lg:text-sm font-black tabular-nums">
                             <span className="text-primary">{possession.home}%</span>
                             <span className="text-[10px] lg:text-xs font-bold tracking-widest text-muted-foreground">

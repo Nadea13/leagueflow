@@ -1160,8 +1160,19 @@ export async function updateMatch(
     const updateData: Record<string, unknown> = {};
     if (data.home_team_id !== undefined) updateData.home_team_id = data.home_team_id;
     if (data.away_team_id !== undefined) updateData.away_team_id = data.away_team_id;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.timer_status !== undefined) updateData.timer_status = data.timer_status;
+    if (data.status !== undefined) {
+        updateData.status = data.status;
+        if (data.status === 'finished' || data.status === 'completed') {
+            updateData.timer_status = 'stopped';
+        }
+    }
+    if (data.timer_status !== undefined) {
+        if (data.status === 'finished' || data.status === 'completed') {
+            updateData.timer_status = 'stopped';
+        } else {
+            updateData.timer_status = data.timer_status;
+        }
+    }
     
     if (data.elapsed_seconds !== undefined) {
         updateData.elapsed_seconds = data.elapsed_seconds;

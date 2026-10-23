@@ -141,7 +141,7 @@ export function VolleyballScoreboard({
     return (
         <div className="bg-card border rounded-sm relative overflow-hidden w-full group">
             <div className="p-2 lg:p-4 flex flex-col items-center justify-center relative z-10 w-full">
-                <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
+                <div className="flex items-center justify-between w-full max-w-7xl px-2 lg:px-8 gap-4 lg:gap-12">
                     {/* Home Team */}
                     <div
                         className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/home min-w-0"

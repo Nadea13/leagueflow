@@ -243,7 +243,7 @@ export interface GlobalPlayer {
     created_at: string;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'first_half' | 'half_time' | 'second_half' | 'full_time' | 'extra_time' | 'extra_time_half_time' | 'extra_time_second_half' | 'penalties' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win' | 'possession' | 'pass' | 'missed_shot' | 'bad_pass' | 'offside' | 'cross' | 'miss_cross';
+export type EventType = 'goal' | 'own_goal' | 'penalty_goal' | 'missed_penalty' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'foul_drawn' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'first_half' | 'half_time' | 'second_half' | 'full_time' | 'extra_time' | 'extra_time_half_time' | 'extra_time_second_half' | 'penalties' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win' | 'possession' | 'pass' | 'missed_shot' | 'bad_pass' | 'offside' | 'cross' | 'miss_cross';
 
 export interface MatchEvent {
     id: string;
@@ -260,6 +260,8 @@ export interface MatchEvent {
     isPending?: boolean;
     // Join
     player_name?: string; // For display convenience if joined
+    team_name?: string;
+    team_logo?: string | null;
 }
 
 export interface Goal {
