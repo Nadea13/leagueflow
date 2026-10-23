@@ -1346,7 +1346,11 @@
   "Legal": {
     "title": "Legal Documents",
     "privacy": "Privacy Policy",
+    "privacy_policy": "Privacy Policy",
+    "privacy_description": "Our commitment to protecting your personal data and privacy.",
     "terms": "Terms of Service",
+    "terms_of_service": "Terms of Service",
+    "terms_description": "Terms, conditions, and rules for using the LeagueFlow platform.",
     "refund": "Refund Policy"
   },
   "DashboardSettings": {
@@ -1361,7 +1365,9 @@
     "legal_desc": "Review our policies and terms.",
     "danger_zone": "Danger Zone",
     "delete_account": "Delete Account",
+    "delete_account_title": "Delete Account",
     "delete_account_desc": "Permanently delete your account and all associated data.",
+    "delete_account_description": "Permanently delete your account and all associated data.",
     "delete_confirm_title": "Are you absolutely sure?",
     "delete_confirm_desc": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
     "type_to_confirm": "Please type \"{text}\" to confirm:",

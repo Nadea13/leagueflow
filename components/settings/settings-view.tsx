@@ -127,7 +127,7 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                 </aside>
 
                 {/* Right Column: Active Tab Content */}
-                <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+                <div id="tour-settings-content" className="lg:col-span-8 xl:col-span-9 min-w-0">
                     {/* Tab 1: General (Single Unified Card for Profile, Preferences, and Connected Accounts) */}
                     {isGeneralTab && (
                         <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
@@ -194,14 +194,14 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                     )}
 
                     {/* Tab 2: Security / Password */}
-                    {activeTab === 'security' && (
+                    {currentTab === 'security' && (
                         <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
                             <SecurityForm />
                         </div>
                     )}
 
                     {/* Tab 3: Legal */}
-                    {activeTab === 'legal' && (
+                    {currentTab === 'legal' && (
                         <div className="rounded-sm border bg-card divide-y divide-border overflow-hidden">
                             <div className="p-4 space-y-4">
                                 <div>
@@ -224,10 +224,10 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                             </div>
                                             <div className="space-y-1">
                                                 <Header level={6}>
-                                                    {tLegal("privacy_policy")}
+                                                    {tLegal("privacy_policy") || tLegal("privacy") || (isThai ? "นโยบายความเป็นส่วนตัว" : "Privacy Policy")}
                                                 </Header>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {tLegal("privacy_description")}
+                                                    {tLegal("privacy_description") || (isThai ? "ข้อตกลงและนโยบายในการคุ้มครองข้อมูลส่วนบุคคลของคุณ" : "Our commitment to protecting your personal data and privacy.")}
                                                 </p>
                                             </div>
                                         </div>
@@ -249,10 +249,10 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                             </div>
                                             <div className="space-y-1">
                                                 <Header level={6}>
-                                                    {tLegal("terms_of_service")}
+                                                    {tLegal("terms_of_service") || tLegal("terms") || (isThai ? "ข้อกำหนดการให้บริการ" : "Terms of Service")}
                                                 </Header>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {tLegal("terms_description")}
+                                                    {tLegal("terms_description") || (isThai ? "ข้อกำหนด เงื่อนไข และระเบียบปฏิบัติในการใช้งานแพลตฟอร์ม" : "Terms, conditions, and rules for using the LeagueFlow platform.")}
                                                 </p>
                                             </div>
                                         </div>
@@ -271,12 +271,12 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                     )}
 
                     {/* Tab 4: Billing */}
-                    {activeTab === 'billing' && (
+                    {currentTab === 'billing' && (
                         <BillingTab />
                     )}
 
                     {/* Tab 5: Danger Zone */}
-                    {activeTab === 'danger' && (
+                    {currentTab === 'danger' && (
                         <div className="rounded-sm border border-destructive/30 bg-card divide-y divide-border overflow-hidden">
                             <div className="p-4 space-y-4">
                                 <div>
@@ -298,10 +298,10 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                             </div>
                                             <div className="space-y-1">
                                                 <Header level={6}>
-                                                    {t("delete_account_title")}
+                                                    {t("delete_account_title") || t("delete_account")}
                                                 </Header>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {t("delete_account_description")}
+                                                    {t("delete_account_description") || t("delete_account_desc")}
                                                 </p>
                                             </div>
                                         </div>
