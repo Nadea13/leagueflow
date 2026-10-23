@@ -26,6 +26,11 @@ export function ThemeToggle({
     className,
 }: ThemeToggleProps = {}) {
     const { setTheme, theme } = useTheme()
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
 
     return (
         <ActionMenu>
@@ -42,21 +47,21 @@ export function ThemeToggle({
                         <Sun className="h-4 w-4" />
                         <span>Light</span>
                     </div>
-                    {theme === "light" && <Check className="h-4 w-4" />}
+                    {mounted && theme === "light" && <Check className="h-4 w-4" />}
                 </ActionMenuItem>
                 <ActionMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <Moon className="h-4 w-4" />
                         <span>Dark</span>
                     </div>
-                    {theme === "dark" && <Check className="h-4 w-4" />}
+                    {mounted && theme === "dark" && <Check className="h-4 w-4" />}
                 </ActionMenuItem>
                 <ActionMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4" />
                         <span>System</span>
                     </div>
-                    {theme === "system" && <Check className="h-4 w-4" />}
+                    {mounted && theme === "system" && <Check className="h-4 w-4" />}
                 </ActionMenuItem>
             </ActionMenuContent>
         </ActionMenu>
