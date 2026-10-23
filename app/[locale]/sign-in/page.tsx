@@ -3,7 +3,7 @@ import { EmailLoginForm } from "@/features/auth/email-login-form";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { Logo } from "@/components/shared/logo";
+import { BrandLogo } from "@/components/shared/logo";
 import { HeroDotBackground } from "@/components/landing/hero-dot-background";
 import { Header } from "@/components/ui/header";
 import { Label } from "@/components/ui/label";
@@ -30,10 +30,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             <div className="w-full max-w-[480px] bg-card backdrop-blur-xl rounded-sm shadow-2xl relative z-10 p-4 space-y-4">
                 <div className="text-center space-y-4">
                     {/* Logo */}
-                    <Link href="/" className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105">
-                        <Logo className="w-9 h-9" color="#00C49A" />
-                        <span className="font-black text-foreground text-2xl tracking-tighter">Tourni</span>
-                    </Link>
+                    <BrandLogo 
+                        href="/" 
+                        size="lg"
+                        className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105"
+                    />
 
                     <div className="space-y-2">
                         <Header level={2}>{t('title')}</Header>

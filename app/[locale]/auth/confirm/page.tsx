@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/routing";
-import { Logo } from "@/components/shared/logo";
+import { BrandLogo } from "@/components/shared/logo";
 import { HeroDotBackground } from "@/components/landing/hero-dot-background";
 
 export default function AuthConfirmPage() {
@@ -55,10 +55,11 @@ export default function AuthConfirmPage() {
                 <Card className="w-full max-w-sm bg-card/50 backdrop-blur-md shadow-xl border rounded-sm relative z-10">
                     <CardContent className="px-4 pt-6 space-y-6 text-center">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
-                            <Logo className="w-8 h-8" color="#00C49A" />
-                            <span className="font-black text-foreground text-xl tracking-tighter">Tourni</span>
-                        </Link>
+                        <BrandLogo 
+                        href="/" 
+                        size="md"
+                        className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105"
+                    />
 
                         <div className="text-destructive font-semibold">Authentication Error</div>
                         <p className="text-muted-foreground text-sm">{error}</p>
@@ -85,10 +86,11 @@ export default function AuthConfirmPage() {
             <Card className="w-full max-w-sm bg-card/50 backdrop-blur-md shadow-xl border rounded-sm relative z-10">
                 <CardContent className="px-4 pt-6 space-y-6 text-center">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
-                        <Logo className="w-8 h-8" color="#00C49A" />
-                        <span className="font-black text-foreground text-xl tracking-tighter">Tourni</span>
-                    </Link>
+                    <BrandLogo 
+                        href="/" 
+                        size="md"
+                        className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105"
+                    />
 
                     <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
                     <p className="text-muted-foreground">{t("loading")}</p>

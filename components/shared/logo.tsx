@@ -1,6 +1,8 @@
 import React from "react";
+import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
-interface LogoProps extends React.SVGProps<SVGSVGElement> {
+export interface LogoProps extends React.SVGProps<SVGSVGElement> {
   size?: number | string;
   className?: string;
   color?: string;
@@ -9,7 +11,7 @@ interface LogoProps extends React.SVGProps<SVGSVGElement> {
 export function Logo({
   size = 32,
   className = "",
-  color = "#06AE95",
+  color = "#00C49A",
   ...props
 }: LogoProps) {
   return (
@@ -19,7 +21,7 @@ export function Logo({
       viewBox="0 0 1095 1095"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={cn("shrink-0", className)}
       {...props}
     >
       <path
@@ -34,3 +36,81 @@ export function Logo({
     </svg>
   );
 }
+
+export type BrandLogoSize = "sm" | "md" | "lg" | "xl";
+
+export interface BrandLogoProps {
+  href?: string | null;
+  size?: BrandLogoSize;
+  color?: string;
+  className?: string;
+  iconClassName?: string;
+  textClassName?: string;
+  showText?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}
+
+const sizeConfig: Record<BrandLogoSize, { iconSize: number; textClass: string; gapClass: string }> = {
+  sm: { iconSize: 24, textClass: "text-base md:text-lg", gapClass: "gap-2" },
+  md: { iconSize: 32, textClass: "text-lg md:text-xl", gapClass: "gap-2.5" },
+  lg: { iconSize: 36, textClass: "text-xl md:text-2xl", gapClass: "gap-2.5" },
+  xl: { iconSize: 44, textClass: "text-2xl md:text-3xl", gapClass: "gap-3" },
+};
+
+export function BrandLogo({
+  href = "/",
+  size = "md",
+  color = "#00C49A",
+  className,
+  iconClassName,
+  textClassName,
+  showText = true,
+  onClick,
+}: BrandLogoProps) {
+  const config = sizeConfig[size];
+
+  const content = (
+    <>
+      <div className="relative shrink-0">
+        <Logo
+          size={config.iconSize}
+          color={color}
+          className={cn("transition-all", iconClassName)}
+        />
+      </div>
+      {showText && (
+        <span
+          className={cn(
+            "font-black tracking-tighter text-foreground shrink-0 leading-none select-none",
+            config.textClass,
+            textClassName
+          )}
+        >
+          Tourni
+        </span>
+      )}
+    </>
+  );
+
+  const containerClasses = cn(
+    "flex items-center",
+    config.gapClass,
+    className
+  );
+
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} className={containerClasses}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div onClick={onClick as any} className={containerClasses}>
+      {content}
+    </div>
+  );
+}
+
+export default BrandLogo;

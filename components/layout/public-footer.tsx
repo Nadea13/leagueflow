@@ -6,7 +6,7 @@ import { ArrowRight, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { Logo } from "@/components/shared/logo";
+import { BrandLogo } from "@/components/shared/logo";
 
 export function PublicFooter() {
     const tLanding = useTranslations('Landing');
@@ -25,14 +25,12 @@ export function PublicFooter() {
             <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between text-sm text-muted-foreground gap-8 px-4 md:px-0">
                 {/* Brand & Tournaments link */}
                 <div className="flex flex-col items-center md:items-start gap-4">
-                    <Link 
+                    <BrandLogo 
                         href="/" 
                         onClick={handleLogoClick}
-                        className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                        <Logo className="w-8 h-8" color="#00C49A" />
-                        <span className="font-black text-foreground text-xl tracking-tighter">Tourni</span>
-                    </Link>
+                        size="md"
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                    />
                     <div className="flex flex-col items-center md:items-start gap-2">
                         <Link href="/tournaments" className="hover:text-foreground transition-colors font-medium">
                             {tLanding('nav_tournaments')}

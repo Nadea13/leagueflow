@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/shared/logo";
+import { BrandLogo } from "@/components/shared/logo";
 import { Shield } from "lucide-react";
 
 export interface NavbarUser {
@@ -53,16 +53,12 @@ export function PublicNavbar({ user = null }: PublicNavbarProps) {
             <div className="container max-w-7xl mx-auto px-4 md:px-0 flex items-center justify-between relative transition-all duration-300">
                 {/* Logo & Brand */}
                 <div className="flex items-center gap-6">
-                    <Link 
+                    <BrandLogo 
                         href="/" 
                         onClick={handleLogoClick}
-                        className="flex items-center gap-2.5 font-bold text-xl cursor-pointer"
-                    >
-                        <div className="relative shrink-0">
-                            <Logo className="w-8 h-8 transition-all" color="#00C49A" />
-                        </div>
-                        <span className="text-lg md:text-xl font-black tracking-tighter text-foreground shrink-0 leading-none">Tourni</span>
-                    </Link>
+                        size="md"
+                        className="font-bold cursor-pointer"
+                    />
                 </div>
 
                 {/* Centered Navigation Menu */}

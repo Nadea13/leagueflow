@@ -9,7 +9,7 @@ import { getNavItems } from "@/config/nav"
 
 import { BecomeOrganizerDialog } from "@/features/dialogs"
 import { BecomeTeamManagerDialog } from "@/features/dialogs"
-import { Logo } from "@/components/shared/logo"
+import { BrandLogo } from "@/components/shared/logo"
 
 interface DashboardNavbarProps {
     userEmail?: string
@@ -78,12 +78,13 @@ export function DashboardNavbar({
             {/* Mobile Top Header / Desktop Navbar Header */}
             <header className={cn("sticky top-0 z-40 flex h-14 md:h-20 items-center justify-between border-b bg-card backdrop-blur-xl px-2 w-full", className)}>
                 <div className="flex items-center gap-1 md:gap-2">
-                    <Link href="/dashboard" className="flex items-center gap-2 transition-transform group">
-                        <div className="relative shrink-0">
-                            <Logo className="w-7 h-7 md:w-8 md:h-8 transition-all" color="#00C49A" />
-                        </div>
-                        <span className="text-base md:text-lg font-black tracking-tighter text-foreground shrink-0 leading-none">Tourni</span>
-                    </Link>
+                    <BrandLogo 
+                        href="/dashboard" 
+                        size="sm"
+                        className="transition-transform group"
+                        iconClassName="w-7 h-7 md:w-8 md:h-8"
+                        textClassName="text-base md:text-lg"
+                    />
                 </div>
                 <div className="flex items-center">
                     <UserDropdown email={userEmail} name={userName} avatar={userAvatar} role={role} className="border-none hover:bg-transparent p-0" hideText />
