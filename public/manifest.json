@@ -1,6 +1,6 @@
 {
-    "name": "LeagueFlow",
-    "short_name": "LeagueFlow",
+    "name": "Tourni",
+    "short_name": "Tourni",
     "description": "Tournament Management System",
     "start_url": "/",
     "display": "standalone",

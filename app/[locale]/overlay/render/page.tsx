@@ -169,7 +169,7 @@ function CustomOverlayRenderer() {
     ? config.blocks
     : (parsedBlocksFromPositions.length > 0 ? parsedBlocksFromPositions : (localData.blocks || []));
   const scoreBg = config?.scoreBg || "#ef4444";
-  const headerText = localData.headerText || config?.headerText || "LEAGUEFLOW LEAGUE";
+  const headerText = localData.headerText || config?.headerText || "TOURNI LEAGUE";
   const nameHome = localData.nameHome || config?.nameHome || "TEAM ALPHA";
   const nameAway = localData.nameAway || config?.nameAway || "TEAM BETA";
   const scoreHome = localData.scoreHome ?? config?.scoreHome ?? "0";

@@ -15,7 +15,7 @@ func TestLoadConfigDefaults(t *testing.T) {
 	if cfg.Port != "8080" {
 		t.Errorf("expected default port 8080, got %s", cfg.Port)
 	}
-	if cfg.JWTSecret != "leagueflow-jwt-secret-key-default" {
+	if cfg.JWTSecret != "tourni-jwt-secret-key-default" {
 		t.Errorf("expected default jwt secret, got %s", cfg.JWTSecret)
 	}
 	if cfg.FrontendURL != "https://leagueflow.vercel.app" {

@@ -217,12 +217,12 @@ export function CanvasPreview({
                 case "point-won-away": return "🏐";
                 case "score-bar-home": return "🏐 ○ 🏐 🏐 ○";
                 case "score-bar-away": return "○ 🏐 ○ ○ 🏐";
-                case "header-text": return headerText || "LEAGUEFLOW";
+                case "header-text": return headerText || "TOURNI";
                 case "timer": return timerText || "00:00";
                 case "add-time": return addTimeText || "+0";
                 case "logo-home": return logoHome ? "" : (locale === 'th' ? "ทีมเหย้า" : "HOME");
                 case "logo-away": return logoAway ? "" : (locale === 'th' ? "ทีมเยือน" : "AWAY");
-                case "logo-tournament": return logoTournament ? "" : "LEAGUEFLOW";
+                case "logo-tournament": return logoTournament ? "" : "TOURNI";
                 case "home-scorer": return homeScorer || (locale === 'th' ? "👟 A. Player (12'), B. Player (45')" : "👟 A. Player (12'), B. Player (45')");
                 case "away-scorer": return awayScorer || (locale === 'th' ? "👟 X. Player (30'), Y. Player (75')" : "👟 X. Player (30'), Y. Player (75')");
                 default: break;
@@ -234,7 +234,7 @@ export function CanvasPreview({
         if (b.id === "score-away") return scoreAway || "0";
         if (b.id === "timer") return timerText || "00:00";
         if (b.id === "add-time") return addTimeText || "+0";
-        if (b.id === "header-text") return headerText || "LEAGUEFLOW";
+        if (b.id === "header-text") return headerText || "TOURNI";
         if (b.shapeType === "text") return b.text || (locale === 'th' ? "ข้อความ" : "Text");
         return b.shapeType ? "" : getShortPreviewLabel(b.id);
     };

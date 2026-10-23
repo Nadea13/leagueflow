@@ -55,12 +55,12 @@ export class ApiClient {
       const isHttps = window.location.protocol === 'https:';
       const secureFlag = isHttps ? '; Secure' : '';
       if (token) {
-        localStorage.setItem('leagueflow_access_token', token);
+        localStorage.setItem('tourni_access_token', token);
         // Set cookie so Next.js Middleware can read auth state
-        document.cookie = `leagueflow_access_token=${token}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
+        document.cookie = `tourni_access_token=${token}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
       } else {
-        localStorage.removeItem('leagueflow_access_token');
-        document.cookie = `leagueflow_access_token=; path=/; max-age=0; SameSite=Lax${secureFlag}`;
+        localStorage.removeItem('tourni_access_token');
+        document.cookie = `tourni_access_token=; path=/; max-age=0; SameSite=Lax${secureFlag}`;
       }
     }
   }
@@ -155,20 +155,20 @@ export class ApiClient {
 
   public static getToken(): string | null {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('leagueflow_access_token');
+      const stored = localStorage.getItem('tourni_access_token');
       if (stored) {
         this.token = stored;
         const isHttps = window.location.protocol === 'https:';
         const secureFlag = isHttps ? '; Secure' : '';
         // Keep cookie active and synchronized for Server Actions
-        document.cookie = `leagueflow_access_token=${stored}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
+        document.cookie = `tourni_access_token=${stored}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
         return stored;
       }
       // Fallback check cookie
-      const match = document.cookie.match(new RegExp('(^| )leagueflow_access_token=([^;]+)'));
+      const match = document.cookie.match(new RegExp('(^| )tourni_access_token=([^;]+)'));
       if (match) {
         this.token = match[2];
-        localStorage.setItem('leagueflow_access_token', match[2]);
+        localStorage.setItem('tourni_access_token', match[2]);
         return match[2];
       }
     }

@@ -8,9 +8,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/config"
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/service"
+	"tourni-backend/internal/config"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/service"
 )
 
 type ContextKey string

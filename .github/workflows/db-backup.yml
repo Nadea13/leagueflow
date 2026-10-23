@@ -34,7 +34,7 @@ jobs:
           fi
 
           TIMESTAMP=$(date +"%Y-%m-%d_%H%M%S")
-          BACKUP_NAME="leagueflow_backup_${TIMESTAMP}.sql.gz"
+          BACKUP_NAME="tourni_backup_${TIMESTAMP}.sql.gz"
           echo "BACKUP_NAME=$BACKUP_NAME" >> $GITHUB_ENV
 
           echo "🚀 Creating PostgreSQL dump from Render Database..."

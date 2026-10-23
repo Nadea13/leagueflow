@@ -100,7 +100,7 @@ export function DashboardSidebar({
                         <Logo className="w-8 h-8 transition-all duration-300 ease-in-out" color="#00C49A" />
                     </div>
                     <div className="flex flex-col transition-all duration-300 ease-in-out opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto overflow-hidden">
-                        <span className="text-xl font-black tracking-tighter text-foreground whitespace-nowrap">League Flow</span>
+                        <span className="text-xl font-black tracking-tighter text-foreground whitespace-nowrap">Tourni</span>
                     </div>
                 </Link>
             </div>

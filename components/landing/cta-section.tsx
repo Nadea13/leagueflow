@@ -28,7 +28,7 @@ export function CtaSection() {
 
           {/* Description */}
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-            เข้าร่วมกับ League Flow วันนี้ เพื่อการจัดการแข่งขันกีฬาที่ราบรื่น รวดเร็ว ประหยัดเวลา และสร้างความประทับใจให้กับทั้งนักกีฬาและแฟนบอล
+            เข้าร่วมกับ Tourni วันนี้ เพื่อการจัดการแข่งขันกีฬาที่ราบรื่น รวดเร็ว ประหยัดเวลา และสร้างความประทับใจให้กับทั้งนักกีฬาและแฟนบอล
           </p>
 
           {/* CTA Buttons */}

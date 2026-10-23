@@ -35,7 +35,7 @@ func LoadConfig() *Config {
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://postgres:postgrespassword@localhost:5432/leagueflow?sslmode=disable"
+		dbURL = "postgres://postgres:postgrespassword@localhost:5432/tourni?sslmode=disable"
 	}
 
 	redisURL := os.Getenv("REDIS_URL")
@@ -45,12 +45,12 @@ func LoadConfig() *Config {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "leagueflow-jwt-secret-key-default"
+		jwtSecret = "tourni-jwt-secret-key-default"
 	}
 
 	jwtRefreshSecret := os.Getenv("JWT_REFRESH_SECRET")
 	if jwtRefreshSecret == "" {
-		jwtRefreshSecret = "leagueflow-jwt-refresh-secret-key-default"
+		jwtRefreshSecret = "tourni-jwt-refresh-secret-key-default"
 	}
 
 	corsOrigins := os.Getenv("CORS_ORIGINS")

@@ -14,14 +14,14 @@ import (
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	"leagueflow-backend/internal/config"
-	"leagueflow-backend/internal/database"
-	"leagueflow-backend/internal/handler"
-	appLogger "leagueflow-backend/internal/logger"
-	"leagueflow-backend/internal/middleware"
-	"leagueflow-backend/internal/repository"
-	"leagueflow-backend/internal/service"
-	wsHub "leagueflow-backend/internal/websocket"
+	"tourni-backend/internal/config"
+	"tourni-backend/internal/database"
+	"tourni-backend/internal/handler"
+	appLogger "tourni-backend/internal/logger"
+	"tourni-backend/internal/middleware"
+	"tourni-backend/internal/repository"
+	"tourni-backend/internal/service"
+	wsHub "tourni-backend/internal/websocket"
 )
 
 func main() {
@@ -88,7 +88,7 @@ func main() {
 
 	// 8. Initialize Fiber App with expanded buffer sizes
 	app := fiber.New(fiber.Config{
-		AppName:         "LeagueFlow API v1",
+		AppName:         "Tourni API v1",
 		ReadBufferSize:  16 * 1024, // 16KB to prevent 431 Request Header Fields Too Large from browser cookies
 		WriteBufferSize: 16 * 1024,
 	})
@@ -162,7 +162,7 @@ func main() {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
-			"message": "LeagueFlow API is healthy and running",
+			"message": "Tourni API is healthy and running",
 		})
 	})
 
@@ -171,7 +171,7 @@ func main() {
 	api.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"version": "1.0.0",
-			"name":    "LeagueFlow Core API",
+			"name":    "Tourni Core API",
 		})
 	})
 

@@ -61,7 +61,7 @@ export function PublicNavbar({ user = null }: PublicNavbarProps) {
                         <div className="relative shrink-0">
                             <Logo className="w-8 h-8 transition-all" color="#00C49A" />
                         </div>
-                        <span className="text-lg md:text-xl font-black tracking-tighter text-foreground shrink-0 leading-none">League Flow</span>
+                        <span className="text-lg md:text-xl font-black tracking-tighter text-foreground shrink-0 leading-none">Tourni</span>
                     </Link>
                 </div>
 

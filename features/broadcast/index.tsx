@@ -1295,7 +1295,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
 
                     <div className="flex items-center gap-2">
                         <span className="font-black text-sm lg:text-base tracking-tight hidden lg:inline-block">
-                            LeagueFlow Broadcast
+                            Tourni Broadcast
                         </span>
                     </div>
                 </div>
@@ -1451,7 +1451,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                             <Input
                                                 value={headerText}
                                                 onChange={(e) => setHeaderText(e.target.value)}
-                                                placeholder="e.g. LEAGUEFLOW CHAMPIONSHIP 2026"
+                                                placeholder="e.g. TOURNI CHAMPIONSHIP 2026"
                                                 className="h-10 text-xs font-bold"
                                             />
                                             <p className="text-[11px] text-muted-foreground">
@@ -1635,7 +1635,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                     <span>{nameAway || "AWAY"}</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground font-semibold">
-                                    {headerText || "LEAGUEFLOW MATCH"} • {selectedSport.toUpperCase()}
+                                    {headerText || "TOURNI MATCH"} • {selectedSport.toUpperCase()}
                                 </p>
                             </div>
                         </div>

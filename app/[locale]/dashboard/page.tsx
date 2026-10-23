@@ -3,7 +3,7 @@ import { DashboardClient } from "../../../features/dashboard/dashboard-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "League Flow Dashboard",
+    title: "Tourni Dashboard",
     description: "View tournaments and manage your master player profile.",
 };
 

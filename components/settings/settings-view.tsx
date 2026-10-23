@@ -252,7 +252,7 @@ export function SettingsView({ user, profile, activeTab = "general", onProfileUp
                                                     {tLegal("terms_of_service") || tLegal("terms") || (isThai ? "ข้อกำหนดการให้บริการ" : "Terms of Service")}
                                                 </Header>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {tLegal("terms_description") || (isThai ? "ข้อกำหนด เงื่อนไข และระเบียบปฏิบัติในการใช้งานแพลตฟอร์ม" : "Terms, conditions, and rules for using the LeagueFlow platform.")}
+                                                    {tLegal("terms_description") || (isThai ? "ข้อกำหนด เงื่อนไข และระเบียบปฏิบัติในการใช้งานแพลตฟอร์ม" : "Terms, conditions, and rules for using the Tourni platform.")}
                                                 </p>
                                             </div>
                                         </div>

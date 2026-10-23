@@ -12,7 +12,7 @@ export default async function middleware(request: NextRequest) {
     request.headers.set('x-client-ip', clientIp);
 
     // 2. Check JWT Session Cookie
-    const token = request.cookies.get('leagueflow_access_token')?.value;
+    const token = request.cookies.get('tourni_access_token')?.value;
     const path = request.nextUrl.pathname;
 
     // Check if user is navigating to auth pages while already logged in

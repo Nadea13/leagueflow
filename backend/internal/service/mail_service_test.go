@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"leagueflow-backend/internal/config"
+	"tourni-backend/internal/config"
 )
 
 func TestGenerateOTP(t *testing.T) {

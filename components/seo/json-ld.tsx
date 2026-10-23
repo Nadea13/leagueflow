@@ -12,7 +12,7 @@ export function JsonLd({ locale }: JsonLdProps) {
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'League Flow',
+    name: 'Tourni',
     url: siteUrl,
     logo: `${siteUrl}/logo.png`,
     sameAs: [
@@ -28,7 +28,7 @@ export function JsonLd({ locale }: JsonLdProps) {
   const softwareAppSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: isThai ? 'League Flow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬา' : 'League Flow - Tournament & Sports Management Platform',
+    name: isThai ? 'Tourni - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬา' : 'Tourni - Tournament & Sports Management Platform',
     applicationCategory: 'SportsApplication',
     operatingSystem: 'All Modern Web Browsers',
     url: `${siteUrl}/${locale}`,
@@ -65,15 +65,15 @@ export function JsonLd({ locale }: JsonLdProps) {
       ? [
           {
             '@type': 'Question',
-            name: 'League Flow คืออะไร?',
+            name: 'Tourni คืออะไร?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'League Flow คือแพลตฟอร์มจัดการแข่งขันกีฬาและฟุตบอลแบบครบวงจร ที่ช่วยผู้จัดสร้างสายการแข่งขัน (Bracket) และตารางแข่งพบกันหมด (Round Robin) อัตโนมัติ บันทึกผลคะแนนแบบเรียลไทม์ เปิดรับสมัครทีมออนไลน์ และมีระบบ Live Scoreboard Overlay สำหรับสตรีมมิ่งสดผ่าน OBS',
+              text: 'Tourni คือแพลตฟอร์มจัดการแข่งขันกีฬาและฟุตบอลแบบครบวงจร ที่ช่วยผู้จัดสร้างสายการแข่งขัน (Bracket) และตารางแข่งพบกันหมด (Round Robin) อัตโนมัติ บันทึกผลคะแนนแบบเรียลไทม์ เปิดรับสมัครทีมออนไลน์ และมีระบบ Live Scoreboard Overlay สำหรับสตรีมมิ่งสดผ่าน OBS',
             },
           },
           {
             '@type': 'Question',
-            name: 'League Flow รองรับกีฬาประเภทใดบ้าง?',
+            name: 'Tourni รองรับกีฬาประเภทใดบ้าง?',
             acceptedAnswer: {
               '@type': 'Answer',
               text: 'รองรับฟุตบอล (Football), บาสเกตบอล (Basketball), แบดมินตัน (Badminton), วอลเลย์บอล (Volleyball), ฟุตซอล (Futsal), คริกเก็ต และเซปักตะกร้อ',
@@ -89,36 +89,36 @@ export function JsonLd({ locale }: JsonLdProps) {
           },
           {
             '@type': 'Question',
-            name: 'League Flow สามารถใช้งานฟรีได้หรือไม่?',
+            name: 'Tourni สามารถใช้งานฟรีได้หรือไม่?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'League Flow มีแพ็กเกจฟรีสำหรับทดลองใช้งาน รวมถึงฟีเจอร์ Free Live Overlay สำหรับการถ่ายทอดสดโดยไม่มีค่าใช้จ่าย และมีแพ็กเกจ Event และ Cup สำหรับผู้จัดทัวร์นาเมนต์ขนาดใหญ่',
+              text: 'Tourni มีแพ็กเกจฟรีสำหรับทดลองใช้งาน รวมถึงฟีเจอร์ Free Live Overlay สำหรับการถ่ายทอดสดโดยไม่มีค่าใช้จ่าย และมีแพ็กเกจ Event และ Cup สำหรับผู้จัดทัวร์นาเมนต์ขนาดใหญ่',
             },
           },
         ]
       : [
           {
             '@type': 'Question',
-            name: 'What is League Flow?',
+            name: 'What is Tourni?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'League Flow is a complete tournament and sports management platform providing automatic bracket generation, real-time live scoring, online team registration, and OBS live broadcast overlays.',
+              text: 'Tourni is a complete tournament and sports management platform providing automatic bracket generation, real-time live scoring, online team registration, and OBS live broadcast overlays.',
             },
           },
           {
             '@type': 'Question',
-            name: 'What sports are supported on League Flow?',
+            name: 'What sports are supported on Tourni?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'League Flow supports Football, Basketball, Badminton, Volleyball, Futsal, Cricket, and Sepak Takraw.',
+              text: 'Tourni supports Football, Basketball, Badminton, Volleyball, Futsal, Cricket, and Sepak Takraw.',
             },
           },
           {
             '@type': 'Question',
-            name: 'Is League Flow free to use?',
+            name: 'Is Tourni free to use?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Yes, League Flow offers free tiers and free live score overlays, as well as premium packages for large-scale tournaments.',
+              text: 'Yes, Tourni offers free tiers and free live score overlays, as well as premium packages for large-scale tournaments.',
             },
           },
         ],

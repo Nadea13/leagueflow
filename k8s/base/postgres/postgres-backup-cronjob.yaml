@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: postgres-backup-to-r2
-  namespace: leagueflow
+  namespace: tourni
 spec:
   # Run every day at 02:00 AM (UTC)
   schedule: "0 2 * * *"
@@ -70,7 +70,7 @@ spec:
                   BACKUP_FILE="backup_${POSTGRES_DB}_${TIMESTAMP}.sql.gz"
 
                   echo "Starting pg_dump for database ${POSTGRES_DB}..."
-                  PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump -h postgres-service.leagueflow.svc.cluster.local -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "/tmp/${BACKUP_FILE}"
+                  PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump -h postgres-service.tourni.svc.cluster.local -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" | gzip > "/tmp/${BACKUP_FILE}"
 
                   echo "Uploading ${BACKUP_FILE} to Cloudflare R2 bucket: ${R2_BUCKET_NAME}..."
                   aws s3 cp "/tmp/${BACKUP_FILE}" "s3://${R2_BUCKET_NAME}/database-backups/${BACKUP_FILE}" --endpoint-url "${AWS_ENDPOINT_URL}"

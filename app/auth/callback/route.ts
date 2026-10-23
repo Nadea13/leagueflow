@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect to dashboard and attach session cookie
     const response = NextResponse.redirect(`${origin}/${locale}/dashboard`);
-    response.cookies.set("leagueflow_access_token", token, {
+    response.cookies.set("tourni_access_token", token, {
         path: "/",
         maxAge: 60 * 60 * 24 * 7, // 7 days
         sameSite: "lax",

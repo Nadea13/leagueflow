@@ -855,7 +855,7 @@ function BroadcastOverlayContent() {
                                                         case "set-away": return String(awaySetsWon);
                                                         case "point-won-home": return isHomePointWon ? (cfg.text || "🏐") : "";
                                                         case "point-won-away": return isAwayPointWon ? (cfg.text || "🏐") : "";
-                                                        case "header-text": return displayHeaderText || 'LEAGUEFLOW';
+                                                        case "header-text": return displayHeaderText || 'TOURNI';
                                                         case "timer": return timeString;
                                                         case "add-time": return addedTime ? `+${addedTime}` : '+0';
                                                         case "home-scorer": {
@@ -1557,7 +1557,7 @@ function BroadcastOverlayContent() {
                                     <div className="bg-black/90 rounded-sm shadow-2xl p-3 flex flex-col gap-2 min-w-[240px]">
                                         {/* Header with Timer/Status */}
                                         <div className="flex items-center justify-between border-b border-white/5 pb-2 text-[10px] font-bold text-white/50 tracking-wider">
-                                            <span>{displayHeaderText || "LEAGUEFLOW OVERLAY"}</span>
+                                            <span>{displayHeaderText || "TOURNI OVERLAY"}</span>
                                             <span className={cn("font-mono text-xs text-white", match.status === "live" && match.timer_status === "paused" && "text-amber-400")}>
                                                 {match.status === "finished" ? "FULL TIME" : isHalfTime ? "HALF TIME" : match.status === "live" ? timeString : "UPCOMING"}
                                             </span>

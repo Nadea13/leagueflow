@@ -38,7 +38,7 @@ export async function logToLoki(message: string, options: LogOptions = {}) {
         const nanoTime = (BigInt(Date.now()) * BigInt(1000000)).toString();
 
         const streamLabels = {
-            app: 'leagueflow',
+            app: 'tourni',
             env: 'production',
             source: 'frontend',
             level,

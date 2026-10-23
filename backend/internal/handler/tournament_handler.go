@@ -4,8 +4,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/service"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/service"
 )
 
 type TournamentHandler struct {

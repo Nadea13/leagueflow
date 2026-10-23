@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('LeagueFlow E2E Page Tests', () => {
+test.describe('Tourni E2E Page Tests', () => {
   test('Landing Page - check title and pricing section', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/League\s*Flow/i);
+    await expect(page).toHaveTitle(/Tourni/i);
     const bodyText = await page.innerText('body');
     expect(bodyText).toBeTruthy();
   });

@@ -16,9 +16,9 @@ import (
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 
-	"leagueflow-backend/internal/config"
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/repository"
+	"tourni-backend/internal/config"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/repository"
 )
 
 type GoogleUserInfo struct {
@@ -191,7 +191,7 @@ func (s *AuthService) generateTokens(ctx context.Context, user *model.User) (*Au
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "leagueflow-backend",
+			Issuer:    "tourni-backend",
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
@@ -208,7 +208,7 @@ func (s *AuthService) generateTokens(ctx context.Context, user *model.User) (*Au
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "leagueflow-backend",
+			Issuer:    "tourni-backend",
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)

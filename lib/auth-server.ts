@@ -15,7 +15,7 @@ export interface ServerAuthUser {
 export async function getServerSession(): Promise<{ user: ServerAuthUser; token: string } | null> {
     try {
         const cookieStore = await cookies();
-        const token = cookieStore.get("leagueflow_access_token")?.value;
+        const token = cookieStore.get("tourni_access_token")?.value;
         if (!token) return null;
 
         const res = await fetch(`${API_BASE_URL}/auth/me`, {

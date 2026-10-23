@@ -74,7 +74,7 @@ export async function getStaffs(
             if (tourData) {
                 const organizerEmail = tourData.settings?.organizer_email 
                     || (tourData.settings?.organizer_name ? `${tourData.settings.organizer_name}` : null)
-                    || (tourData.organizer_id ? `organizer@leagueflow.com` : null);
+                    || (tourData.organizer_id ? `organizer@tourni.com` : null);
                 
                 ownerMember = {
                     id: `owner-${tourData.id || tournamentId}`,

@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
                         <Logo className="w-8 h-8" color="#00C49A" />
-                        <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
+                        <span className="font-black text-foreground text-xl tracking-tighter">Tourni</span>
                     </Link>
 
                     <div className="space-y-1 md:space-y-2">

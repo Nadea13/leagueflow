@@ -12,5 +12,5 @@ export function getSiteUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return 'https://leagueflow.vercel.app';
+  return 'https://tourni.vercel.app';
 }

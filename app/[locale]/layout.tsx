@@ -35,13 +35,13 @@ export async function generateMetadata({
   return {
     title: {
       default: isThai
-        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬา สร้างตารางแข่งอัตโนมัติ"
-        : "League Flow | Sports & Football Tournament Management Platform",
-      template: "%s | League Flow",
+        ? "Tourni | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬา สร้างตารางแข่งอัตโนมัติ"
+        : "Tourni | Sports & Football Tournament Management Platform",
+      template: "%s | Tourni",
     },
     description: isThai
-      ? "League Flow แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร สร้างตารางแข่งอัตโนมัติ (Bracket & Round Robin) สรุปผลคะแนนสดเรียลไทม์ รับสมัครทีมพร้อมชำระเงิน PromptPay และ OBS Live Score Overlay"
-      : "League Flow - All-in-one tournament management platform for football and sports. Automated bracket generator, real-time live scoring, team registration, and OBS live streaming overlays.",
+      ? "Tourni แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร สร้างตารางแข่งอัตโนมัติ (Bracket & Round Robin) สรุปผลคะแนนสดเรียลไทม์ รับสมัครทีมพร้อมชำระเงิน PromptPay และ OBS Live Score Overlay"
+      : "Tourni - All-in-one tournament management platform for football and sports. Automated bracket generator, real-time live scoring, team registration, and OBS live streaming overlays.",
     keywords: isThai
       ? [
           "จัดการแข่งขันฟุตบอล",
@@ -50,7 +50,7 @@ export async function generateMetadata({
           "โปรแกรมการแข่งขัน",
           "ระบบจัดการลีก",
           "สมัครแข่งบอล",
-          "League Flow",
+          "Tourni",
           "Tournament Management",
           "Football League",
           "Match Scoring",
@@ -67,9 +67,9 @@ export async function generateMetadata({
           "Live Match Scoring",
           "Sports Tournament Platform",
           "OBS Scoreboard Overlay",
-          "League Flow"
+          "Tourni"
         ],
-    authors: [{ name: "League Flow", url: siteUrl }],
+    authors: [{ name: "Tourni", url: siteUrl }],
     metadataBase: new URL(siteUrl),
     alternates: {
       canonical: `${siteUrl}/${locale}`,
@@ -83,19 +83,19 @@ export async function generateMetadata({
       locale: isThai ? "th_TH" : "en_US",
       alternateLocale: isThai ? "en_US" : "th_TH",
       title: isThai
-        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬามืออาชีพ"
-        : "League Flow | Professional Sports Tournament Management",
+        ? "Tourni | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬามืออาชีพ"
+        : "Tourni | Professional Sports Tournament Management",
       description: isThai
         ? "สร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ และระบบสมัครทีมออนไลน์ครบวงจร"
         : "Automated bracket generation, real-time match scoring, and online team registration.",
-      siteName: "League Flow",
+      siteName: "Tourni",
       url: `${siteUrl}/${locale}`,
     },
     twitter: {
       card: "summary_large_image",
       title: isThai
-        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ"
-        : "League Flow | Sports Tournament Management",
+        ? "Tourni | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ"
+        : "Tourni | Sports Tournament Management",
       description: isThai
         ? "จัดการแข่งขันฟุตบอลและกีฬาครบวงจร บันทึกผลเรียลไทม์ และระบบสมัครทีมออนไลน์"
         : "Tournament management, real-time live score, and team registration.",

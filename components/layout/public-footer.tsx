@@ -31,7 +31,7 @@ export function PublicFooter() {
                         className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
                     >
                         <Logo className="w-8 h-8" color="#00C49A" />
-                        <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
+                        <span className="font-black text-foreground text-xl tracking-tighter">Tourni</span>
                     </Link>
                     <div className="flex flex-col items-center md:items-start gap-2">
                         <Link href="/tournaments" className="hover:text-foreground transition-colors font-medium">
@@ -72,7 +72,7 @@ export function PublicFooter() {
                 {/* Copyright & Toggles */}
                 <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 md:self-end">
                     <p className="text-xs tracking-wide opacity-40">
-                        © {new Date().getFullYear()} League Flow. {tLanding('footer_rights')}
+                        © {new Date().getFullYear()} Tourni. {tLanding('footer_rights')}
                     </p>
                     <div className="flex items-center gap-2">
                         <LanguageToggle />

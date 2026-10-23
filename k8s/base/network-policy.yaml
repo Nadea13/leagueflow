@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: postgres-firewall
-  namespace: leagueflow
+  namespace: tourni
 spec:
   podSelector:
     matchLabels:
@@ -14,7 +14,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: leagueflow-backend
+              app: tourni-backend
       ports:
         - protocol: TCP
           port: 5432

@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: `${tournament.name} | Live Standings & Results`,
             description: `Follow ${tournament.name} live. View standings, fixtures, results, and bracket in real-time.`,
             openGraph: {
-                title: `${tournament.name} | League Flow`,
+                title: `${tournament.name} | Tourni`,
                 description: `Live standings and results for ${tournament.name}.`,
             },
         };

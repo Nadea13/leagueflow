@@ -71,11 +71,11 @@ export async function createStripeCheckoutSession({
 
         // Clean plan title
         const cleanPlanName = planName.replace(/^สมัครใช้\s*/i, '').replace(/^(สมัคร|Subscribe)\s*/i, '').trim();
-        let displayTitle = `สมัครใช้ LeagueFlow ${cleanPlanName}`;
+        let displayTitle = `สมัครใช้ Tourni ${cleanPlanName}`;
         if (isYearly) {
-            displayTitle = `สมัครใช้ LeagueFlow ${cleanPlanName.replace(/yearly/i, '').trim()} (Annual)`;
+            displayTitle = `สมัครใช้ Tourni ${cleanPlanName.replace(/yearly/i, '').trim()} (Annual)`;
         } else if (isMonthly) {
-            displayTitle = `สมัครใช้ LeagueFlow ${cleanPlanName.replace(/monthly/i, '').trim()} (Monthly)`;
+            displayTitle = `สมัครใช้ Tourni ${cleanPlanName.replace(/monthly/i, '').trim()} (Monthly)`;
         }
 
         let baseDesc = "ระบบบริหารจัดการการแข่งขันฟุตบอลแบบมืออาชีพ สร้างทัวร์นาเมนต์ได้ไม่จำกัด ตารางแข่งขันและสถิติ Real-time";

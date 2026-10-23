@@ -15,8 +15,8 @@ export function FaqSection({ locale }: FaqSectionProps) {
   const faqs = isThai
     ? [
         {
-          q: "League Flow คืออะไร และช่วยจัดการแข่งขันอย่างไร?",
-          a: "League Flow คือแพลตฟอร์มจัดการแข่งขันกีฬาและฟุตบอลครบวงจร ช่วยให้ผู้จัดการแข่งขันสร้างสายแข่ง (Tournament Bracket) และตารางแข่งลีกแบบพบกันหมด (Round Robin) อัตโนมัติ พร้อมระบบรับสมัครทีมออนไลน์และบันทึกสกอร์สดแบบเรียลไทม์",
+          q: "Tourni คืออะไร และช่วยจัดการแข่งขันอย่างไร?",
+          a: "Tourni คือแพลตฟอร์มจัดการแข่งขันกีฬาและฟุตบอลครบวงจร ช่วยให้ผู้จัดการแข่งขันสร้างสายแข่ง (Tournament Bracket) และตารางแข่งลีกแบบพบกันหมด (Round Robin) อัตโนมัติ พร้อมระบบรับสมัครทีมออนไลน์และบันทึกสกอร์สดแบบเรียลไทม์",
           highlights: [
             "สร้างตารางแข่งอัตโนมัติภายใน 1 นาที",
             "ระบบรับสมัครทีมและจ่ายเงิน PromptPay",
@@ -25,7 +25,7 @@ export function FaqSection({ locale }: FaqSectionProps) {
         },
         {
           q: "รองรับกีฬาประเภทใดบ้าง?",
-          a: "League Flow ออกแบบมาให้ยืดหยุ่นรองรับกีฬายอดนิยมทุกประเภท เช่น ฟุตบอล (Football), ฟุตซอล (Futsal), บาสเกตบอล (Basketball), วอลเลย์บอล (Volleyball), แบดมินตัน (Badminton), เซปักตะกร้อ และคริกเก็ต",
+          a: "Tourni ออกแบบมาให้ยืดหยุ่นรองรับกีฬายอดนิยมทุกประเภท เช่น ฟุตบอล (Football), ฟุตซอล (Futsal), บาสเกตบอล (Basketball), วอลเลย์บอล (Volleyball), แบดมินตัน (Badminton), เซปักตะกร้อ และคริกเก็ต",
           highlights: [
             "ฟุตบอล และ ฟุตซอล (11 คน, 7 คน, 5 คน)",
             "บาสเกตบอล และ วอลเลย์บอล",
@@ -62,8 +62,8 @@ export function FaqSection({ locale }: FaqSectionProps) {
       ]
     : [
         {
-          q: "What is League Flow and how does it help manage tournaments?",
-          a: "League Flow is an all-in-one sports tournament management platform that automates bracket generation, round-robin scheduling, online team registrations, and real-time live scoring.",
+          q: "What is Tourni and how does it help manage tournaments?",
+          a: "Tourni is an all-in-one sports tournament management platform that automates bracket generation, round-robin scheduling, online team registrations, and real-time live scoring.",
           highlights: [
             "Automated bracket generation in under 1 minute",
             "Online team registration with instant checkout",
@@ -72,7 +72,7 @@ export function FaqSection({ locale }: FaqSectionProps) {
         },
         {
           q: "Which sports are supported?",
-          a: "League Flow supports Football, Futsal, Basketball, Volleyball, Badminton, Sepak Takraw, and Cricket with custom rules.",
+          a: "Tourni supports Football, Futsal, Basketball, Volleyball, Badminton, Sepak Takraw, and Cricket with custom rules.",
           highlights: [
             "Football & Futsal (11v11, 7v7, 5v5)",
             "Basketball & Volleyball",
@@ -110,8 +110,8 @@ export function FaqSection({ locale }: FaqSectionProps) {
         <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16 space-y-3">
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground">
             {isThai
-              ? "ทุกคำตอบเกี่ยวกับการจัดแข่งขันด้วย League Flow"
-              : "Everything you need to know about League Flow"}
+              ? "ทุกคำตอบเกี่ยวกับการจัดแข่งขันด้วย Tourni"
+              : "Everything you need to know about Tourni"}
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base">
             {isThai

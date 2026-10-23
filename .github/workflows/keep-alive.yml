@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Ping Backend Health Endpoint
         run: |
-          echo "Pinging LeagueFlow Render Backend..."
+          echo "Pinging Tourni Render Backend..."
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://leagueflow-v80x.onrender.com/health)
           echo "Backend HTTP Status: $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ne 200 ]; then
@@ -28,6 +28,6 @@ jobs:
 
       - name: Ping Frontend Vercel
         run: |
-          echo "Pinging LeagueFlow Vercel Frontend..."
+          echo "Pinging Tourni Vercel Frontend..."
           FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://leagueflow.vercel.app)
           echo "Frontend HTTP Status: $FRONTEND_STATUS"

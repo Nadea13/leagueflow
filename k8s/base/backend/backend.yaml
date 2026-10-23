@@ -2,11 +2,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backend-config
-  namespace: leagueflow
+  namespace: tourni
 data:
   PORT: "8080"
-  DATABASE_URL: "postgres://postgres:leagueflow_secure_password_change_me@postgres-service.leagueflow.svc.cluster.local:5432/leagueflow?sslmode=disable"
-  REDIS_URL: "redis-service.leagueflow.svc.cluster.local:6379"
+  DATABASE_URL: "postgres://postgres:tourni_secure_password_change_me@postgres-service.tourni.svc.cluster.local:5432/tourni?sslmode=disable"
+  REDIS_URL: "redis-service.tourni.svc.cluster.local:6379"
   CORS_ORIGINS: "*"
   SMTP_HOST: "mailpit"
   SMTP_PORT: "1025"
@@ -15,11 +15,11 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: backend-secret
-  namespace: leagueflow
+  namespace: tourni
 type: Opaque
 stringData:
-  JWT_SECRET: "super-secret-leagueflow-jwt-key-change-in-production-123456"
-  JWT_REFRESH_SECRET: "super-secret-leagueflow-refresh-key-change-in-production-654321"
+  JWT_SECRET: "super-secret-tourni-jwt-key-change-in-production-123456"
+  JWT_REFRESH_SECRET: "super-secret-tourni-refresh-key-change-in-production-654321"
   STRIPE_SECRET_KEY: "sk_test_..."
   STRIPE_WEBHOOK_SECRET: "whsec_..."
   RESEND_API_KEY: "re_..."
@@ -29,9 +29,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
-  namespace: leagueflow
+  namespace: tourni
   labels:
-    app: leagueflow-backend
+    app: tourni-backend
 spec:
   type: ClusterIP
   ports:
@@ -39,28 +39,28 @@ spec:
       targetPort: 8080
       name: http
   selector:
-    app: leagueflow-backend
+    app: tourni-backend
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: leagueflow
+  namespace: tourni
   labels:
-    app: leagueflow-backend
+    app: tourni-backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: leagueflow-backend
+      app: tourni-backend
   template:
     metadata:
       labels:
-        app: leagueflow-backend
+        app: tourni-backend
     spec:
       containers:
         - name: backend
-          image: ghcr.io/yourusername/leagueflow-backend:latest
+          image: ghcr.io/yourusername/tourni-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

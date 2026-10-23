@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: frontend-config
-  namespace: leagueflow
+  namespace: tourni
 data:
   NODE_ENV: "production"
   PORT: "3000"
@@ -11,9 +11,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
-  namespace: leagueflow
+  namespace: tourni
   labels:
-    app: leagueflow-frontend
+    app: tourni-frontend
 spec:
   type: ClusterIP
   ports:
@@ -21,28 +21,28 @@ spec:
       targetPort: 3000
       name: http
   selector:
-    app: leagueflow-frontend
+    app: tourni-frontend
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: leagueflow
+  namespace: tourni
   labels:
-    app: leagueflow-frontend
+    app: tourni-frontend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: leagueflow-frontend
+      app: tourni-frontend
   template:
     metadata:
       labels:
-        app: leagueflow-frontend
+        app: tourni-frontend
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/yourusername/leagueflow-frontend:latest
+          image: ghcr.io/yourusername/tourni-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

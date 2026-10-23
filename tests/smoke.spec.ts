@@ -6,11 +6,11 @@ test.describe('Smoke Test', () => {
     await page.goto('/');
 
     // Check if the page title or a key element exists
-    await expect(page).toHaveTitle(/League\s*Flow/i);
+    await expect(page).toHaveTitle(/Tourni/i);
     
     // Check if the main heading or a specific text is visible
     // Adjust this based on the actual content of the home page
     const bodyText = await page.innerText('body');
-    expect(bodyText.toLowerCase().replace(/\s/g, '')).toContain('leagueflow');
+    expect(bodyText.toLowerCase().replace(/\s/g, '')).toContain('tourni');
   });
 });

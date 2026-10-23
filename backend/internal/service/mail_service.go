@@ -16,7 +16,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"leagueflow-backend/internal/config"
+	"tourni-backend/internal/config"
 )
 
 type otpItem struct {
@@ -75,7 +75,7 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 
 	htmlContent := fmt.Sprintf(`
 		<div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-			<h2 style="color: #00C49A; text-align: center;">LeagueFlow</h2>
+			<h2 style="color: #00C49A; text-align: center;">Tourni</h2>
 			<p style="font-size: 16px; color: #333;">สวัสดีครับ,</p>
 			<p style="font-size: 14px; color: #555;">รหัสยืนยัน OTP 6 หลักของคุณคือ:</p>
 			<div style="background-color: #f4f6f8; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #111; border-radius: 6px; margin: 20px 0;">
@@ -87,12 +87,12 @@ func (s *MailService) SendVerificationOTP(ctx context.Context, email string) err
 
 	// 2. If Resend API Key is provided, use Resend API
 	if s.cfg.ResendAPIKey != "" {
-		return s.sendResendEmail(email, "Your LeagueFlow Verification Code", htmlContent)
+		return s.sendResendEmail(email, "Your Tourni Verification Code", htmlContent)
 	}
 
 	// 3. Otherwise, send to Mailpit via SMTP in local development
 	log.Printf("📧 [DEV MODE] Sending OTP %s to %s via Mailpit", otp, email)
-	return s.sendSMTPEmail(email, "Your LeagueFlow Verification Code", htmlContent)
+	return s.sendSMTPEmail(email, "Your Tourni Verification Code", htmlContent)
 }
 
 func (s *MailService) sendSMTPEmail(to, subject, htmlContent string) error {

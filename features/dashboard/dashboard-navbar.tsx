@@ -82,7 +82,7 @@ export function DashboardNavbar({
                         <div className="relative shrink-0">
                             <Logo className="w-7 h-7 md:w-8 md:h-8 transition-all" color="#00C49A" />
                         </div>
-                        <span className="text-base md:text-lg font-black tracking-tighter text-foreground shrink-0 leading-none">League Flow</span>
+                        <span className="text-base md:text-lg font-black tracking-tighter text-foreground shrink-0 leading-none">Tourni</span>
                     </Link>
                 </div>
                 <div className="flex items-center">

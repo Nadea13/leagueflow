@@ -28,7 +28,7 @@ export default function SignUpPage() {
                     {/* Logo */}
                     <Link href="/" className="inline-flex items-center justify-center gap-2 mx-auto group transition-transform hover:scale-105">
                         <Logo className="w-9 h-9" color="#00C49A" />
-                        <span className="font-black text-foreground text-2xl tracking-tighter">League Flow</span>
+                        <span className="font-black text-foreground text-2xl tracking-tighter">Tourni</span>
                     </Link>
 
                     <div className="space-y-2">

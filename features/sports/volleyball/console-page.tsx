@@ -93,7 +93,7 @@ export function VolleyballConsolePage({
         }
         if (typeof window !== "undefined") {
             try {
-                const savedCustom = localStorage.getItem("leagueflow-volleyball-custom-actions");
+                const savedCustom = localStorage.getItem("tourni-volleyball-custom-actions");
                 if (savedCustom) {
                     const parsed = JSON.parse(savedCustom);
                     if (Array.isArray(parsed)) return parsed;
@@ -112,7 +112,7 @@ export function VolleyballConsolePage({
         }
         if (typeof window !== "undefined") {
             try {
-                const savedStats = localStorage.getItem("leagueflow-volleyball-visible-stats");
+                const savedStats = localStorage.getItem("tourni-volleyball-visible-stats");
                 if (savedStats) {
                     const parsed = JSON.parse(savedStats);
                     if (Array.isArray(parsed)) return parsed;
@@ -131,7 +131,7 @@ export function VolleyballConsolePage({
         }
         if (typeof window !== "undefined") {
             try {
-                const savedLogs = localStorage.getItem("leagueflow-volleyball-visible-logs");
+                const savedLogs = localStorage.getItem("tourni-volleyball-visible-logs");
                 if (savedLogs) {
                     const parsed = JSON.parse(savedLogs);
                     if (Array.isArray(parsed)) return parsed;
@@ -149,7 +149,7 @@ export function VolleyballConsolePage({
             setVisibleStats(stats as string[]);
         } else if (typeof window !== "undefined") {
             try {
-                const savedStats = localStorage.getItem("leagueflow-volleyball-visible-stats");
+                const savedStats = localStorage.getItem("tourni-volleyball-visible-stats");
                 if (savedStats) {
                     const parsed = JSON.parse(savedStats);
                     if (Array.isArray(parsed)) setVisibleStats(parsed);
@@ -164,7 +164,7 @@ export function VolleyballConsolePage({
             setVisibleLogs(logs as string[]);
         } else if (typeof window !== "undefined") {
             try {
-                const savedLogs = localStorage.getItem("leagueflow-volleyball-visible-logs");
+                const savedLogs = localStorage.getItem("tourni-volleyball-visible-logs");
                 if (savedLogs) {
                     const parsed = JSON.parse(savedLogs);
                     if (Array.isArray(parsed)) setVisibleLogs(parsed);
@@ -179,7 +179,7 @@ export function VolleyballConsolePage({
             setCustomActionTypes(actions as string[]);
         } else if (typeof window !== "undefined") {
             try {
-                const savedCustom = localStorage.getItem("leagueflow-volleyball-custom-actions");
+                const savedCustom = localStorage.getItem("tourni-volleyball-custom-actions");
                 if (savedCustom) {
                     const parsed = JSON.parse(savedCustom);
                     if (Array.isArray(parsed)) setCustomActionTypes(parsed);
@@ -192,7 +192,7 @@ export function VolleyballConsolePage({
         setCustomActionTypes(prev => {
             const next = prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type];
             if (typeof window !== "undefined") {
-                localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(next));
+                localStorage.setItem("tourni-volleyball-custom-actions", JSON.stringify(next));
             }
             if (!readOnly && match.tournament_category_id) {
                 updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_custom_actions: next }).catch(console.error);
@@ -205,7 +205,7 @@ export function VolleyballConsolePage({
         setVisibleStats(prev => {
             const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
             if (typeof window !== "undefined") {
-                localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(next));
+                localStorage.setItem("tourni-volleyball-visible-stats", JSON.stringify(next));
             }
             if (!readOnly && match.tournament_category_id) {
                 updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_stats: next }).catch(console.error);
@@ -218,7 +218,7 @@ export function VolleyballConsolePage({
         setVisibleLogs(prev => {
             const next = prev.includes(logType) ? prev.filter(t => t !== logType) : [...prev, logType];
             if (typeof window !== "undefined") {
-                localStorage.setItem("leagueflow-volleyball-visible-logs", JSON.stringify(next));
+                localStorage.setItem("tourni-volleyball-visible-logs", JSON.stringify(next));
             }
             if (!readOnly && match.tournament_category_id) {
                 updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_logs: next }).catch(console.error);
@@ -231,7 +231,7 @@ export function VolleyballConsolePage({
     const [match, setMatch] = useState<Match>(() => {
         if (typeof window !== "undefined") {
             try {
-                const saved = localStorage.getItem(`leagueflow-match-snapshot-${initialMatch.id}`);
+                const saved = localStorage.getItem(`tourni-match-snapshot-${initialMatch.id}`);
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (parsed && parsed.id === initialMatch.id) {
@@ -248,7 +248,7 @@ export function VolleyballConsolePage({
     // Persist snapshot to LocalStorage
     useEffect(() => {
         if (typeof window !== "undefined" && match.id) {
-            localStorage.setItem(`leagueflow-match-snapshot-${match.id}`, JSON.stringify(match));
+            localStorage.setItem(`tourni-match-snapshot-${match.id}`, JSON.stringify(match));
         }
     }, [match]);
 
@@ -478,7 +478,7 @@ export function VolleyballConsolePage({
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const saved = localStorage.getItem(`leagueflow-pending-match-${match.id}`);
+            const saved = localStorage.getItem(`tourni-pending-match-${match.id}`);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -495,7 +495,7 @@ export function VolleyballConsolePage({
         matchQueueRef.current = newQueue;
         setMatchQueue(newQueue);
         if (typeof window !== "undefined") {
-            localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
+            localStorage.setItem(`tourni-pending-match-${match.id}`, JSON.stringify(newQueue));
         }
     }, [match.id]);
 

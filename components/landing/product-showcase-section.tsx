@@ -190,7 +190,7 @@ export function ProductShowcaseSection() {
                   </div>
 
                   <div className="flex items-center gap-2 px-3 py-0.5 rounded-sm bg-background border border-border/60 text-[11px] font-mono text-muted-foreground max-w-[240px] sm:max-w-md truncate">
-                    <span>leagueflow.vercel.app/tournaments/bangkok-super-cup/{item.id}</span>
+                    <span>tourni.vercel.app/tournaments/bangkok-super-cup/{item.id}</span>
                   </div>
 
                   <div className="w-12" />
@@ -414,7 +414,7 @@ function _OverlayPreview() {
           {/* League Logo / Tag */}
           <div className="px-2.5 py-1.5 bg-primary text-black font-black text-xs tracking-tighter flex items-center gap-1">
             <Sparkles className="h-4 w-4" />
-            <span>LEAGUE FLOW</span>
+            <span>TOURNI</span>
           </div>
 
           {/* Team 1 */}

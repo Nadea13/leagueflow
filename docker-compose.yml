@@ -1,26 +1,27 @@
+name: tourni
+
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: leagueflow_postgres
+    container_name: tourni_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: leagueflow
+      POSTGRES_DB: tourni
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d leagueflow"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tourni"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: leagueflow_redis
+    container_name: tourni_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -34,7 +35,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: leagueflow_mailpit
+    container_name: tourni_mailpit
     restart: unless-stopped
     ports:
       - "8025:8025" # Web UI
@@ -46,19 +47,19 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    container_name: leagueflow_backend
+    container_name: tourni_backend
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       PORT: "8080"
-      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/leagueflow?sslmode=disable"
+      DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/tourni?sslmode=disable"
       REDIS_URL: "redis:6379"
-      JWT_SECRET: "super-secret-leagueflow-jwt-key-change-in-production-123456"
-      JWT_REFRESH_SECRET: "super-secret-leagueflow-refresh-key-change-in-production-654321"
+      JWT_SECRET: "super-secret-tourni-jwt-key-change-in-production-123456"
+      JWT_REFRESH_SECRET: "super-secret-tourni-refresh-key-change-in-production-654321"
       CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000"
       RESEND_API_KEY: "${RESEND_API_KEY:-}"
-      RESEND_FROM_EMAIL: "${RESEND_FROM_EMAIL:-LeagueFlow <onboarding@resend.dev>}"
+      RESEND_FROM_EMAIL: "${RESEND_FROM_EMAIL:-Tourni <onboarding@resend.dev>}"
       SMTP_HOST: "mailpit"
       SMTP_PORT: "1025"
       STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY:-}"
@@ -79,7 +80,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: "http://localhost:8080/api/v1"
-    container_name: leagueflow_frontend
+    container_name: tourni_frontend
     restart: unless-stopped
     ports:
       - "3000:3000"

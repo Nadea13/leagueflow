@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/service"
+	"tourni-backend/internal/service"
 )
 
 type StandingsHandler struct {

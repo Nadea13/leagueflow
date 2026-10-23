@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/config"
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/repository"
-	"leagueflow-backend/internal/service"
+	"tourni-backend/internal/config"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/repository"
+	"tourni-backend/internal/service"
 )
 
 type AuthHandler struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/model"
+	"tourni-backend/internal/model"
 )
 
 func TestCalculateStandings(t *testing.T) {

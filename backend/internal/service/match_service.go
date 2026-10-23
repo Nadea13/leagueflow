@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/repository"
-	wsHub "leagueflow-backend/internal/websocket"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/repository"
+	wsHub "tourni-backend/internal/websocket"
 )
 
 type MatchService struct {

@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"leagueflow-backend/internal/model"
+	"tourni-backend/internal/model"
 )
 
 type TeamRepository struct {

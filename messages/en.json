@@ -155,7 +155,7 @@
     "unable_load_stats": "Unable to load statistics.",
     "required_fields_error": "Please fill in all required fields.",
     "registration_error": "An error occurred during registration.",
-    "tour_welcome_title": "Welcome to League Flow!",
+    "tour_welcome_title": "Welcome to Tourni!",
     "tour_welcome_desc": "Let's take a quick tour of your dashboard to get you started.",
     "tour_tournaments_title": "Tournaments & Registration",
     "tour_tournaments_desc": "Here you can see all available tournaments. You can click on any tournament to register your team.",
@@ -1061,7 +1061,7 @@
     "get_started_by_adding_your_first_player_above": "Get started by adding your first player above"
   },
   "Landing": {
-    "brand": "League Flow",
+    "brand": "Tourni",
     "nav_tournaments": "Tournaments",
     "nav_registrations": "Registrations",
     "nav_features": "Features",
@@ -1075,7 +1075,7 @@
     "hero_cta_demo": "View Demo",
     "screenshot_placeholder": "Dashboard Screenshot Placeholder",
     "features_title": "Everything You Need",
-    "features_subtitle": "Stop wrestling with complicated tools. League Flow gives you powerful features kept simple.",
+    "features_subtitle": "Stop wrestling with complicated tools. Tourni gives you powerful features kept simple.",
     "feature_1_title": "Automated Fixtures",
     "feature_1_desc": "Generate Round Robin schedules with one click. Handle odd numbers of teams automatically.",
     "feature_2_title": "Live Standings",
@@ -1146,7 +1146,7 @@
   },
   "SignUp": {
     "title": "Create Account",
-    "subtitle": "Join League Flow and start managing your tournaments",
+    "subtitle": "Join Tourni and start managing your tournaments",
     "or": "Or",
     "full_name": "Full Name",
     "full_name_placeholder": "e.g. John Doe",
@@ -1350,7 +1350,7 @@
     "privacy_description": "Our commitment to protecting your personal data and privacy.",
     "terms": "Terms of Service",
     "terms_of_service": "Terms of Service",
-    "terms_description": "Terms, conditions, and rules for using the LeagueFlow platform.",
+    "terms_description": "Terms, conditions, and rules for using the Tourni platform.",
     "refund": "Refund Policy"
   },
   "DashboardSettings": {
@@ -1749,7 +1749,7 @@
     "select_file": "Select slip file"
   },
   "PublicView": {
-    "brand": "League Flow",
+    "brand": "Tourni",
     "overview": "Overview",
     "matches": "Matches",
     "league_table": "Standings",
@@ -1925,7 +1925,7 @@
     "title": "Privacy Policy",
     "last_updated": "Last updated",
     "intro_title": "1. Introduction",
-    "intro_desc": "Welcome to League Flow. We respect your privacy and are committed to protecting your personal data.",
+    "intro_desc": "Welcome to Tourni. We respect your privacy and are committed to protecting your personal data.",
     "data_collect_title": "2. Data We Collect",
     "data_identity": "Identity Data (Name, username)",
     "data_contact": "Contact Data (Email address)",
@@ -1948,9 +1948,9 @@
     "title": "Terms of Service",
     "last_updated": "Last updated",
     "acceptance_title": "1. Acceptance of Terms",
-    "acceptance_desc": "By accessing or using League Flow, you agree to be bound by these Terms of Service.",
+    "acceptance_desc": "By accessing or using Tourni, you agree to be bound by these Terms of Service.",
     "service_title": "2. Description of Service",
-    "service_desc": "League Flow provides tournament management tools for organizers. We reserve the right to modify or discontinue the service at any time.",
+    "service_desc": "Tourni provides tournament management tools for organizers. We reserve the right to modify or discontinue the service at any time.",
     "accounts_title": "3. User Accounts",
     "accounts_desc": "You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.",
     "content_title": "4. Content",
@@ -1958,7 +1958,7 @@
     "payments_title": "5. Payments & Refunds",
     "payments_desc": "Upgrades are effective immediately after payment. We generally do not provide refunds for services already rendered, unless required by law.",
     "ip_title": "6. Intellectual Property",
-    "ip_desc": "League Flow, its logos, software, and content are the exclusive property of League Flow. You may not use them without our written permission.",
+    "ip_desc": "Tourni, its logos, software, and content are the exclusive property of Tourni. You may not use them without our written permission.",
     "liability_title": "7. Limitation of Liability",
     "liability_desc": "We are not liable for any damages arising out of your use or inability to use our services, to the fullest extent permitted by law.",
     "termination_title": "8. Termination",
@@ -1966,11 +1966,11 @@
     "law_title": "9. Governing Law",
     "law_desc": "These terms are governed by and construed in accordance with the laws of Thailand.",
     "accuracy_title": "10. Accuracy of Tournament Data",
-    "accuracy_desc": "Tournament Organizers are solely responsible for the accuracy of scores, rankings, and schedules. League Flow is a management tool and does not verify the results entered by users.",
+    "accuracy_desc": "Tournament Organizers are solely responsible for the accuracy of scores, rankings, and schedules. Tourni is a management tool and does not verify the results entered by users.",
     "fair_play_title": "11. Fair Play & Prohibited Use",
-    "fair_play_desc": "You agree not to use League Flow for illegal gambling, betting, or the creation of fraudulent tournament results. We reserve the right to remove any content that violates these principles.",
+    "fair_play_desc": "You agree not to use Tourni for illegal gambling, betting, or the creation of fraudulent tournament results. We reserve the right to remove any content that violates these principles.",
     "availability_title": "12. Service Availability during Events",
-    "availability_desc": "While we strive for maximum uptime, League Flow is not liable for service interruptions, server downtime, or internet outages that may occur during live tournament events.",
+    "availability_desc": "While we strive for maximum uptime, Tourni is not liable for service interruptions, server downtime, or internet outages that may occur during live tournament events.",
     "comm_title": "13. Communications",
     "comm_desc": "By using the platform, you consent to receive electronic communications regarding tournament updates, administrative notices, and service-related information."
   },
@@ -1987,7 +1987,7 @@
     "contact_desc": "If you have any questions about refunds or believe you were charged in error, please contact our support team through the Feedback system."
   },
   "Home": {
-    "title": "League Flow Results",
+    "title": "Tourni Results",
     "subtitle": "Browse and search for tournament results from all over the world.",
     "search_placeholder": "Search tournaments...",
     "searching": "Searching...",
@@ -1997,7 +1997,7 @@
     "completed_tournaments": "Completed Tournaments",
     "no_results": "No tournaments found matching your search.",
     "organize_title": "Want to organize your own tournament?",
-    "organize_desc": "League Flow provides everything you need to manage leagues, tournaments, and teams with ease.",
+    "organize_desc": "Tourni provides everything you need to manage leagues, tournaments, and teams with ease.",
     "get_started": "Get Started for Free",
     "view_pricing": "View Pricing & Features"
   },

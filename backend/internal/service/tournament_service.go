@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"leagueflow-backend/internal/model"
-	"leagueflow-backend/internal/repository"
+	"tourni-backend/internal/model"
+	"tourni-backend/internal/repository"
 )
 
 type TournamentService struct {
